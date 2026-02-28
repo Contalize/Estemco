@@ -8,6 +8,7 @@ import {
     Download, Filter, AlertTriangle, Briefcase, Zap, Droplets, Gauge
 } from 'lucide-react';
 import { usePhoenixData } from '../hooks/usePhoenixData';
+import { ReportsBI } from './ReportsBI';
 
 // --- HELPER COMPONENTS ---
 

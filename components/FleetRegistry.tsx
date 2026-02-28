@@ -4,6 +4,7 @@ import { db } from '../firebaseConfig';
 import { collection, addDoc, onSnapshot, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { Trash2, Plus, Truck, AlertTriangle, Settings, Anchor, ArrowDownToLine, Wrench } from 'lucide-react';
 import { MaintenanceModal } from './MaintenanceModal';
+import CalendarioFrota from './CalendarioFrota';
 
 export const FleetRegistry = () => {
     const [assets, setAssets] = useState<Asset[]>([]);
@@ -77,8 +78,8 @@ export const FleetRegistry = () => {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (confirm('Tem certeza que deseja remover este ativo?')) {
+    const handleDelete = async (id: string, name: string) => {
+        if (window.confirm(`Tem certeza que deseja remover "${name}" da frota? Esta ação não pode ser desfeita.`)) {
             try {
                 // Soft delete usually better, but hard delete for now as per "Remove" icon
                 await deleteDoc(doc(db, 'assets', id));
@@ -203,7 +204,7 @@ export const FleetRegistry = () => {
                                         >
                                             <Wrench size={16} />
                                         </button>
-                                        <button onClick={() => handleDelete(asset.id)} className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors">
+                                        <button onClick={() => handleDelete(asset.id, asset.name)} className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors">
                                             <Trash2 size={16} />
                                         </button>
                                     </td>
@@ -220,6 +221,9 @@ export const FleetRegistry = () => {
                     </table>
                 </div>
             )}
+            <div className="mt-8">
+                <CalendarioFrota />
+            </div>
             {
                 maintenanceAsset && (
                     <MaintenanceModal

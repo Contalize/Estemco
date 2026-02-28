@@ -43,7 +43,7 @@ export const analyzeSiteHealth = async (site: ConstructionSite, dieselPrice: num
     const prompt = parseConstructionDataForPrompt(site, dieselPrice);
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash',
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
@@ -86,10 +86,11 @@ export const analyzeLogistics = async (site: ConstructionSite): Promise<Analysis
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash',
       contents: prompt,
       config: {
-        tools: [{ googleSearch: {} }]
+        tools: [{ googleSearch: {} }],
+        temperature: 0.3
       }
     });
 
