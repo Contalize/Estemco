@@ -1,19 +1,29 @@
 import React from 'react';
 import { Calendar, Truck } from 'lucide-react';
-import { MAQUINAS_MOCK, AGENDAMENTOS_MOCK } from '../data/mockData';
 
 interface Props {
   categoriaFiltro?: string; // HELICE, ESCAVADA, etc.
 }
 
 import { db } from '../firebaseConfig';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { Asset } from '../types';
+import { collection, onSnapshot, getDocs } from 'firebase/firestore';
+import { Asset, Agendamento } from '../types';
 
 const CalendarioFrota: React.FC<Props> = ({ categoriaFiltro }) => {
   const [assets, setAssets] = React.useState<Asset[]>([]);
+  const [agendamentos, setAgendamentos] = React.useState<Agendamento[]>([]);
 
   React.useEffect(() => {
+    const fetchAgendamentos = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'events'));
+        setAgendamentos(snap.docs.map(d => ({ id: d.id, ...d.data() } as any)));
+      } catch (err) {
+        console.error("Error fetching agendamentos", err);
+      }
+    };
+    fetchAgendamentos();
+
     const unsub = onSnapshot(collection(db, 'assets'), (snap) => {
       setAssets(snap.docs.map(d => ({ id: d.id, ...d.data() } as Asset)));
     });
@@ -66,7 +76,7 @@ const CalendarioFrota: React.FC<Props> = ({ categoriaFiltro }) => {
                   {mq.nome}
                 </div>
                 {dias.map((d, i) => {
-                  const ocupado = AGENDAMENTOS_MOCK.find(a => a.maquinaId === mq.id && d.toISOString() >= a.dataInicio && d.toISOString() <= a.dataFim);
+                  const ocupado = agendamentos.find(a => a.maquinaId === mq.id && d.toISOString() >= a.dataInicio && d.toISOString() <= a.dataFim);
                   return (
                     <div key={i} className="h-full border-l border-gray-50 p-0.5">
                       <div className={`w-full h-full rounded-sm ${ocupado ? 'bg-blue-500' : 'bg-green-100'}`}></div>

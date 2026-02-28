@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Plus, ArrowLeft, Droplets, MapPin, Calculator, FileText } from 'lucide-react';
+import { Save, Plus, ArrowLeft, Droplets, MapPin, Calculator, FileText, ArrowDownToLine } from 'lucide-react';
 import { db } from '../firebaseConfig';
 import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import { Borehole, SPTSample } from '../types';
@@ -71,14 +71,13 @@ export const SptManager: React.FC<SptManagerProps> = ({ projectId, onClose }) =>
                 projectId,
                 name: boreholeName,
                 date,
-                coordinates: {
-                    x: Number(coordX),
-                    y: Number(coordY),
-                    z: Number(elevationZ)
-                },
+                coordinateX: Number(coordX),
+                coordinateY: Number(coordY),
+                elevationZ: Number(elevationZ),
                 waterLevelDepth,
                 samples: validSamples,
-                status: 'EXECUTED'
+                status: 'EXECUTED',
+                layers: []
             };
 
             await addDoc(collection(db, 'investigations'), borehole);

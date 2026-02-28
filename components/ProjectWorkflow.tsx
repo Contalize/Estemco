@@ -102,7 +102,7 @@ export function ProjectWorkflow() {
                                         {(provided) => (
                                             <div {...provided.droppableProps} ref={provided.innerRef} className="flex-1 p-2 space-y-3 overflow-y-auto max-h-[calc(100vh-200px)] custom-scrollbar">
                                                 {boardData[columnId]?.map((item: any, index: number) => (
-                                                    <Draggable key={item.id} draggableId={item.id} index={index}>
+                                                    <Draggable draggableId={String(item.id)} index={index}>
                                                         {(provided) => (
                                                             <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:shadow-md group">
                                                                 <div className="flex justify-between items-start mb-2">

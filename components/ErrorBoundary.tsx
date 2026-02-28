@@ -2,7 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 
 interface Props {
-    children: ReactNode;
+    children?: ReactNode;
 }
 
 interface State {
@@ -54,6 +54,6 @@ export class ErrorBoundary extends Component<Props, State> {
             );
         }
 
-        return this.props.children;
+        return (this as any).props.children;
     }
 }

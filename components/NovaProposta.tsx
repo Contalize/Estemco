@@ -727,7 +727,7 @@ const handleGenerateProposal = async (formData: any, itens: any[], setShowModal:
   const pageWidth = docPdf.internal.pageSize.width;
   let cursorY = 20;
 
-  const addLine = (text: string, fontSize = 10, fontStyle = 'normal', align = 'left' as 'left' | 'center' | 'right') => {
+  const addLine = (text: string, fontSize = 10, fontStyle = 'normal', align: 'left' | 'center' | 'right' = 'left') => {
     docPdf.setFont("helvetica", fontStyle);
     docPdf.setFontSize(fontSize);
 
@@ -781,7 +781,7 @@ const handleGenerateProposal = async (formData: any, itens: any[], setShowModal:
 
   // Table Header
   let startParamsY = cursorY;
-  docPdf.setFillColor(240);
+  docPdf.setFillColor(240, 240, 240);
   docPdf.rect(margin, cursorY, pageWidth - (margin * 2), 8, 'F');
   docPdf.setFont('helvetica', 'bold');
   docPdf.text("DESCRIÇÃO", margin + 2, cursorY + 5);
@@ -795,8 +795,8 @@ const handleGenerateProposal = async (formData: any, itens: any[], setShowModal:
     docPdf.setFont('helvetica', 'normal');
     docPdf.text(`Estaca Ø ${item.diametro}cm`, margin + 2, cursorY);
     docPdf.text(`${item.qty * item.depth} m`, margin + 90, cursorY);
-    docPdf.text(fmt(item.price), margin + 110, cursorY);
-    docPdf.text(fmt(item.qty * item.depth * item.price), margin + 140, cursorY);
+    docPdf.text(fmt(Number(item.price)), margin + 110, cursorY);
+    docPdf.text(fmt(Number(item.qty * item.depth * item.price)), margin + 140, cursorY);
     cursorY += 6;
   });
 
@@ -806,18 +806,18 @@ const handleGenerateProposal = async (formData: any, itens: any[], setShowModal:
   docPdf.line(margin, cursorY, pageWidth - margin, cursorY);
   cursorY += 5;
 
-  if (formData.includeNF) addLine(`Impostos (NF): ${fmt(formData.serviceTotal * 0.10)}`, 9, 'italic', 'right');
+  if (formData.includeNF) addLine(`Impostos (NF): ${fmt(Number(formData.serviceTotal * 0.10))}`, 9, 'italic', 'right');
   if (formData.includeART) addLine(`Taxa ART: R$ 99,96`, 9, 'italic', 'right');
 
   addSpace(2);
-  addLine(`TOTAL GERAL ESTIMADO: ${fmt(formData.grandTotal)}`, 12, 'bold', 'right');
+  addLine(`TOTAL GERAL ESTIMADO: ${fmt(Number(formData.grandTotal))}`, 12, 'bold', 'right');
   addSpace(10);
 
   // 4. PAYMENT CONDITIONS (Dynamic)
   addLine("3. CONDIÇÕES DE PAGAMENTO", 11, 'bold');
 
   // Signal
-  const sinalTxt = `Sinal de ${fmt(formData.sinalValue)} (${formData.sinalPerc}%) a ser pago no aceite desta proposta.`;
+  const sinalTxt = `Sinal de ${fmt(Number(formData.sinalValue))} (${formData.sinalPerc}%) a ser pago no aceite desta proposta.`;
   addLine(`• ${sinalTxt}`);
 
   // Balance
@@ -826,22 +826,22 @@ const handleGenerateProposal = async (formData: any, itens: any[], setShowModal:
 
   switch (formData.paymentMethod) {
     case 'PIX':
-      balanceTxt = `Saldo de ${fmt(saldo)} via PIX. Chave: ${formData.pixKey}.`;
+      balanceTxt = `Saldo de ${fmt(Number(saldo))} via PIX. Chave: ${formData.pixKey}.`;
       break;
     case 'BOLETO':
-      balanceTxt = `Saldo de ${fmt(saldo)} via Boleto Bancário. Vencimentos: ${formData.boletoDays} dias após medição.`;
+      balanceTxt = `Saldo de ${fmt(Number(saldo))} via Boleto Bancário. Vencimentos: ${formData.boletoDays} dias após medição.`;
       break;
     case 'TED':
-      balanceTxt = `Saldo de ${fmt(saldo)} via Transferência Bancária. Dados: ${formData.bankDetails}.`;
+      balanceTxt = `Saldo de ${fmt(Number(saldo))} via Transferência Bancária. Dados: ${formData.bankDetails}.`;
       break;
     case 'CARTAO_CREDITO':
-      balanceTxt = `Saldo de ${fmt(saldo)} no Cartão de Crédito (${formData.cardBrand}) em ${formData.cardInstallments}x.`;
+      balanceTxt = `Saldo de ${fmt(Number(saldo))} no Cartão de Crédito (${formData.cardBrand}) em ${formData.cardInstallments}x.`;
       break;
     case 'DINHEIRO':
-      balanceTxt = `Saldo de ${fmt(saldo)} em Dinheiro (Espécie), a ser pago diretamente na data combinada.`;
+      balanceTxt = `Saldo de ${fmt(Number(saldo))} em Dinheiro (Espécie), a ser pago diretamente na data combinada.`;
       break;
     default:
-      balanceTxt = `Saldo de ${fmt(saldo)} a combinar.`;
+      balanceTxt = `Saldo de ${fmt(Number(saldo))} a combinar.`;
   }
   addLine(`• ${balanceTxt}`);
   addSpace(8);
@@ -849,14 +849,14 @@ const handleGenerateProposal = async (formData: any, itens: any[], setShowModal:
   // 5. SAFEGUARDS (Clause Injection)
   addLine("4. CONDIÇÕES GERAIS E SALVAGUARDAS", 11, 'bold');
   const clauses = [
-    `Faturamento Mínimo: Caso a medição não atinja ${fmt(formData.minBilling)}, será cobrado este valor mínimo por mobilização.`,
-    `Água/Rocha: Ocorrências geológicas de água ou rocha implicam em taxa adicional de ${fmt(formData.waterFee)} por dia ou evento.`,
-    `Improdutividade: Horas paradas por responsabilidade do CONTRATANTE serão cobradas a ${fmt(formData.hourRate)}/hora.`,
+    `Faturamento Mínimo: Caso a medição não atinja ${fmt(Number(formData.minBilling))}, será cobrado este valor mínimo por mobilização.`,
+    `Água/Rocha: Ocorrências geológicas de água ou rocha implicam em taxa adicional de ${fmt(Number(formData.waterFee))} por dia ou evento.`,
+    `Improdutividade: Horas paradas por responsabilidade do CONTRATANTE serão cobradas a ${fmt(Number(formData.hourRate))}/hora.`,
     `Concreto e Ferragem são de responsabilidade integral do CONTRATANTE, salvo estipulado em contrário.`,
     `O fornecimento de água e energia elétrica para a execução dos serviços corre por conta do CONTRATANTE.`
   ];
 
-  clauses.forEach((c, i) => addLine(`${4}.{i+1} ${c}`, 9));
+  clauses.forEach((c, i) => addLine(`4.${i+1} ${c}`, 9));
 
   // --- LAST PAGE: ACCEPTANCE ---
   docPdf.addPage();
@@ -902,6 +902,23 @@ const handleGenerateProposal = async (formData: any, itens: any[], setShowModal:
 
   // PERSISTENCE (ERP)
   try {
+    let installmentList = [];
+    if (formData.paymentMethod === 'BOLETO' && formData.boletoDays) {
+      const days = formData.boletoDays.split('/').map(d => parseInt(d.trim(), 10)).filter(d => !isNaN(d));
+      const saldo = formData.grandTotal - formData.sinalValue;
+      const parcelaValue = saldo / days.length;
+
+      installmentList = days.map((day, idx) => {
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + day);
+        return {
+          number: idx + 1,
+          value: parcelaValue,
+          date: dueDate.toISOString()
+        };
+      });
+    }
+
     const newProject = {
       name: `Obra ${formData.client.split(' ')[0]} - ${selectedCategory}`,
       clientName: formData.client,
@@ -918,6 +935,7 @@ const handleGenerateProposal = async (formData: any, itens: any[], setShowModal:
         bankDetails: formData.paymentMethod === 'TED' ? formData.bankDetails : null,
         cardInstallments: formData.paymentMethod === 'CARTAO_CREDITO' ? formData.cardInstallments : null
       },
+      installmentList,
       siteAddress: formData.siteAddress,
       startDate: formData.startDate,
       prazoDias: formData.prazo,

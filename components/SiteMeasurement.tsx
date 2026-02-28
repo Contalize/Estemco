@@ -3,8 +3,8 @@ import { Calculator, ArrowRight, AlertCircle, TrendingUp, CheckCircle2 } from 'l
 import { DailyLog } from '../types';
 
 export const SiteMeasurement = ({ projeto, bdos, onClose }: { projeto: any, bdos: DailyLog[], onClose?: () => void }) => {
-    const totalMetersRealized = bdos.reduce((acc, b) => acc + (b.totalMetrosDia || 0), 0);
-    const totalIdleHours = bdos.reduce((acc, b) => acc + (b.totalHorasParadasDia || 0), 0);
+    const totalMetersRealized = bdos.reduce((acc, b) => acc + (b.totalMeters || 0), 0);
+    const totalIdleHours = bdos.reduce((acc, b) => acc + (b.totalIdleHours || 0), 0);
 
     // Fallbacks logic
     const UNIT_PRICE = projeto.valorUnitarioMetro || 100; // Legacy support

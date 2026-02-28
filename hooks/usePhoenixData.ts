@@ -16,9 +16,14 @@ export const usePhoenixData = () => {
     const clients = useQuery({
         queryKey: ['clients'],
         queryFn: async () => {
-            const q = query(collection(db, 'clients'), orderBy('razaoSocial')); // Changed 'nome' to 'razaoSocial' based on previous types
-            const snap = await getDocs(q);
-            return snap.docs.map(d => ({ id: d.id, ...d.data() })) as Client[];
+            try {
+                const q = query(collection(db, 'clients'), orderBy('razaoSocial')); // Changed 'nome' to 'razaoSocial' based on previous types
+                const snap = await getDocs(q);
+                return snap.docs.map(d => ({ id: d.id, ...d.data() })) as Client[];
+            } catch (error) {
+                console.error("Error fetching clients:", error);
+                throw error;
+            }
         },
         staleTime: 1000 * 60 * 10,
     });
@@ -47,8 +52,13 @@ export const usePhoenixData = () => {
     const assets = useQuery({
         queryKey: ['assets'],
         queryFn: async () => {
-            const snap = await getDocs(collection(db, 'assets'));
-            return snap.docs.map(d => ({ id: d.id, ...d.data() })) as Asset[];
+            try {
+                const snap = await getDocs(collection(db, 'assets'));
+                return snap.docs.map(d => ({ id: d.id, ...d.data() })) as Asset[];
+            } catch (error) {
+                console.error("Error fetching assets:", error);
+                throw error;
+            }
         },
         staleTime: 1000 * 60 * 60, // 1 hora (muda pouco)
     });
@@ -57,8 +67,13 @@ export const usePhoenixData = () => {
     const events = useQuery({
         queryKey: ['events'],
         queryFn: async () => {
-            const snap = await getDocs(collection(db, 'events'));
-            return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            try {
+                const snap = await getDocs(collection(db, 'events'));
+                return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            } catch (error) {
+                console.error("Error fetching events:", error);
+                throw error;
+            }
         },
         staleTime: 1000 * 60 * 5,
     });
@@ -107,8 +122,13 @@ export const usePhoenixData = () => {
     const allDailyLogs = useQuery({
         queryKey: ['allDailyLogs'],
         queryFn: async () => {
-            const snap = await getDocs(collection(db, 'daily_logs'));
-            return snap.docs.map(d => ({ id: d.id, ...d.data() })) as DailyLog[];
+            try {
+                const snap = await getDocs(collection(db, 'daily_logs'));
+                return snap.docs.map(d => ({ id: d.id, ...d.data() })) as DailyLog[];
+            } catch (error) {
+                console.error("Error fetching all daily logs:", error);
+                throw error;
+            }
         },
         staleTime: 1000 * 60 * 5, // 5 minutes cache
     });
