@@ -39,11 +39,11 @@ const parseConstructionDataForPrompt = (site: ConstructionSite, dieselPrice: num
 
 export const analyzeSiteHealth = async (site: ConstructionSite, dieselPrice: number): Promise<AnalysisResponse> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || "" });
     const prompt = parseConstructionDataForPrompt(site, dieselPrice);
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
@@ -73,13 +73,13 @@ export const analyzeSiteHealth = async (site: ConstructionSite, dieselPrice: num
 
 export const analyzeLogistics = async (site: ConstructionSite): Promise<AnalysisResponse> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || "" });
     
     const prompt = `
       Analise a logística para a obra de fundação em: ${site.address || site.name}.
       Localização aproximada: Lat ${site.latitude}, Lng ${site.longitude}.
       
-      USE O GOOGLE MAPS para:
+      Procure usando GOOGLE SEARCH:
       1. Encontrar as 3 usinas de concreto (Concrete Batch Plants) mais próximas.
       2. Verificar postos de combustível para abastecimento de máquinas.
       3. Identificar possíveis restrições de tráfego para caminhões pesados ou carretas de hélice contínua no entorno.
@@ -89,15 +89,7 @@ export const analyzeLogistics = async (site: ConstructionSite): Promise<Analysis
       model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
-        tools: [{ googleMaps: {} }],
-        toolConfig: {
-          retrievalConfig: {
-            latLng: site.latitude && site.longitude ? {
-              latitude: site.latitude,
-              longitude: site.longitude
-            } : undefined
-          }
-        }
+        tools: [{ googleSearch: {} }]
       }
     });
 

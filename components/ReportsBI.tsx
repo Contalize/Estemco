@@ -23,7 +23,7 @@ export const ReportsBI = () => {
     const totalRevenue = filteredProjects.reduce((acc, p) => acc + (p.revenue || p.totalBudget || 0), 0);
     const totalMeters = filteredProjects.reduce((acc, p) => acc + (p.contractMeters || 0), 0);
     const totalProposals = filteredProjects.length;
-    const closedDeals = filteredProjects.filter(p => p.status === 'Ativa' || p.status === 'Concluída').length;
+    const closedDeals = filteredProjects.filter(p => p.status === 'EXECUCAO' || p.status === 'FINALIZADO' || p.status === 'CONTRATO' || p.status === 'ACEITE').length;
     const conversionRate = totalProposals > 0 ? (closedDeals / totalProposals) * 100 : 0;
 
     // CHART DATA GENERATORS
@@ -60,11 +60,11 @@ export const ReportsBI = () => {
     const funnelData = useMemo(() => {
         const counts = { PROPOSTA: 0, ACEITE: 0, CONTRATO: 0, EXECUCAO: 0, CONCLUDED: 0 };
         filteredProjects.forEach(p => {
-            if (p.stage === 'PROPOSTA') counts.PROPOSTA++;
-            if (p.stage === 'ACEITE') counts.ACEITE++;
-            if (p.stage === 'CONTRATO') counts.CONTRATO++;
-            if (p.stage === 'EXECUCAO' || p.stage === 'MEDICAO') counts.EXECUCAO++;
-            if (p.status === 'Concluída') counts.CONCLUDED++;
+            if (p.status === 'PROPOSTA') counts.PROPOSTA++;
+            if (p.status === 'ACEITE') counts.ACEITE++;
+            if (p.status === 'CONTRATO') counts.CONTRATO++;
+            if (p.status === 'EXECUCAO' || p.status === 'MEDICAO') counts.EXECUCAO++;
+            if (p.status === 'FINALIZADO') counts.CONCLUDED++;
         });
 
         return [

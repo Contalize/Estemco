@@ -18,7 +18,7 @@ const ConstructionCalendar = React.lazy(() => import('./components/ConstructionC
 const NovaProposta = React.lazy(() => import('./components/NovaProposta').then(module => ({ default: module.NovaProposta })));
 const Registrations = React.lazy(() => import('./components/Registrations').then(module => ({ default: module.Registrations })));
 const Templates = React.lazy(() => import('./components/Templates').then(module => ({ default: module.Templates })));
-const Relatorios = React.lazy(() => import('./components/Relatorios').then(module => ({ default: module.Relatorios })));
+const Relatorios = React.lazy(() => import('./components/ReportsBI').then(module => ({ default: module.ReportsBI })));
 const FleetRegistry = React.lazy(() => import('./components/FleetRegistry').then(module => ({ default: module.FleetRegistry })));
 
 const INITIAL_SITES: ConstructionSite[] = [];

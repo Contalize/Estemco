@@ -182,7 +182,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ sites = [], config, setAct
                         label="Cadastrar Cliente"
                         icon={<Users size={20} />}
                         color="bg-emerald-600 text-white hover:bg-emerald-700"
-                        onClick={() => setActiveTab(Tab.DASHBOARD)}
+                        onClick={() => setActiveTab(Tab.REGISTERS)}
                     />
                     <ShortcutButton
                         label="Agenda de Frota"
