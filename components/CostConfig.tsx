@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { GlobalConfig, EmployeeCost } from '../types';
-import { Save, Plus, Trash2, Fuel, Users, HardHat, Receipt } from 'lucide-react';
-import { db } from '../firebaseConfig';
-import { doc, setDoc } from 'firebase/firestore';
+import { Save, Plus, Trash2, Fuel, Users, HardHat } from 'lucide-react';
 
 interface CostConfigProps {
   config: GlobalConfig;
@@ -11,32 +9,16 @@ interface CostConfigProps {
 
 export const CostConfig: React.FC<CostConfigProps> = ({ config, onUpdate }) => {
   const [dieselPrice, setDieselPrice] = useState(config.dieselPrice);
-  const [taxRateNF, setTaxRateNF] = useState(config.taxRateNF || 10);
-  const [taxValueART, setTaxValueART] = useState(config.taxValueART || 99.96);
   const [employees, setEmployees] = useState<EmployeeCost[]>(config.employees);
   const [newRole, setNewRole] = useState('');
   const [newCost, setNewCost] = useState('');
 
-  const handleSave = async () => {
-    try {
-      const newConfig = {
-        dieselPrice,
-        taxRateNF,
-        taxValueART,
-        employees
-      };
-
-      // Save locally
-      onUpdate(newConfig);
-
-      // Save to Firestore
-      await setDoc(doc(db, 'metadata', 'config'), newConfig);
-
-      alert('Base de custos atualizada no Banco de Dados!');
-    } catch (error) {
-      console.error("Error saving config:", error);
-      alert('Erro ao salvar configuração.');
-    }
+  const handleSave = () => {
+    onUpdate({
+      dieselPrice,
+      employees
+    });
+    alert('Base de custos atualizada no NiboFlow!');
   };
 
   const addEmployee = () => {
@@ -66,7 +48,7 @@ export const CostConfig: React.FC<CostConfigProps> = ({ config, onUpdate }) => {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
+        
         {/* Diesel Section */}
         <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
           <div className="flex items-center gap-4 mb-6">
@@ -78,7 +60,7 @@ export const CostConfig: React.FC<CostConfigProps> = ({ config, onUpdate }) => {
               <p className="text-sm text-slate-500">Insumo Variável Crítico</p>
             </div>
           </div>
-
+          
           <div className="space-y-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
             <label className="block text-sm font-semibold text-slate-700">Preço Médio do Litro (R$)</label>
             <div className="relative rounded-md shadow-sm">
@@ -96,53 +78,6 @@ export const CostConfig: React.FC<CostConfigProps> = ({ config, onUpdate }) => {
             <p className="text-xs text-slate-500 leading-relaxed">
               <span className="font-bold text-amber-600">Nota:</span> Este valor alimenta o cálculo de custo de máquinas no "Boletim Diário". Mantenha atualizado conforme a última nota fiscal de compra.
             </p>
-          </div>
-        </section>
-
-        {/* Taxes & Fees Section */}
-        <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="p-3 bg-red-100 rounded-lg text-red-600 shadow-sm">
-              <Receipt size={28} />
-            </div>
-            <div>
-              <h3 className="font-bold text-lg text-slate-800">Impostos & Taxas</h3>
-              <p className="text-sm text-slate-500">Parâmetros Fiscais Globais</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-              <label className="block text-sm font-semibold text-slate-700">Alíquota da Nota Fiscal (%)</label>
-              <div className="relative rounded-md shadow-sm mt-1">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <span className="text-slate-500 sm:text-sm font-bold">%</span>
-                </div>
-                <input
-                  type="number"
-                  step="0.1"
-                  className="block w-full rounded-md border-slate-300 pl-10 focus:border-red-500 focus:ring-red-500 py-3 border text-lg font-mono text-slate-700"
-                  value={taxRateNF}
-                  onChange={(e) => setTaxRateNF(parseFloat(e.target.value))}
-                />
-              </div>
-            </div>
-
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-              <label className="block text-sm font-semibold text-slate-700">Valor da ART (R$)</label>
-              <div className="relative rounded-md shadow-sm mt-1">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <span className="text-slate-500 sm:text-sm font-bold">R$</span>
-                </div>
-                <input
-                  type="number"
-                  step="0.01"
-                  className="block w-full rounded-md border-slate-300 pl-10 focus:border-red-500 focus:ring-red-500 py-3 border text-lg font-mono text-slate-700"
-                  value={taxValueART}
-                  onChange={(e) => setTaxValueART(parseFloat(e.target.value))}
-                />
-              </div>
-            </div>
           </div>
         </section>
 
@@ -198,8 +133,8 @@ export const CostConfig: React.FC<CostConfigProps> = ({ config, onUpdate }) => {
                 {employees.map((emp) => (
                   <tr key={emp.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-4 py-3 text-sm font-medium text-slate-700 flex items-center gap-2">
-                      <HardHat size={14} className="text-slate-400" />
-                      {emp.role}
+                        <HardHat size={14} className="text-slate-400"/>
+                        {emp.role}
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-600">R$ {emp.dailyCost.toFixed(2)}</td>
                     <td className="px-4 py-3 text-right">
@@ -218,8 +153,6 @@ export const CostConfig: React.FC<CostConfigProps> = ({ config, onUpdate }) => {
             </table>
           </div>
         </section>
-
-        {/* Assets Section Moved to Cadastros */}
       </div>
 
       <div className="flex justify-end pt-6 border-t border-slate-200">

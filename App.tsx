@@ -1,27 +1,18 @@
-import React, { useState, useEffect, Suspense } from 'react';
-import { Tab, ConstructionSite, GlobalConfig } from './types';
-import { LayoutDashboard, Settings, Drill, CalendarDays, GitPullRequestArrow, FileText, Database, LogOut } from 'lucide-react';
-import { Sidebar } from './components/Sidebar';
+import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Login } from './components/Login';
-
-// Lazy Load Heavy Modules
-const FinancialDashboard = React.lazy(() => import('./components/FinancialDashboard').then(module => ({ default: module.FinancialDashboard })));
-import { auth } from './firebaseConfig';
-import { User, onAuthStateChanged, signOut } from 'firebase/auth';
-import { usePhoenixData } from './hooks/usePhoenixData';
-
-// Lazy Load Components (Code Splitting) used to improve performance
-const Dashboard = React.lazy(() => import('./components/Dashboard').then(module => ({ default: module.Dashboard })));
-const CostConfig = React.lazy(() => import('./components/CostConfig').then(module => ({ default: module.CostConfig })));
-const ProjectWorkflow = React.lazy(() => import('./components/ProjectWorkflow').then(module => ({ default: module.ProjectWorkflow })));
-const ConstructionCalendar = React.lazy(() => import('./components/ConstructionCalendar').then(module => ({ default: module.ConstructionCalendar })));
-const NovaProposta = React.lazy(() => import('./components/NovaProposta').then(module => ({ default: module.NovaProposta })));
-const Registrations = React.lazy(() => import('./components/Registrations').then(module => ({ default: module.Registrations })));
-const Templates = React.lazy(() => import('./components/Templates').then(module => ({ default: module.Templates })));
-const Relatorios = React.lazy(() => import('./components/Relatorios').then(module => ({ default: module.Relatorios })));
-const FleetRegistry = React.lazy(() => import('./components/FleetRegistry').then(module => ({ default: module.FleetRegistry })));
-
-const INITIAL_SITES: ConstructionSite[] = [];
+import { Dashboard } from './components/Dashboard';
+import { CostConfig } from './components/CostConfig';
+import { ProjectWorkflow } from './components/ProjectWorkflow';
+import { ConstructionCalendar } from './components/ConstructionCalendar';
+import { NovaProposta } from './components/NovaProposta';
+import { Settings as SettingsPage } from './components/Settings';
+import { Clients } from './components/Clients';
+import { Team } from './components/Team';
+import { Tab, ConstructionSite, GlobalConfig } from './types';
+import { LayoutDashboard, Settings, Drill, CalendarDays, GitPullRequestArrow, FileText, Users, Shield } from 'lucide-react';
+import { useCollection } from './src/firebase/firestore/use-collection';
+import { where } from 'firebase/firestore';
 
 const INITIAL_CONFIG: GlobalConfig = {
   dieselPrice: 6.59,
@@ -32,110 +23,112 @@ const INITIAL_CONFIG: GlobalConfig = {
   ]
 };
 
-export const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  // AUTH STATE OBSERVER
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setAuthLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
+export const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.DASHBOARD);
-
-  // PHOENIX ARCHITECTURE: Dados Centralizados
-  const { projects, loading: dataLoading } = usePhoenixData();
-  const localSites = projects as ConstructionSite[]; // Auto-synced via React Query
-
   const [config, setConfig] = useState<GlobalConfig>(INITIAL_CONFIG);
+  const { user, profile, loading } = useAuth();
+  
+  const { data: obras } = useCollection<ConstructionSite>('obras', profile?.tenantId ? [where('tenantId', '==', profile.tenantId)] : []);
 
-  const renderContent = () => {
-    // Suspense Wrap for Lazy Components
+  if (loading) {
     return (
-      <Suspense fallback={
-        <div className="flex items-center justify-center h-full">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-slate-900"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4 text-slate-500">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
+          <p className="text-sm font-medium">Carregando sistema...</p>
         </div>
-      }>
-        {(() => {
-
-
-          switch (activeTab) {
-            case Tab.DASHBOARD:
-              return <Dashboard sites={localSites} config={config} setActiveTab={setActiveTab} />;
-            case Tab.REGISTERS:
-              return <Registrations />;
-            case Tab.QUOTE:
-              return <NovaProposta />;
-            case Tab.WORKFLOW:
-              return <ProjectWorkflow />;
-            case Tab.CALENDAR:
-              return <ConstructionCalendar />;
-            case Tab.FINANCIAL:
-              return <FinancialDashboard />;
-            case Tab.CONFIG:
-              return <CostConfig config={config} onUpdate={setConfig} />;
-            case Tab.TEMPLATES:
-              return <Templates />;
-            case Tab.REPORTS:
-              return <Relatorios />;
-            case Tab.ASSETS:
-              return <FleetRegistry />;
-            default:
-              return <Dashboard sites={localSites} config={config} setActiveTab={setActiveTab} />;
-          }
-        })()}
-      </Suspense>
-    );
-  };
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
       </div>
     );
   }
 
   if (!user) {
-    return <Login onLogin={(user) => {
-      setUser(user);
-      setAuthLoading(false);
-    }} />;
+    return <Login />;
   }
+
+  const handleUpdateSite = (updatedSite: ConstructionSite) => {
+    // In a real app, this would update Firestore
+    // For now, we'll just log it since we are reading from Firestore
+    console.log('Update site:', updatedSite);
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case Tab.DASHBOARD:
+        return <Dashboard sites={obras} config={config} onNavigate={setActiveTab} />;
+      case Tab.QUOTE:
+        return <NovaProposta />;
+      case Tab.WORKFLOW:
+        return <ProjectWorkflow />;
+      case Tab.CALENDAR:
+        return <ConstructionCalendar sites={obras} />;
+      case Tab.CONFIG:
+        return <CostConfig config={config} onUpdate={setConfig} />;
+      case Tab.SETTINGS:
+        return <SettingsPage />;
+      case Tab.CLIENTS:
+        return <Clients />;
+      case Tab.TEAM:
+        return <Team />;
+      default:
+        return <Dashboard sites={obras} config={config} onNavigate={setActiveTab} />;
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
+      <aside className="hidden md:flex w-64 bg-slate-900 text-white flex-col fixed h-full z-20 shadow-xl border-r border-slate-800 transition-all">
+        <div className="h-20 flex items-center px-6 border-b border-slate-800 bg-white">
+          <img 
+            src="https://www.estemco.com.br/wp-content/uploads/2022/07/logo.png" 
+            alt="Estemco Logo" 
+            className="h-10 w-auto object-contain"
+          />
+        </div>
 
-      {/* Sidebar Component */}
-      <Sidebar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        user={user}
-        isOpen={isSidebarOpen}
-        setIsOpen={setIsSidebarOpen}
-      />
-
-      <main className="flex-1 w-full min-w-0 flex flex-col h-screen overflow-hidden">
-        {/* Mobile Header Trigger */}
-        <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center shrink-0">
-          <span className="font-bold">ESTEMCO ERP</span>
-          <button onClick={() => setIsSidebarOpen(true)} className="p-2">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
+        <nav className="flex-1 py-6 space-y-2 px-3">
+          <button onClick={() => setActiveTab(Tab.DASHBOARD)} className={`w-full flex items-center justify-start gap-3 px-3 py-3 rounded-lg transition-all ${activeTab === Tab.DASHBOARD ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <LayoutDashboard size={20} /> <span className="font-medium">Dashboard</span>
           </button>
-        </div>
+          <button onClick={() => setActiveTab(Tab.QUOTE)} className={`w-full flex items-center justify-start gap-3 px-3 py-3 rounded-lg transition-all ${activeTab === Tab.QUOTE ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <FileText size={20} /> <span className="font-medium">Orçamento</span>
+          </button>
+          <button onClick={() => setActiveTab(Tab.CLIENTS)} className={`w-full flex items-center justify-start gap-3 px-3 py-3 rounded-lg transition-all ${activeTab === Tab.CLIENTS ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <Users size={20} /> <span className="font-medium">Clientes</span>
+          </button>
+          <button onClick={() => setActiveTab(Tab.WORKFLOW)} className={`w-full flex items-center justify-start gap-3 px-3 py-3 rounded-lg transition-all ${activeTab === Tab.WORKFLOW ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <GitPullRequestArrow size={20} /> <span className="font-medium">Gestão de Obras</span>
+          </button>
+          <button onClick={() => setActiveTab(Tab.CALENDAR)} className={`w-full flex items-center justify-start gap-3 px-3 py-3 rounded-lg transition-all ${activeTab === Tab.CALENDAR ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <CalendarDays size={20} /> <span className="font-medium">Calendário</span>
+          </button>
+          
+          {profile?.role === 'Administrador' && (
+            <>
+              <div className="pt-4 pb-2 px-3">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Administração</p>
+              </div>
+              <button onClick={() => setActiveTab(Tab.TEAM)} className={`w-full flex items-center justify-start gap-3 px-3 py-3 rounded-lg transition-all ${activeTab === Tab.TEAM ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+                <Shield size={20} /> <span className="font-medium">Equipe e Acessos</span>
+              </button>
+              <button onClick={() => setActiveTab(Tab.SETTINGS)} className={`w-full flex items-center justify-start gap-3 px-3 py-3 rounded-lg transition-all ${activeTab === Tab.SETTINGS ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+                <Settings size={20} /> <span className="font-medium">Configurações</span>
+              </button>
+            </>
+          )}
+        </nav>
+      </aside>
 
-        <div className="flex-1 overflow-y-auto p-0 md:p-8 scroll-smooth pb-20 md:pb-0">
-          {renderContent()}
-        </div>
+      <main className="flex-1 w-full md:ml-64 p-0 md:p-8 overflow-y-auto pb-20 md:pb-0">
+        {renderContent()}
       </main>
     </div>
+  );
+};
+
+export const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };

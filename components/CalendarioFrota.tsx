@@ -6,24 +6,11 @@ interface Props {
   categoriaFiltro?: string; // HELICE, ESCAVADA, etc.
 }
 
-import { db } from '../firebaseConfig';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { Asset } from '../types';
-
 const CalendarioFrota: React.FC<Props> = ({ categoriaFiltro }) => {
-  const [assets, setAssets] = React.useState<Asset[]>([]);
-
-  React.useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'assets'), (snap) => {
-      setAssets(snap.docs.map(d => ({ id: d.id, ...d.data() } as Asset)));
-    });
-    return unsub;
-  }, []);
-
   // Filtra as máquinas baseadas na seleção do usuário
-  const maquinasVisiveis = categoriaFiltro
-    ? assets.filter(m => m.category === categoriaFiltro)
-    : assets;
+  const maquinasVisiveis = categoriaFiltro 
+    ? MAQUINAS_MOCK.filter(m => m.categoria === categoriaFiltro)
+    : MAQUINAS_MOCK;
 
   const dias = Array.from({ length: 10 }, (_, i) => {
     const d = new Date();
@@ -35,7 +22,7 @@ const CalendarioFrota: React.FC<Props> = ({ categoriaFiltro }) => {
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6 transition-all duration-300">
       <div className="bg-slate-50 p-3 border-b border-gray-200 flex justify-between items-center">
         <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm">
-          <Calendar className="text-blue-600" size={16} />
+          <Calendar className="text-blue-600" size={16} /> 
           {categoriaFiltro ? `Disponibilidade: ${categoriaFiltro}` : 'Disponibilidade Geral'}
         </h3>
         <div className="flex gap-2 text-[8px] font-bold uppercase">
@@ -69,7 +56,7 @@ const CalendarioFrota: React.FC<Props> = ({ categoriaFiltro }) => {
                   const ocupado = AGENDAMENTOS_MOCK.find(a => a.maquinaId === mq.id && d.toISOString() >= a.dataInicio && d.toISOString() <= a.dataFim);
                   return (
                     <div key={i} className="h-full border-l border-gray-50 p-0.5">
-                      <div className={`w-full h-full rounded-sm ${ocupado ? 'bg-blue-500' : 'bg-green-100'}`}></div>
+                       <div className={`w-full h-full rounded-sm ${ocupado ? 'bg-blue-500' : 'bg-green-100'}`}></div>
                     </div>
                   );
                 })}
