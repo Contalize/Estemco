@@ -19,7 +19,9 @@ export interface PropostaData {
   diametro?: string;
   metragemPrevista?: number;
   precoMetro?: number;
+  validadeDias?: number;
   prazoExecucao: number;
+  inicioPrevisto?: string;
   mobilizacao: number;
   faturamentoMinimo: number;
   taxaAgua: number;

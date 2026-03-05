@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Check, ChevronsUpDown, MoreVertical } from 'lucide-react';
 
-export const Card = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => (
-  <div className={`bg-white rounded-xl border border-slate-200 shadow-sm ${className}`}>{children}</div>
-);
+export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ children, className = '', ...props }, ref) => (
+  <div ref={ref} className={`bg-white rounded-xl border border-slate-200 shadow-sm ${className}`} {...props}>{children}</div>
+));
+Card.displayName = 'Card';
 
 export const Label = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => (
   <label className={`text-sm font-medium text-slate-700 mb-1.5 block ${className}`}>{children}</label>
