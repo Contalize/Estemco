@@ -1,0 +1,187 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isSuperAdmin() {
+      return request.auth.token.email == "afonso.franco18@gmail.com" || request.auth.uid == "c05s8UmhomMtdEauVRoSL6oi51t1";
+    }
+    
+    function userDocExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function getTenantId() {
+      return userDocExists() ? getUserData().tenantId : null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        (isSuperAdmin() || 
+         (userDocExists() && getUserData().role == 'Administrador'));
+    }
+    
+    function isTenantOwner(data) {
+      return isAuthenticated() && data.tenantId == getTenantId();
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+
+    // Invitations collection
+    match /invitations/{invitationId} {
+      allow read: if isAuthenticated() && (
+        isSuperAdmin() ||
+        (resource != null && resource.data.tenantId == getTenantId() && isAdmin()) ||
+        (resource != null && resource.data.email == request.auth.token.email)
+      );
+      allow list: if isAuthenticated() && (
+        isSuperAdmin() ||
+        (request.query.limit <= 100 && request.query.filters.email == request.auth.token.email) ||
+        (isAdmin() && resource.data.tenantId == getTenantId())
+      );
+      
+      allow create: if isAdmin();
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.email == request.auth.token.email);
+    }
+
+    // Clientes collection
+    match /clientes/{clienteId} {
+      allow read, write: if isAuthenticated() && (
+        isSuperAdmin() ||
+        ((resource == null || resource.data.tenantId == getTenantId()) &&
+         (request.resource == null || request.resource.data.tenantId == getTenantId()))
+      );
+    }
+
+    // Propostas collection
+    match /propostas/{propostaId} {
+      allow read, write: if isAuthenticated() && (
+        isSuperAdmin() ||
+        ((resource == null || resource.data.tenantId == getTenantId()) &&
+         (request.resource == null || request.resource.data.tenantId == getTenantId()))
+      );
+    }
+
+    // Obras collection
+    match /obras/{obraId} {
+      allow read, write: if isAuthenticated() && (
+        isSuperAdmin() ||
+        ((resource == null || resource.data.tenantId == getTenantId()) &&
+         (request.resource == null || request.resource.data.tenantId == getTenantId()))
+      );
+    }
+
+    // Boletins Diários collection
+    match /boletins_diarios/{boletimId} {
+      allow read, write: if isAuthenticated() && (
+        isSuperAdmin() ||
+        ((resource == null || resource.data.tenantId == getTenantId()) &&
+         (request.resource == null || request.resource.data.tenantId == getTenantId()))
+      );
+    }
+
+    // Boletins collection (New)
+    match /boletins/{boletimId} {
+      allow read, write: if isAuthenticated() && (
+        isSuperAdmin() ||
+        ((resource == null || resource.data.tenantId == getTenantId()) &&
+         (request.resource == null || request.resource.data.tenantId == getTenantId()))
+      );
+    }
+
+    // DRE Obras collection
+    match /dre_obras/{dreId} {
+      allow read, write: if isAuthenticated() && (
+        isSuperAdmin() ||
+        ((resource == null || resource.data.tenantId == getTenantId()) &&
+         (request.resource == null || request.resource.data.tenantId == getTenantId()))
+      );
+    }
+
+    // Empresas collection
+    match /empresas/{empresaId} {
+      allow read: if isAuthenticated() && (
+        isSuperAdmin() || empresaId == getTenantId()
+      );
+      allow write: if isAuthenticated() && (
+        isSuperAdmin() || (empresaId == getTenantId() && isAdmin())
+      );
+    }
+
+    // Maquinas collection
+    match /maquinas/{maquinaId} {
+      allow read, write: if isAuthenticated() && (
+        isSuperAdmin() ||
+        ((resource == null || resource.data.tenantId == getTenantId()) &&
+         (request.resource == null || request.resource.data.tenantId == getTenantId()))
+      );
+    }
+
+    // Agendamentos collection
+    match /agendamentos/{agendamentoId} {
+      allow read, write: if isAuthenticated() && (
+        isSuperAdmin() ||
+        ((resource == null || resource.data.tenantId == getTenantId()) &&
+         (request.resource == null || request.resource.data.tenantId == getTenantId()))
+      );
+    }
+
+    // Medições collection — leitura/criação para usuários do mesmo tenant
+    match /medicoes/{medicaoId} {
+      allow read: if isAuthenticated() && (
+        isSuperAdmin() ||
+        (resource != null && resource.data.tenantId == getTenantId())
+      );
+      allow create, update: if isAuthenticated() && (
+        isSuperAdmin() ||
+        request.resource.data.tenantId == getTenantId()
+      );
+      allow delete: if isAuthenticated() && isSuperAdmin();
+    }
+
+    // Anotações de Obra — leitura para tenant, delete apenas pelo autor ou admin
+    match /anotacoes_obra/{anotacaoId} {
+      allow read: if isAuthenticated() && (
+        isSuperAdmin() ||
+        (resource != null && resource.data.tenantId == getTenantId())
+      );
+      allow create: if isAuthenticated() && (
+        isSuperAdmin() ||
+        request.resource.data.tenantId == getTenantId()
+      );
+      allow delete: if isAuthenticated() && (
+        isSuperAdmin() ||
+        resource.data.createdByUserId == request.auth.uid ||
+        isAdmin()
+      );
+    }
+  }
+}

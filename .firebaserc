@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "estemco"
+  },
+  "targets": {
+    "estemco": {
+      "hosting": {
+        "estemco": [
+          "estemco"
+        ]
+      }
+    }
+  }
+}

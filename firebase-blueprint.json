@@ -1,0 +1,93 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user profile and role information",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["Administrador", "Comercial", "Engenheiro"] },
+        "tenantId": { "type": "string" },
+        "nome": { "type": "string" },
+        "createdByUserId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role", "tenantId"]
+    },
+    "Invitation": {
+      "title": "Invitation",
+      "description": "Stores pending invitations for new members",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["Administrador", "Comercial", "Engenheiro"] },
+        "tenantId": { "type": "string" },
+        "invitedBy": { "type": "string" },
+        "createdByUserId": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pendente", "Aceito"] },
+        "createdAt": { "type": "object" }
+      },
+      "required": ["email", "role", "tenantId", "status"]
+    },
+    "Cliente": {
+      "title": "Cliente",
+      "description": "Customer information",
+      "type": "object",
+      "properties": {
+        "nome": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "telefone": { "type": "string" },
+        "cnpj": { "type": "string" },
+        "tenantId": { "type": "string" }
+      },
+      "required": ["nome", "tenantId"]
+    },
+    "Proposta": {
+      "title": "Proposta",
+      "description": "Sales proposal",
+      "type": "object",
+      "properties": {
+        "cliente": { "type": "string" },
+        "clienteId": { "type": "string" },
+        "valorTotal": { "type": "number" },
+        "status": { "type": "string" },
+        "tenantId": { "type": "string" }
+      },
+      "required": ["clienteId", "valorTotal", "status", "tenantId"]
+    },
+    "Obra": {
+      "title": "Obra",
+      "description": "Construction project",
+      "type": "object",
+      "properties": {
+        "nome": { "type": "string" },
+        "clienteId": { "type": "string" },
+        "propostaId": { "type": "string" },
+        "tenantId": { "type": "string" }
+      },
+      "required": ["nome", "tenantId"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles"
+    },
+    "invitations/{invitationId}": {
+      "schema": "Invitation",
+      "description": "Team invitations"
+    },
+    "clientes/{clienteId}": {
+      "schema": "Cliente",
+      "description": "Clients"
+    },
+    "propostas/{propostaId}": {
+      "schema": "Proposta",
+      "description": "Proposals"
+    },
+    "obras/{obraId}": {
+      "schema": "Obra",
+      "description": "Construction projects"
+    }
+  }
+}
