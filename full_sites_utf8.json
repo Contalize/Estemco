@@ -1,0 +1,17 @@
+﻿{
+  "status": "success",
+  "result": {
+    "sites": [
+      {
+        "name": "projects/studio-6840747069-75a4c/sites/estemco",
+        "defaultUrl": "https://estemco.web.app",
+        "type": "USER_SITE"
+      },
+      {
+        "name": "projects/studio-6840747069-75a4c/sites/studio-6840747069-75a4c",
+        "defaultUrl": "https://studio-6840747069-75a4c.web.app",
+        "type": "DEFAULT_SITE"
+      }
+    ]
+  }
+}

@@ -1,14 +1,5 @@
 {
   "projects": {
-    "default": "estemco"
-  },
-  "targets": {
-    "estemco": {
-      "hosting": {
-        "estemco": [
-          "estemco"
-        ]
-      }
-    }
+    "default": "studio-6840747069-75a4c"
   }
 }
