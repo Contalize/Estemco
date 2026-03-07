@@ -1,0 +1,82 @@
+﻿{
+  "status": "success",
+  "result": [
+    {
+      "projectId": "coffee-spark-ai-barista-797b2",
+      "projectNumber": "580717820974",
+      "displayName": "Coffee Spark AI Barista",
+      "name": "projects/coffee-spark-ai-barista-797b2",
+      "resources": {
+        "hostingSite": "coffee-spark-ai-barista-797b2"
+      },
+      "state": "ACTIVE",
+      "etag": "1_602f840d-27db-44b4-a246-dd294fc9ed97"
+    },
+    {
+      "projectId": "estemco-4cb55",
+      "projectNumber": "1062357915034",
+      "displayName": "Estemco",
+      "name": "projects/estemco-4cb55",
+      "resources": {
+        "hostingSite": "estemco-4cb55"
+      },
+      "state": "ACTIVE",
+      "etag": "1_57cd961f-c544-40dd-bea9-deff108c0da5"
+    },
+    {
+      "projectId": "manoel-farmacia",
+      "projectNumber": "566371095984",
+      "displayName": "Manoel-Farmacia",
+      "name": "projects/manoel-farmacia",
+      "resources": {
+        "hostingSite": "manoel-farmacia"
+      },
+      "state": "ACTIVE",
+      "etag": "1_4edbc38e-eac0-4c77-ba54-893f2c0ce235"
+    },
+    {
+      "projectId": "planilize-e48bc",
+      "projectNumber": "658934066775",
+      "displayName": "Planilize",
+      "name": "projects/planilize-e48bc",
+      "resources": {
+        "hostingSite": "planilize-e48bc"
+      },
+      "state": "ACTIVE",
+      "etag": "1_de7196b1-6366-45c4-a684-f347e1ddabea"
+    },
+    {
+      "projectId": "portal-michelangelo",
+      "projectNumber": "907558280912",
+      "displayName": "Portal-Michelangelo",
+      "name": "projects/portal-michelangelo",
+      "resources": {
+        "hostingSite": "portal-michelangelo"
+      },
+      "state": "ACTIVE",
+      "etag": "1_00afa3d7-d81d-403b-aa44-ab03c5878c21"
+    },
+    {
+      "projectId": "studio-5105712300-4e5a7",
+      "projectNumber": "879687921556",
+      "displayName": "Firebase app",
+      "name": "projects/studio-5105712300-4e5a7",
+      "resources": {
+        "hostingSite": "studio-5105712300-4e5a7"
+      },
+      "state": "ACTIVE",
+      "etag": "1_8270a726-53c7-416e-b271-ac5b78ef28df"
+    },
+    {
+      "projectId": "studio-6840747069-75a4c",
+      "projectNumber": "44307931083",
+      "displayName": "Estemco-FireStudio",
+      "name": "projects/studio-6840747069-75a4c",
+      "resources": {
+        "hostingSite": "studio-6840747069-75a4c"
+      },
+      "state": "ACTIVE",
+      "etag": "1_8bd880c4-7e0d-4bf5-a2bd-99581b7dc9f4"
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isSameTenant(tenantId) {
+      return getUserData().tenantId == tenantId;
+    }
+    
+    function isAdmin() {
+      return getUserData().role == 'Administrador';
+    }
+    
+    function isAdminOrComercial() {
+      return getUserData().role in ['Administrador', 'Comercial'];
+    }
+    
+    function isAdminOrEngineer() {
+      return getUserData().role in ['Administrador', 'Engenheiro'];
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin());
+    }
+
+    match /empresas/{tenantId} {
+      allow read, write: if isAuthenticated() && 
+        isSameTenant(tenantId) && isAdmin();
+    }
+
+    match /clientes/{docId} {
+      allow read: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId);
+      allow create: if isAuthenticated() && 
+        isAdminOrComercial() && 
+        isSameTenant(request.resource.data.tenantId);
+      allow update, delete: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId) && 
+        isAdminOrComercial();
+    }
+
+    match /propostas/{docId} {
+      allow read: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId);
+      allow create: if isAuthenticated() && 
+        isAdminOrComercial() && 
+        isSameTenant(request.resource.data.tenantId);
+      allow update: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId) && 
+        isAdminOrComercial();
+    }
+
+    match /obras/{docId} {
+      allow read: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId);
+      allow create: if isAuthenticated() && 
+        isAdminOrComercial() && 
+        isSameTenant(request.resource.data.tenantId);
+      allow update: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId) && 
+        isAdminOrEngineer();
+    }
+
+    match /dre_obras/{docId} {
+      allow read: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId);
+      allow create, update: if isAuthenticated() && 
+        isSameTenant(request.resource.data.tenantId);
+    }
+
+    match /boletins/{docId} {
+      allow read: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId);
+      allow create: if isAuthenticated() && 
+        isAdminOrEngineer() && 
+        isSameTenant(request.resource.data.tenantId);
+      allow update: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId) && 
+        isAdmin();
+    }
+
+    match /medicoes/{docId} {
+      allow read: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId);
+      allow create, update: if isAuthenticated() && 
+        isSameTenant(request.resource.data.tenantId) && 
+        isAdminOrComercial();
+    }
+
+    match /anotacoes_obra/{docId} {
+      allow read: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId);
+      allow create: if isAuthenticated() && 
+        isSameTenant(request.resource.data.tenantId);
+      allow delete: if isAuthenticated() && 
+        (resource.data.createdByUserId == request.auth.uid || 
+         isAdmin());
+    }
+
+    match /invitations/{docId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isAdmin();
+      allow delete: if isAuthenticated() && 
+        (isAdmin() || 
+         resource.data.email == request.auth.token.email);
+    }
+  }
+}
