@@ -1,0 +1,42 @@
+﻿src/components/steps/Step1TipoServico.tsx(2,10): error TS2305: Module '"../../../types"' has no exported member 'TipoServico'.
+src/components/steps/Step3ItensServico.tsx(2,10): error TS2305: Module '"../../../types"' has no exported member 'TipoServico'.
+src/components/steps/Step3ItensServico.tsx(2,37): error TS2305: Module '"../../../types"' has no exported member 'ItemFuroSPT'.
+src/components/steps/Step3ItensServico.tsx(3,34): error TS2307: Cannot find module '../../../types/propostaForm' or its corresponding type declarations.
+src/components/steps/Step4Revisao.tsx(2,34): error TS2307: Cannot find module '../../../types/propostaForm' or its corresponding type declarations.
+src/components/steps/Step4Revisao.tsx(4,24): error TS2305: Module '"../../../types"' has no exported member 'ItemFuroSPT'.
+src/pages/NovaProposta.tsx(3,34): error TS2307: Cannot find module '../../types/propostaForm' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(4,10): error TS2305: Module '"../../types"' has no exported member 'TipoServico'.
+src/pages/NovaProposta.tsx(5,31): error TS2307: Cannot find module '../../services/propostaService' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(7,34): error TS2307: Cannot find module './steps/Step1TipoServico' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(8,34): error TS2307: Cannot find module './steps/Step2ClienteObra' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(9,35): error TS2307: Cannot find module './steps/Step3ItensServico' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(10,30): error TS2307: Cannot find module './steps/Step4Revisao' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(115,54): error TS2322: Type '{ message: string; type: "success" | "error"; onClose: () => void; }' is not assignable to type 'IntrinsicAttributes & { message: string; variant?: "default" | "destructive" | "success"; onClose: () => void; }'.
+  Property 'type' does not exist on type 'IntrinsicAttributes & { message: string; variant?: "default" | "destructive" | "success"; onClose: () => void; }'.
+src/pages/Orcamentos.tsx(7,31): error TS2307: Cannot find module '../components/orcamentos/OrcamentoForm' or its corresponding type declarations.
+src/pages/Propostas.tsx(63,22): error TS2820: Type '"rascunho"' is not assignable to type 'StatusProposta'. Did you mean '"RASCUNHO"'?
+src/pages/Propostas.tsx(89,51): error TS2339: Property 'tipo' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(91,42): error TS2339: Property 'numero' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(91,98): error TS2339: Property 'clienteNome' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(163,91): error TS2339: Property 'numero' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(164,104): error TS2339: Property 'clienteNome' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(166,129): error TS2339: Property 'tipo' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(167,48): error TS2339: Property 'tipo' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(170,112): error TS2339: Property 'enderecoObra' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(174,44): error TS2339: Property 'criadoEm' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(174,66): error TS2339: Property 'criadoEm' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(184,46): error TS2367: This comparison appears to be unintentional because the types 'StatusProposta' and '"aprovada"' have no overlap.
+src/pages/Propostas.tsx(184,73): error TS2367: This comparison appears to be unintentional because the types 'StatusProposta' and '"recusada"' have no overlap.
+src/pages/Propostas.tsx(185,121): error TS2339: Property 'numero' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(189,47): error TS2367: This comparison appears to be unintentional because the types 'StatusProposta' and '"rascunho"' have no overlap.
+src/pages/Propostas.tsx(189,74): error TS2367: This comparison appears to be unintentional because the types 'StatusProposta' and '"expirada"' have no overlap.
+src/pages/Propostas.tsx(189,101): error TS2367: This comparison appears to be unintentional because the types 'StatusProposta' and '"recusada"' have no overlap.
+src/pages/Propostas.tsx(190,120): error TS2339: Property 'numero' does not exist on type 'Proposta'.
+src/services/propostaService.ts(6,20): error TS2305: Module '"../../types"' has no exported member 'TipoServico'.
+src/services/propostaService.ts(25,35): error TS2339: Property 'tipo' does not exist on type 'Omit<Proposta, "id" | "status" | "criadoEm" | "numero" | "atualizadoEm">'.
+src/services/propostaService.ts(31,42): error TS2339: Property 'tipo' does not exist on type 'Omit<Proposta, "id" | "status" | "criadoEm" | "numero" | "atualizadoEm">'.
+src/services/propostaService.ts(34,46): error TS2339: Property 'numero' does not exist on type 'Proposta'.
+src/services/propostaService.ts(35,52): error TS2339: Property 'numero' does not exist on type 'Proposta'.
+src/services/propostaService.ts(40,46): error TS2339: Property 'tipo' does not exist on type 'Omit<Proposta, "id" | "status" | "criadoEm" | "numero" | "atualizadoEm">'.
+src/utils/calculosProposta.ts(27,43): error TS2307: Cannot find module '../types' or its corresponding type declarations.
+types.ts(438,14): error TS2304: Cannot find name 'ItemFuroSPT'.

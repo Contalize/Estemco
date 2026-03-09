@@ -66,9 +66,9 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
 
   const handleSearchCnpj = async () => {
     if (!documento || documento.length < 14) return;
-    
+
     const cleanCnpj = documento.replace(/\D/g, '');
-    
+
     if (cleanCnpj.length !== 14) {
       alert('CNPJ inválido. Digite 14 números.');
       return;
@@ -78,9 +78,9 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
     try {
       const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
       if (!response.ok) throw new Error('CNPJ não encontrado');
-      
+
       const data = await response.json();
-      
+
       setValue('nomeRazaoSocial', data.razao_social || '');
       setValue('nomeFantasia', data.nome_fantasia || '');
       setValue('cep', data.cep || '');
@@ -91,10 +91,10 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
       setValue('cidade', data.municipio || '');
       setValue('uf', data.uf || '');
       setValue('telefone', data.ddd_telefone_1 || '');
-      
+
       const fullAddress = `${data.logradouro || ''}, ${data.numero || ''}${data.complemento ? ' - ' + data.complemento : ''}, ${data.bairro || ''}, ${data.municipio || ''} - ${data.uf || ''}, ${data.cep || ''}`;
       setValue('enderecoFaturamento', fullAddress.replace(/^[,\s]+|[,\s]+$/g, '').replace(/,[,\s]*,/g, ','));
-      
+
     } catch (error) {
       console.error('Erro ao buscar CNPJ:', error);
       alert('Erro ao buscar CNPJ. Verifique o número e tente novamente.');
@@ -106,7 +106,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
   const handleSearchCep = async () => {
     const cepValue = watch('cep');
     if (!cepValue) return;
-    
+
     const cleanCep = cepValue.replace(/\D/g, '');
     if (cleanCep.length !== 8) return;
 
@@ -114,20 +114,20 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
     try {
       const response = await fetch(`https://brasilapi.com.br/api/cep/v1/${cleanCep}`);
       if (!response.ok) throw new Error('CEP não encontrado');
-      
+
       const data = await response.json();
-      
+
       setValue('endereco', data.street || '');
       setValue('bairro', data.neighborhood || '');
       setValue('cidade', data.city || '');
       setValue('uf', data.state || '');
-      
+
       const currentFaturamento = watch('enderecoFaturamento');
       if (!currentFaturamento) {
         const fullAddress = `${data.street || ''}, , ${data.neighborhood || ''}, ${data.city || ''} - ${data.state || ''}, ${data.cep || ''}`;
         setValue('enderecoFaturamento', fullAddress.replace(/^[,\s]+|[,\s]+$/g, '').replace(/,[,\s]*,/g, ','));
       }
-      
+
     } catch (error) {
       console.error('Erro ao buscar CEP:', error);
       alert('Erro ao buscar CEP. Verifique o número e tente novamente.');
@@ -137,10 +137,10 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-6 overflow-y-auto flex-1">
+    <div className="flex flex-col">
+      <div className="p-6">
         <form id="client-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6 pb-8">
-          
+
           {/* TIPO DE PESSOA */}
           <div className="flex gap-4 p-1 bg-slate-100 rounded-lg w-fit">
             <label className={`flex items-center gap-2 px-4 py-2 rounded-md cursor-pointer text-sm font-medium transition-colors ${tipoPessoa === 'PF' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
@@ -157,9 +157,9 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
             <div className="md:col-span-2">
               <Label>{tipoPessoa === 'PJ' ? 'CNPJ' : 'CPF'}</Label>
               <div className="flex gap-2">
-                <Input 
-                  placeholder={tipoPessoa === 'PJ' ? '00.000.000/0001-00' : '000.000.000-00'} 
-                  {...register('documento', { required: true })} 
+                <Input
+                  placeholder={tipoPessoa === 'PJ' ? '00.000.000/0001-00' : '000.000.000-00'}
+                  {...register('documento', { required: true })}
                   className="flex-1"
                 />
                 {tipoPessoa === 'PJ' && (
@@ -195,7 +195,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
               <Input placeholder="(00) 00000-0000" {...register('telefone', { required: true })} />
               {errors.telefone && <span className="text-xs text-red-500 mt-1">Campo obrigatório</span>}
             </div>
-            
+
             <div className="md:col-span-2">
               <Label>Endereço de Faturamento / Cobrança</Label>
               <Input placeholder="Endereço completo para emissão de NF e Contratos" {...register('enderecoFaturamento', { required: true })} />
@@ -246,22 +246,22 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
           <div className="pt-6 border-t border-slate-200">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Contatos da Empresa</h3>
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm" 
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 className="h-8 text-xs gap-1"
                 onClick={() => appendContato({ nome: '', cargo: '', telefone: '', email: '' })}
               >
                 <Plus size={14} /> Adicionar Contato
               </Button>
             </div>
-            
+
             <div className="space-y-4">
               {contatosFields.map((field, index) => (
                 <Card key={field.id} className="p-4 bg-slate-50 border-slate-200 relative">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => removeContato(index)}
                     className="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"
                   >
@@ -304,8 +304,8 @@ export const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSubmit, o
 
         </form>
       </div>
-      
-      <div className="border-t border-slate-200 p-4 bg-slate-50 flex justify-end gap-3 rounded-b-2xl shrink-0">
+
+      <div className="border-t border-slate-200 p-4 bg-slate-50 flex justify-end gap-3 md:rounded-b-2xl sticky bottom-0 z-10">
         <Button variant="outline" onClick={onCancel}>Cancelar</Button>
         <Button type="submit" form="client-form" disabled={isSaving} className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white">
           {isSaving && <Loader2 size={16} className="animate-spin" />}

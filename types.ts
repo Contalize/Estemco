@@ -89,12 +89,14 @@ export enum Tab {
   CALENDAR = 'calendar',
   CONFIG = 'config',
   QUOTE = 'quote',
+  PROPOSALS = 'PROPOSALS',
   SETTINGS = 'settings',
   CLIENTS = 'clients',
   TEAM = 'team',
   BOLETIM = 'boletim',
   DRE = 'dre',
-  FINANCES = 'finances'
+  FINANCES = 'finances',
+  MACHINES = 'machines'
 }
 
 export interface Medicao {
@@ -201,11 +203,46 @@ export interface ItemProposta {
   unidade: string;
   qtdeFuros: number;
   profundidade: number;
+  // Campos de HCM / ESC:
+  diametro?: number;
+  quantidadeEstacas?: number;
+  comprimentoUnitario?: number;
+  // Campos gerais:
   totalMetros: number;
   quantidade: number;
   valorUnitario: number;
+  precoMetro?: number;
   origem: OrigemEquipamento;
+  subtotal?: number;
   total: number;
+}
+
+export type CategoriaParada =
+  | 'CONCRETO_BOMBA'
+  | 'EQUIPAMENTO'
+  | 'TERRENO_GEOLOGIA'
+  | 'CLIMA'
+  | 'GESTAO_LOGISTICA'
+  | 'MAO_DE_OBRA'
+  | 'FATORES_EXTERNOS'
+  | 'OUTROS';
+
+export interface ParadaBDO {
+  id: string;
+  categoria: CategoriaParada;
+  motivo: string;       // subMotivo específico
+  descricao: string;    // texto livre de detalhe
+  horaInicio: string;
+  horaFim: string;
+  cobravel: boolean;    // true = cobrado do contratante; false = custo da Estemco
+}
+
+export interface CaminhaoBetoneiraBDO {
+  id: string;
+  numeroFaturamento: string;
+  volumeM3: number;
+  horaChegada: string;
+  horaSaida: string;
 }
 
 export interface Boletim {
@@ -222,19 +259,27 @@ export interface Boletim {
   estacasExecutadas: number;
   metrosExecutados: number;
 
+  // Horários Globais do Dia
+  horaInicioObra?: string;
+  horaFimObra?: string;
+
   // Consumo
   dieselConsumidoLitros: number;
   precoLitroDieselReferencia?: number; // Snapshot do preço no momento do registro
 
-  // Horas
   horasProducao: number;
   horasParada: number;
   motivoParada: string;
+  descricaoParada?: string;
+  paradas?: ParadaBDO[];
 
   // Concreto
   concretoConsumidoM3: number;
   concretoTeoricoM3: number;
   overbreakPct: number;
+  horaChegadaBetoneira?: string; // Legado mantido por precaução
+  horaTerminoBetoneira?: string;
+  caminhoesBetoneira?: CaminhaoBetoneiraBDO[];
 
   // Custos
   custoDiesel: number;
@@ -281,15 +326,24 @@ export interface DREObra {
   updatedAt: any;
 }
 
+export type TipoServico = 'HCM' | 'ESC' | 'SPT';
+
 export interface Proposta {
-  id: string;
+  id?: string;
+  numero: string;             // ex: "5013-HCM", "4916-ESC", "2038-26"
+  tipo: TipoServico;
+  status: StatusProposta;
   clienteId: string;
+  clienteNome: string;
+  tenantId: string;
   obraLocal: string;
+  enderecoObra: any;
   data: Date;
   itens: ItemProposta[];
   valorTotal: number;
   pagamento: CondicaoPagamento;
-  status: StatusProposta;
+  criadoEm?: any;
+  atualizadoEm?: any;
 }
 
 export interface PermissionsMap {
@@ -314,3 +368,148 @@ export interface AuditLog {
   tenantId: string;
   createdAt: any; // Timestamp
 }
+
+export interface DiametroPreco {
+  mm: number;
+  preco: number;
+}
+
+export interface ParcelaConfig {
+  nome: string;
+  percentual: number;
+  prazo: string;
+}
+
+export interface ConfigHCM {
+  diametros: DiametroPreco[];
+  faturamentoMinimoDiario: number;
+  mobilizacaoPadrao: number;
+  comprimentoMinimo: number;
+  acrescimoFimDeSemana: number;
+  horarioPadraoInicio: string;
+  horarioPadraoFim: string;
+  condicoesPagamento: ParcelaConfig[];
+  multaDesistencia: number;
+  multaAtrasoContratante: number;
+  multaInadimplencia: number;
+  jurosMensais: number;
+  multaDescumprimento: number;
+  indiceCorrecao: string;
+  causasFaturamentoMinimo: string[];
+  causasIsencaoMinimo: string[];
+}
+
+export interface ConfigESC {
+  diametros: DiametroPreco[];
+  faturamentoMinimoObra: number;
+  taxaHoraParada: number;
+  mobilizacaoPadrao: number;
+  acrescimoFimDeSemana: number;
+  condicoesPagamento: ParcelaConfig[];
+  contratoSaidaDiariaPadrao: {
+    metrosContratadosPorDia: number;
+    precoExcedentePorMetro: number;
+  };
+}
+
+export interface ConfigSPT {
+  precoPorMetro: number;
+  mobilizacaoLaboratorio: number;
+  artPadrao: number;
+  metragemMinimaTotal: number;
+  metrosPorFuroEstimado: number;
+  prazoEntregaRelatorio: string;
+  aplicarFaturamentoMinimoAcima2Furos: boolean;
+  sinalAgendamento: number;
+  maximoParcelasCartao: number;
+}
+
+export interface Equipamento {
+  id?: string;
+  tenantId: string;
+  nome: string;
+  tipo: 'HCM' | 'ESC' | 'SPT';
+  marcaModelo: string;
+  anoFabricacao?: string;
+  capacidadeTorque?: string;
+  horimetroInicial?: string;
+  operadorPadrao?: string;
+  status: 'Ativo' | 'Em manutenção' | 'Inativo';
+  operadorResponsavel?: string;
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface ItemEstacaHCM {
+  id: string;
+  diametro: 300 | 400 | 500; // mm
+  quantidadeEstacas: number;
+  comprimentoMedio: number; // metros por estaca
+  metrosTotal: number; // calculado: qtd × comprimento
+  precoPorMetro: number; // buscado da config pelo diâmetro
+  subtotal: number; // calculado: metros × preco
+}
+
+export interface ItemEstacaESC {
+  id: string;
+  diametro: 250 | 300 | 400 | 500 | 600; // mm ou cm
+  quantidadeEstacas: number;
+  comprimentoMedio: number;
+  metrosTotal: number;
+  precoPorMetro: number;
+  subtotal: number;
+}
+
+export interface ItemFuroSPT {
+  id: string;
+  numeroFuro: number;
+  profundidade: number;
+}
+
+export interface Orcamento {
+  id?: string;
+  numero: string; // Ex: "5016-HCM", "4917-ESC", "2040-26"
+  tipoEquipamento: 'HCM' | 'ESC' | 'SPT';
+  clienteId: string;
+  clienteNome: string;
+  enderecoObra: string;
+  cidadeObra: string;
+  status: 'rascunho' | 'enviado' | 'aprovado' | 'reprovado';
+
+  // HCM
+  itensHCM?: ItemEstacaHCM[];
+  mobilizacaoHCM?: number;
+
+  // ESC
+  modalidadeESC?: ModalidadeESC;
+  itensESC?: ItemEstacaESC[];
+  mobilizacaoESC?: number;
+  metrosDiarioESC?: number; // para modalidade saida_diaria
+  valorFechadoESC?: number; // para modalidade preco_fechado
+  diasObraESC?: number;
+
+  // SPT
+  furosSPT?: ItemFuroSPT[]; // Changed from FuroSPT[] to ItemFuroSPT[]
+  mobilizacaoSPT?: number;
+  artSPT?: number;
+
+  // Totais calculados
+  subtotalItens: number;
+  totalMobilizacao: number;
+  totalArt?: number;
+  totalGeral: number;
+
+  // Condições comerciais
+  condicoesPagemento: string;
+  prazoExecucao: string;
+  validadeProposta: number; // dias
+  observacoes?: string;
+
+  // Controle
+  criadoEm: any;
+  atualizadoEm: any;
+  empresaId: string;
+}
+
+export type ModalidadeESC = 'por_metro' | 'preco_fechado' | 'saida_diaria';
+export type TipoEquipamento = 'HCM' | 'ESC' | 'SPT';

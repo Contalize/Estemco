@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Users, Plus, Search, Loader2, Building2, User, X, CheckCircle2, ChevronLeft, ChevronRight, Edit2, Trash2, MoreVertical, MoreHorizontal } from 'lucide-react';
-import { collection, addDoc, updateDoc, doc, where } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, deleteDoc, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useCollection } from '../src/firebase/firestore/use-collection';
 import { useAuth } from '../contexts/AuthContext';
@@ -90,6 +90,20 @@ export const Clients: React.FC = () => {
       alert('Erro ao salvar o cliente.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteClient = async (clienteId: string, clienteNome: string) => {
+    if (!window.confirm(`Excluir o cliente "${clienteNome}"?\n\nEsta ação não pode ser desfeita.`)) return;
+
+    try {
+      await deleteDoc(doc(db, 'clientes', clienteId));
+      setToastMessage(`Cliente "${clienteNome}" excluído.`);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } catch (error: any) {
+      console.error('Erro ao excluir cliente:', error);
+      alert(`Erro ao excluir: ${error.message}`);
     }
   };
 
@@ -191,7 +205,7 @@ export const Clients: React.FC = () => {
                           <DropdownMenuItem onClick={() => handleEditClient(cliente)} className="flex items-center gap-2">
                             <Edit2 size={14} /> Editar Cliente
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50">
+                          <DropdownMenuItem onClick={() => handleDeleteClient(cliente.id, cliente.nomeRazaoSocial)} className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50">
                             <Trash2 size={14} /> Excluir Cliente
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -239,21 +253,28 @@ export const Clients: React.FC = () => {
 
       {/* MODAL NOVO CLIENTE */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col animate-in zoom-in-95 duration-200 max-h-[90vh]">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white rounded-t-2xl shrink-0">
-              <h2 className="text-xl font-bold text-slate-900">{editingClient ? 'Editar Cliente' : 'Novo Cliente'}</h2>
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 backdrop-blur-sm p-0 md:p-4 md:items-center overflow-y-auto">
+          <div className="w-full md:max-w-3xl bg-white md:rounded-2xl shadow-2xl flex flex-col animate-in zoom-in-95 duration-200 min-h-screen md:min-h-0 md:max-h-[92vh]">
+
+            {/* Header fixo */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white md:rounded-t-2xl shrink-0 sticky top-0 z-10">
+              <h2 className="text-xl font-bold text-slate-900">
+                {editingClient ? 'Editar Cliente' : 'Novo Cliente'}
+              </h2>
               <Button variant="ghost" className="h-8 w-8 p-0 rounded-full" onClick={handleCloseModal}>
                 <X size={18} />
               </Button>
             </div>
 
-            <ClientForm
-              initialData={editingClient || undefined}
-              onSubmit={onSubmit}
-              onCancel={handleCloseModal}
-              isSaving={isSaving}
-            />
+            {/* Conteúdo com scroll */}
+            <div className="flex-1 overflow-y-auto">
+              <ClientForm
+                initialData={editingClient || undefined}
+                onSubmit={onSubmit}
+                onCancel={handleCloseModal}
+                isSaving={isSaving}
+              />
+            </div>
           </div>
         </div>
       )}

@@ -8,9 +8,11 @@ import { db } from '../lib/firebase';
 import { Card, Label, Input, Select, Button, Textarea, Toast } from './ui';
 import { Plus, Trash2, Save, X, Search, Calendar as CalendarIcon, Drill, DollarSign, Users, Fuel, Activity, MapPin, Loader2, CloudRain, Sun, Cloud, Image as ImageIcon, FileText } from 'lucide-react';
 import { GlobalConfig, ConstructionSite, Boletim, DREObra } from '../types';
+import { formatarData } from '../src/utils/formatDate';
 
 interface BoletimDiarioProps {
   config: GlobalConfig;
+  initialObraId?: string | null;
 }
 
 type FormEquipe = { cargo: string; nome: string; custoDia: number };
@@ -34,17 +36,27 @@ type BoletimFormData = {
   // Consumos
   dieselConsumidoLitros: number;
   concretoConsumidoM3: number;
+  horaChegadaBetoneira: string;
+  horaTerminoBetoneira: string;
 
   // Equipe & Condições
   equipe: FormEquipe[];
   condicaoClima: string;
   condicaoSolo: string;
 
+  // Horários Globais
+  horaInicioObra: string;
+  horaFimObra: string;
+
+  // Arrays Dinâmicos
+  paradas: { categoria: string; motivo: string; descricao: string; horaInicio: string; horaFim: string; cobravel: boolean }[];
+  caminhoes: { numeroFaturamento: string; volumeM3: number; horaChegada: string; horaSaida: string }[];
+
   // Obs
   observacoes: string;
 };
 
-export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config }) => {
+export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config, initialObraId }) => {
   const { user, profile } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'obra' | 'producao' | 'consumos' | 'obs'>('obra');
@@ -52,9 +64,19 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config }) => {
   const [toastMessage, setToastMessage] = useState('');
 
   // List Filters
-  const [filtroObraId, setFiltroObraId] = useState<string>('');
+  const [filtroObraId, setFiltroObraId] = useState<string>(initialObraId || '');
   const [filtroDataInit, setFiltroDataInit] = useState<string>('');
   const [filtroDataEnd, setFiltroDataEnd] = useState<string>('');
+
+  // When initialObraId changes (coming from ProjectWorkflow navigation), pre-select it
+  useEffect(() => {
+    if (initialObraId) {
+      setFiltroObraId(initialObraId);
+      setValue('obraId', initialObraId);
+      setIsModalOpen(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialObraId]);
 
   // Live Data
   const [companyData, setCompanyData] = useState<any>(null);
@@ -107,12 +129,26 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config }) => {
       condicaoClima: 'Ensolarado',
       condicaoSolo: 'Normal',
       motivoParada: '',
-      descricaoParada: ''
+      descricaoParada: '',
+      horaChegadaBetoneira: '',
+      horaTerminoBetoneira: '',
+      horaInicioObra: '',
+      horaFimObra: '',
+      paradas: [],
+      caminhoes: []
     }
   });
 
   const { fields: equipeFields, append: appendEquipe, remove: removeEquipe } = useFieldArray({
     control, name: 'equipe'
+  });
+
+  const { fields: paradasFields, append: appendParada, remove: removeParada } = useFieldArray({
+    control, name: 'paradas'
+  });
+
+  const { fields: caminhoesFields, append: appendCaminhao, remove: removeCaminhao } = useFieldArray({
+    control, name: 'caminhoes'
   });
 
   // -------- WATCH & CALCULATIONS --------
@@ -190,6 +226,19 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config }) => {
         condicaoClima: data.condicaoClima || 'Ensolarado',
         condicaoSolo: data.condicaoSolo || 'Normal',
         observacoes: data.observacoes,
+        horaInicioObra: data.horaInicioObra,
+        horaFimObra: data.horaFimObra,
+        descricaoParada: data.descricaoParada,
+        paradas: (data.paradas || []).map((p, i) => ({
+          id: `p${i}`,
+          categoria: p.categoria as any,
+          motivo: p.motivo,
+          descricao: p.descricao,
+          horaInicio: p.horaInicio,
+          horaFim: p.horaFim,
+          cobravel: p.cobravel,
+        })),
+        caminhoesBetoneira: (data.caminhoes || []).map((c, i) => ({ id: `bt${i + 1}`, ...c })),
 
         createdByUserId: user.uid,
         createdAt: Timestamp.now()
@@ -375,7 +424,7 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config }) => {
                 boletinsList.map(b => (
                   <tr key={b.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4 font-semibold text-slate-900 border-l-4 border-indigo-500">
-                      {b.data?.toDate ? b.data.toDate().toLocaleDateString() : new Date(b.data).toLocaleDateString()}
+                      {formatarData(b.data)}
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm font-bold block">{b.clienteNome}</span>
@@ -469,6 +518,21 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config }) => {
                       </div>
                     </Card>
 
+                    {/* Horários do dia */}
+                    <Card className="p-5 border-slate-200 bg-white shadow-sm">
+                      <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-100 pb-2"><CalendarIcon size={18} /> Horários do Dia</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label>Hora de Início da Obra</Label>
+                          <Input type="time" {...register('horaInicioObra')} className="h-10" />
+                        </div>
+                        <div>
+                          <Label>Hora de Encerramento</Label>
+                          <Input type="time" {...register('horaFimObra')} className="h-10" />
+                        </div>
+                      </div>
+                    </Card>
+
                     <Card className="p-5 border-slate-200 bg-white shadow-sm space-y-4">
                       <div className="flex justify-between items-end border-b border-slate-100 pb-3">
                         <div>
@@ -549,27 +613,105 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config }) => {
                       </div>
 
                       {wHorasParada > 0 && (
-                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg space-y-3 animate-in slide-in-from-top-2">
+                        <div className="space-y-3 animate-in slide-in-from-top-2">
                           <div>
-                            <Label className="text-amber-900">Motivo da Paralisação</Label>
+                            <Label className="text-amber-900">Motivo Geral da Paralisação</Label>
                             <Select {...register('motivoParada')} className="border-amber-300 bg-white shadow-sm text-sm">
                               <option value="">Classificação da quebra...</option>
                               <option value="Aguardando Concreto">Caminhão: Aguardando Concreto</option>
                               <option value="Chuva">Clima: Chuva Forte / Vento</option>
-                              <option value="Manunteção Equipamento">Equipamento: Manutenção / Quebra</option>
+                              <option value="Manutenção Equipamento">Equipamento: Manutenção / Quebra</option>
                               <option value="Aguardando Liberação Cliente">Cliente: Aguardando Liberação Frente</option>
                               <option value="Outro">Outro (Descrever)</option>
                             </Select>
-                          </div>
-                          <div>
-                            <Label className="text-amber-900">Descreva o motivo</Label>
-                            <Textarea {...register('descricaoParada')} className="bg-white min-h-[60px] text-xs" placeholder="Descreva pormenores do problema." />
                           </div>
                           <div className="text-right text-xs font-bold text-amber-700">
                             * Custo da hora Parada gerado no DRE: {formatCurrency(custoHorasParadas)}
                           </div>
                         </div>
                       )}
+
+                      {/* PARADAS DINÂMICAS */}
+                      <div className="pt-4 border-t border-slate-100">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-sm font-bold text-slate-700">📋 Registro de Paradas / Ocorrências</span>
+                          <Button type="button" size="sm" onClick={() => appendParada({ categoria: 'CONCRETO_BOMBA', motivo: '', descricao: '', horaInicio: '', horaFim: '', cobravel: true })} className="bg-amber-600 text-white text-xs h-8 px-3 rounded-md">
+                            + Registrar Ocorrência
+                          </Button>
+                        </div>
+                        {paradasFields.length === 0 ? (
+                          <div className="text-center py-5 border border-dashed border-amber-200 text-amber-600 text-xs rounded-lg bg-amber-50/50">
+                            Nenhuma ocorrência registrada. Qualquer parada, atraso ou evento relevante deve ser registrado aqui.
+                          </div>
+                        ) : paradasFields.map((field, index) => {
+                          const catVal = (field as any).categoria || 'CONCRETO_BOMBA';
+                          const SUBMOTIVOS: Record<string, string[]> = {
+                            CONCRETO_BOMBA: ['Atraso na chegada da 1ª BT', 'Buraco na concretagem (atraso entre BTs)', 'BT atolada no canteiro', 'Caminhão rejeitado (Slump/Vencido)', 'Falta de volume de concreto', 'Bomba quebrada ou atrasada', 'Estouro de mangote / Tubulação entupida', 'Fila de caminhões (espera excessiva)'],
+                            EQUIPAMENTO: ['Quebra mecânica / hidráulica', 'Rompimento de mangueira hidráulica', 'Falha no motor', 'Manutenção preventiva / lubrificação', 'Quebra de ferramenta de corte (trado/haste)', 'Falha no computador de bordo / sensor', 'Abastecimento de diesel', 'Montagem / desmontagem / deslocamento'],
+                            TERRENO_GEOLOGIA: ['Encontro de matacão / rocha', 'Desmoronamento do furo', 'Excesso de barro / lama', 'Interferência subterrânea não mapeada', 'Terreno alagado / lençol freático alto'],
+                            CLIMA: ['Chuva forte', 'Risco de descargas atmosféricas (raios)'],
+                            GESTAO_LOGISTICA: ['Obra paralisada pelo engenheiro/cliente', 'Aguardando liberação de frente de serviço', 'Aguardando topografia (marcação de furos)', 'Aguardando armação (gaiolas de aço)', 'Restrição de horário (condomínio/prefeitura)', 'Falta de água / energia no canteiro'],
+                            MAO_DE_OBRA: ['Acidente de trabalho / incidente', 'Falta de funcionário essencial', 'DDS / Treinamento de segurança'],
+                            FATORES_EXTERNOS: ['Embargo da obra (Prefeitura/MTE/CREA)', 'Reclamação de vizinho (ruído/vibração)', 'Furto ou roubo no canteiro', 'Greve / manifestação', 'Acidente de trânsito com fornecedor'],
+                            OUTROS: ['Outros (especificar abaixo)'],
+                          };
+                          return (
+                            <div key={field.id} className="p-3 mb-2 bg-white rounded-lg border border-slate-200 shadow-sm space-y-3">
+                              <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-black text-slate-700">Parada #{index + 1}</span>
+                                  <label className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full cursor-pointer select-none ${field.cobravel ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                    <input type="checkbox" {...register(`paradas.${index}.cobravel`)} className="sr-only" />
+                                    {field.cobravel ? '💰 Cobrável do Cliente' : '⚠️ Custo Estemco'}
+                                  </label>
+                                </div>
+                                <button type="button" onClick={() => removeParada(index)} className="text-red-400 hover:text-red-600 p-1"><Trash2 size={14} /></button>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2">
+                                <div>
+                                  <Label>Categoria</Label>
+                                  <Select {...register(`paradas.${index}.categoria`)} className="text-xs h-9">
+                                    <option value="CONCRETO_BOMBA">🔩 Concreto / Bomba</option>
+                                    <option value="EQUIPAMENTO">🔧 Equipamento HCM</option>
+                                    <option value="TERRENO_GEOLOGIA">🪨 Terreno / Geologia</option>
+                                    <option value="CLIMA">🌧️ Clima</option>
+                                    <option value="GESTAO_LOGISTICA">📋 Gestão / Logística</option>
+                                    <option value="MAO_DE_OBRA">👷 Mão de Obra / Segurança</option>
+                                    <option value="FATORES_EXTERNOS">🚨 Fatores Externos / Força Maior</option>
+                                    <option value="OUTROS">❓ Outros</option>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <Label>Início</Label>
+                                  <Input type="time" {...register(`paradas.${index}.horaInicio`)} className="h-9 text-xs" />
+                                </div>
+                                <div>
+                                  <Label>Retorno</Label>
+                                  <Input type="time" {...register(`paradas.${index}.horaFim`)} className="h-9 text-xs" />
+                                </div>
+                              </div>
+                              <div>
+                                <Label>Ocorrência Específica</Label>
+                                <Select {...register(`paradas.${index}.motivo`)} className="text-xs h-9">
+                                  <option value="">Selecione o evento...</option>
+                                  {(SUBMOTIVOS[catVal] || SUBMOTIVOS.OUTROS).map(m => (
+                                    <option key={m} value={m}>{m}</option>
+                                  ))}
+                                </Select>
+                              </div>
+                              <div>
+                                <Label>Observação {catVal === 'OUTROS' ? '(obrigatório)' : '(opcional)'}</Label>
+                                <Textarea
+                                  {...register(`paradas.${index}.descricao`, { required: catVal === 'OUTROS' })}
+                                  className="min-h-[44px] text-xs"
+                                  placeholder={catVal === 'OUTROS' ? 'Descreva o que aconteceu (obrigatório)...' : 'Detalhes adicionais...'}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
                     </Card>
                   </div>
 
@@ -594,14 +736,50 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config }) => {
                     </Card>
 
                     <Card className="p-5 border-slate-200 bg-white shadow-sm">
-                      <div className="flex justify-between border-b border-slate-100 pb-2 mb-4">
-                        <h4 className="font-bold text-slate-800 flex items-center gap-2"><Activity size={18} /> Abastecimento de Concreto</h4>
-                        <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-bold">Furo Referência: Ø {(diamPrincipalM * 100).toFixed(0)}cm</span>
+                      <div className="flex justify-between border-b border-slate-100 pb-2 mb-3">
+                        <h4 className="font-bold text-slate-800 flex items-center gap-2"><Activity size={18} /> Caminhões Betoneira</h4>
+                        <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-bold">Furo Ref: Ø {(diamPrincipalM * 100).toFixed(0)}cm</span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4 mb-5">
+                      <div className="space-y-3 mb-3">
+                        {caminhoesFields.length === 0 ? (
+                          <div className="text-center py-4 border border-dashed text-slate-400 text-xs rounded-lg">Nenhum caminhão registrado. Clique no botão abaixo para adicionar.</div>
+                        ) : caminhoesFields.map((field, index) => (
+                          <div key={field.id} className="p-3 bg-indigo-50 rounded-lg border border-indigo-200 space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs font-black text-indigo-800">BT {String(index + 1).padStart(2, '0')}</span>
+                              <button type="button" onClick={() => removeCaminhao(index)} className="text-red-400 hover:text-red-600 p-1"><Trash2 size={14} /></button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <Label>Chegada</Label>
+                                <Input type="time" {...register(`caminhoes.${index}.horaChegada`)} className="h-9 text-xs" />
+                              </div>
+                              <div>
+                                <Label>Saída / Liberação</Label>
+                                <Input type="time" {...register(`caminhoes.${index}.horaSaida`)} className="h-9 text-xs" />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <Label>Volume (m³)</Label>
+                                <Input type="number" step="0.5" {...register(`caminhoes.${index}.volumeM3`, { valueAsNumber: true })} className="h-9 text-xs" placeholder="7.5" />
+                              </div>
+                              <div>
+                                <Label>Nº Remessa / NF</Label>
+                                <Input {...register(`caminhoes.${index}.numeroFaturamento`)} className="h-9 text-xs" placeholder="Ex: 001234" />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <Button type="button" size="sm" onClick={() => appendCaminhao({ horaChegada: '', horaSaida: '', volumeM3: 0, numeroFaturamento: '' })} className="w-full bg-indigo-600 text-white h-9">
+                        + Registrar Betoneira
+                      </Button>
+
+                      <div className="grid grid-cols-2 gap-4 mt-5 pt-4 border-t border-slate-100">
                         <div>
-                          <Label>Concreto Recebido / Consumido M³</Label>
+                          <Label>Concreto Total Recebido M³ *</Label>
                           <Input type="number" step="0.1" {...register('concretoConsumidoM3', { valueAsNumber: true })} className="h-12 font-bold text-lg border-indigo-300 ring-4 ring-indigo-50" />
                         </div>
                         <div>

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { ConstructionSite, Tab } from '../types';
-import { Building2, FileText, MapPin, Hash, Activity, Search, Plus, X, AlertTriangle, LayoutGrid, List, ChevronRight, CheckCircle2, DollarSign, Calendar as CalendarIcon, Clock, MoreVertical, MessageSquare, Briefcase, Ruler } from 'lucide-react';
+import { Building2, FileText, MapPin, Hash, Activity, Search, Plus, X, AlertTriangle, LayoutGrid, List, ChevronRight, CheckCircle2, DollarSign, Calendar as CalendarIcon, Clock, MoreVertical, MessageSquare, Briefcase, Ruler, Receipt, Trash2 } from 'lucide-react';
 import { useCollection } from '../src/firebase/firestore/use-collection';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../lib/firebase';
 import { logAudit } from '../src/utils/audit';
 import { collection, query, where, orderBy, addDoc, updateDoc, doc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { Card, Button, Input, Select, Textarea, Label, Toast } from './ui';
+import { formatarData } from '../src/utils/formatDate';
 
 interface ProjectWorkflowProps {
   onNavigate?: (tab: string, state?: any) => void;
@@ -21,7 +22,7 @@ export const ProjectWorkflow: React.FC<ProjectWorkflowProps> = ({ onNavigate }) 
 
   // Sheet State
   const [selectedObraId, setSelectedObraId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'resumo' | 'boletins' | 'medicoes' | 'anotacoes'>('resumo');
+  const [activeTab, setActiveTab] = useState<'resumo' | 'boletins' | 'medicoes' | 'anotacoes' | 'despesas'>('resumo');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
@@ -162,7 +163,7 @@ export const ProjectWorkflow: React.FC<ProjectWorkflowProps> = ({ onNavigate }) 
               <div className="border-t border-slate-100 pt-3 flex justify-between items-center">
                 <span className="text-xs text-slate-400 flex items-center gap-1">
                   <CalendarIcon size={12} />
-                  {obra.dataInicio ? new Date(obra.dataInicio).toLocaleDateString() : 'Não iniciada'}
+                  {obra.dataInicio ? formatarData(obra.dataInicio) : 'Não iniciada'}
                 </span>
                 <Button variant="ghost" size="sm" className="h-6 text-xs text-indigo-600 px-2 flex items-center gap-1">
                   Ver <ChevronRight size={12} />
@@ -325,6 +326,7 @@ export const ProjectWorkflow: React.FC<ProjectWorkflowProps> = ({ onNavigate }) 
                   { id: 'resumo', label: 'Resumo da Obra', icon: <Activity size={16} /> },
                   { id: 'boletins', label: 'Boletins Diários', icon: <FileText size={16} /> },
                   { id: 'medicoes', label: 'Medições (Faturamento)', icon: <DollarSign size={16} /> },
+                  { id: 'despesas', label: 'Despesas', icon: <Receipt size={16} /> },
                   { id: 'anotacoes', label: 'Anotações', icon: <MessageSquare size={16} /> }
                 ].map(tab => (
                   <button
@@ -415,6 +417,11 @@ export const ProjectWorkflow: React.FC<ProjectWorkflowProps> = ({ onNavigate }) 
                   <ProjectSheetAnotacoes obraId={selectedObra.id} />
                 )}
 
+                {/* DESPESAS TAB */}
+                {activeTab === 'despesas' && (
+                  <ProjectSheetDespesas obraId={selectedObra.id} tenantId={profile?.tenantId} />
+                )}
+
               </div>
             </div>
           </div>
@@ -484,7 +491,7 @@ const ProjectSheetBoletins = ({ obraId }: { obraId: string }) => {
           <h3 className="text-sm font-semibold text-slate-900">Histórico de BDOs</h3>
           <p className="text-xs text-slate-500">Boletins diários enviados pelo campo.</p>
         </div>
-        <Button size="sm" onClick={() => (window as any).dispatchEvent(new CustomEvent('NAVIGATE_TO', { detail: 'boletim' }))} className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
+        <Button size="sm" onClick={() => (window as any).dispatchEvent(new CustomEvent('NAVIGATE_TO', { detail: { tab: 'boletim', obraId } }))} className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
           <Plus size={14} /> Lançar Novo
         </Button>
       </div>
@@ -500,7 +507,7 @@ const ProjectSheetBoletins = ({ obraId }: { obraId: string }) => {
           {bdosOrdenados.map(b => (
             <Card key={b.id} className="p-4 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <span className="text-xs font-semibold text-slate-500 uppercase flex items-center gap-1.5"><CalendarIcon size={12} /> {new Date(b.data).toLocaleDateString()}</span>
+                <span className="text-xs font-semibold text-slate-500 uppercase flex items-center gap-1.5"><CalendarIcon size={12} /> {formatarData(b.data)}</span>
                 <p className="font-bold text-slate-900 mt-1">{b.metrosExecutados}m executados</p>
                 <span className="text-xs text-slate-600 block mt-0.5">Op: {b.operador || '-'} &bull; {b.dieselConsumidoLitros}L consumidos</span>
               </div>
@@ -568,7 +575,7 @@ const ProjectSheetMedicoes = ({ obra }: { obra: ConstructionSite }) => {
           <Card key={m.id} className="p-4 bg-white flex justify-between items-center border-l-4 border-l-emerald-500">
             <div>
               <p className="font-bold text-slate-900">R$ {Number(m.valor).toFixed(2)}</p>
-              <span className="text-xs text-slate-500">Vence em: {new Date(m.dataVencimento).toLocaleDateString()}</span>
+              <span className="text-xs text-slate-500">Vence em: {formatarData(m.dataVencimento)}</span>
             </div>
             <span className={`px-2 py-1 rounded-full text-xs font-semibold ${m.status === 'Pago' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
               {m.status}
@@ -632,4 +639,124 @@ const ProjectSheetAnotacoes = ({ obraId }: { obraId: string }) => {
       </div>
     </div>
   )
+};
+
+const ProjectSheetDespesas = ({ obraId, tenantId }: { obraId: string, tenantId?: string }) => {
+  const { user } = useAuth();
+  const { data: despesas, isLoading } = useCollection<any>('despesas', [where('obraId', '==', obraId)]);
+  const [isAdding, setIsAdding] = useState(false);
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const [formData, setFormData] = useState({ tipo: 'Concreto', descricao: '', fornecedor: '', valor: 0, data: todayStr, numeroNf: '' });
+
+  const handleCreate = async () => {
+    if (!tenantId || !user) return;
+    if (formData.valor <= 0) return alert('Valor deve ser maior que zero.');
+    try {
+      await addDoc(collection(db, 'despesas'), {
+        ...formData,
+        obraId,
+        tenantId,
+        createdAt: serverTimestamp(),
+        createdByUserId: user.uid
+      });
+      setIsAdding(false);
+      setFormData({ tipo: 'Concreto', descricao: '', fornecedor: '', valor: 0, data: todayStr, numeroNf: '' });
+    } catch (e) { console.error(e); alert('Erro ao salvar despesa.'); }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Excluir esta despesa?')) {
+      await deleteDoc(doc(db, 'despesas', id));
+    }
+  };
+
+  if (isLoading) return <div className="p-12 text-center text-slate-500">Carregando despesas...</div>;
+
+  const total = despesas.reduce((acc, d) => acc + Number(d.valor), 0);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center bg-white p-4 rounded-lg border border-slate-200">
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900">Despesas da Obra</h3>
+          <p className="text-xs text-slate-500">Notas fiscais e custos avulsos.</p>
+        </div>
+        <Button size="sm" onClick={() => setIsAdding(!isAdding)} className="bg-slate-900 hover:bg-slate-800 text-white gap-2">
+          {isAdding ? <X size={14} /> : <Plus size={14} />} {isAdding ? 'Cancelar' : 'Lançar Despesa'}
+        </Button>
+      </div>
+
+      {isAdding && (
+        <Card className="p-4 bg-slate-50 border-slate-200 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Tipo</Label>
+              <Select value={formData.tipo} onChange={e => setFormData({ ...formData, tipo: e.target.value })}>
+                <option value="Concreto">Concreto</option>
+                <option value="Diesel">Diesel</option>
+                <option value="Manutenção">Manutenção</option>
+                <option value="Aço">Aço</option>
+                <option value="Alimentação">Alimentação</option>
+                <option value="Outros">Outros</option>
+              </Select>
+            </div>
+            <div>
+              <Label>Valor (R$)</Label>
+              <Input type="number" step="0.01" value={formData.valor || ''} onChange={e => setFormData({ ...formData, valor: parseFloat(e.target.value) })} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Data</Label>
+              <Input type="date" value={formData.data} onChange={e => setFormData({ ...formData, data: e.target.value })} />
+            </div>
+            <div>
+              <Label>Fornecedor</Label>
+              <Input type="text" value={formData.fornecedor} onChange={e => setFormData({ ...formData, fornecedor: e.target.value })} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Nº NF / Recibo</Label>
+              <Input type="text" value={formData.numeroNf} onChange={e => setFormData({ ...formData, numeroNf: e.target.value })} />
+            </div>
+            <div>
+              <Label>Descrição</Label>
+              <Input type="text" value={formData.descricao} onChange={e => setFormData({ ...formData, descricao: e.target.value })} />
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={handleCreate} className="bg-emerald-600 hover:bg-emerald-700 text-white">Salvar Lançamento</Button>
+          </div>
+        </Card>
+      )}
+
+      {despesas.length === 0 && !isAdding ? (
+        <div className="text-center p-8 bg-white rounded-lg border border-dashed border-slate-300">
+          <Receipt size={32} className="mx-auto text-slate-300 mb-3" />
+          <p className="text-sm text-slate-600 font-medium">Nenhuma despesa lançada nesta obra.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {despesas.map((d: any) => (
+            <Card key={d.id} className="p-4 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-l-4 border-l-rose-500">
+              <div>
+                <span className="text-xs font-semibold text-slate-500 uppercase flex items-center gap-1.5"><CalendarIcon size={12} /> {formatarData(d.data)} - {d.tipo}</span>
+                <p className="font-bold text-slate-900 mt-1">{d.descricao || d.fornecedor || 'Despesa Lançada'}</p>
+                {d.numeroNf && <span className="text-xs text-slate-600 block mt-0.5">NF: {d.numeroNf}</span>}
+              </div>
+              <div className="text-right flex items-center gap-4">
+                <p className="text-sm font-bold text-rose-600">R$ {Number(d.valor).toFixed(2)}</p>
+                <Button variant="ghost" size="sm" onClick={() => handleDelete(d.id)} className="text-slate-400 hover:text-red-600 px-2"><Trash2 size={16} /></Button>
+              </div>
+            </Card>
+          ))}
+          <div className="flex justify-end p-4 bg-slate-100 rounded border border-slate-200 mt-4">
+            <span className="text-sm font-bold text-slate-700">Total Despesas Acumuladas: <span className="text-rose-600">R$ {total.toFixed(2)}</span></span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };

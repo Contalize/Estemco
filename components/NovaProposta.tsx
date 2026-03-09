@@ -3,6 +3,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { pdf } from '@react-pdf/renderer';
 import ProposalPDF from './ProposalPDF';
 import { Plus, FileText, X, Check, Search, Calendar as CalendarIcon, Building2, Drill, DollarSign, FileSignature, Loader2, Trash2, Scale, MoreVertical, MoreHorizontal, Edit2, PlayCircle, CheckCircle2, Download, Send, Copy, AlertCircle, Eye, ArrowLeft } from 'lucide-react';
+import { formatarData } from '../src/utils/formatDate';
 
 
 import { propostasService, PropostaData } from '../services/propostasService';
@@ -16,7 +17,10 @@ import { DREObra, Tab } from '../types';
 import { logAudit } from '../src/utils/audit';
 
 interface NovaPropostaProps {
-  onNavigate?: (tab: Tab) => void;
+  onNavigate?: (tab: any) => void;
+  editPropostaId?: string | null;
+  autoOpenModal?: boolean;
+  onModalHandled?: () => void;
 }
 
 // --- TYPES ---
@@ -74,7 +78,7 @@ type ProposalFormData = {
 };
 
 // --- MAIN COMPONENT ---
-export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate }) => {
+export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editPropostaId: externalEditId, autoOpenModal, onModalHandled }) => {
   const { user, profile } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [proposals, setProposals] = useState<PropostaData[]>([]);
@@ -114,7 +118,7 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate }) => {
       inicioPrevisto: new Date().toISOString().split('T')[0],
       validadeDias: 15,
       prazoExecucao: 30,
-      servicos: [{ tipoEstaca: '', diametro: '', quantidade: 1, metragemPrevista: 0, precoMetro: 0 }],
+      servicos: [{ tipoEstaca: 'HCM', diametro: '', quantidade: 1, metragemPrevista: 0, precoMetro: 0 }],
       mobilizacao: 0,
       taxaAgua: 0,
       horaParada: 500,
@@ -133,6 +137,31 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate }) => {
       mesmoEnderecoCliente: true
     }
   });
+
+  // Auto-open modal when navigated externally (e.g., "Nova Proposta" from sidebar)
+  useEffect(() => {
+    if (autoOpenModal) {
+      if (externalEditId) {
+        // Find proposal to edit - needs proposals to be loaded
+        carregarPropostas().then(() => {
+          // handleOpenModal will be called after carregarPropostas finishes
+        });
+      } else {
+        handleOpenModal();
+      }
+      if (onModalHandled) onModalHandled();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenModal]);
+
+  // When externalEditId changes, load that proposal for editing
+  useEffect(() => {
+    if (externalEditId && proposals.length > 0) {
+      const prop = proposals.find(p => p.id === externalEditId);
+      if (prop) handleOpenModal(prop);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalEditId, proposals.length]);
 
   const { fields: clausulasFields, append: appendClausula, remove: removeClausula } = useFieldArray({
     control,
@@ -854,7 +883,7 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate }) => {
                       </td>
                       <td className="px-6 py-4 text-slate-600">{prop.cliente}</td>
                       <td className="px-6 py-4 text-slate-600">
-                        {new Date(prop.dataEmissao).toLocaleDateString('pt-BR')}
+                        {formatarData(prop.dataEmissao)}
                       </td>
                       <td className="px-6 py-4">{getStatusBadge(propStatus)}</td>
                       <td className="px-6 py-4 text-right font-medium text-slate-900">

@@ -1,0 +1,13 @@
+﻿src/components/orcamentos/engines/ESCEngine.tsx(2,57): error TS2307: Cannot find module '../../../types' or its corresponding type declarations.
+src/components/orcamentos/engines/ESCEngine.tsx(4,46): error TS2307: Cannot find module '../../ui' or its corresponding type declarations.
+src/components/orcamentos/engines/HCMEngine.tsx(2,42): error TS2307: Cannot find module '../../../types' or its corresponding type declarations.
+src/components/orcamentos/engines/HCMEngine.tsx(4,39): error TS2307: Cannot find module '../../ui' or its corresponding type declarations.
+src/components/orcamentos/engines/SPTEngine.tsx(2,36): error TS2307: Cannot find module '../../../types' or its corresponding type declarations.
+src/components/orcamentos/engines/SPTEngine.tsx(4,38): error TS2307: Cannot find module '../../ui' or its corresponding type declarations.
+src/components/orcamentos/OrcamentoForm.tsx(4,8): error TS2307: Cannot find module '../../types' or its corresponding type declarations.
+src/components/orcamentos/OrcamentoForm.tsx(5,25): error TS2307: Cannot find module '../../contexts/AuthContext' or its corresponding type declarations.
+src/components/orcamentos/OrcamentoForm.tsx(7,20): error TS2307: Cannot find module '../../lib/firebase' or its corresponding type declarations.
+src/components/orcamentos/OrcamentoForm.tsx(15,59): error TS2307: Cannot find module '../ui' or its corresponding type declarations.
+src/hooks/useConfiguracoes.ts(3,20): error TS2307: Cannot find module '../lib/firebase' or its corresponding type declarations.
+src/hooks/useConfiguracoes.ts(4,49): error TS2307: Cannot find module '../types' or its corresponding type declarations.
+src/lib/numeracao.ts(2,20): error TS2307: Cannot find module './firebase' or its corresponding type declarations.

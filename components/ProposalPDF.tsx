@@ -2,6 +2,7 @@ import React from 'react';
 import { Page, Text, View, Document, StyleSheet, Image, Font } from '@react-pdf/renderer';
 import { PropostaData } from '../services/propostasService';
 import { numberToWords } from '../src/utils/numberToWords';
+import { formatarData } from '../src/utils/formatDate';
 
 // Register fonts
 Font.register({
@@ -122,17 +123,16 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({ proposta, cliente, empresa })
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
   };
 
-  const formatDateString = (dtStr: string) => {
+  const formatDateString = (dtStr: any) => {
     if (!dtStr) return '';
-    const date = new Date(dtStr);
+    const date = dtStr?.toDate ? dtStr.toDate() : (dtStr && typeof dtStr === 'object' && 'seconds' in dtStr) ? new Date(dtStr.seconds * 1000) : new Date(dtStr);
+    if (isNaN(date.getTime())) return 'Data Inválida';
     const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
     return `${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
   };
 
-  const formatDateSimple = (dtStr: string) => {
-    if (!dtStr) return '';
-    const date = new Date(dtStr);
-    return date.toLocaleDateString('pt-BR');
+  const formatDateSimple = (dtStr: any) => {
+    return formatarData(dtStr);
   };
 
   const dataEmissaoExtenso = formatDateString(proposta.dataEmissao || new Date().toISOString());

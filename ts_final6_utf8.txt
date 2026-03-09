@@ -1,0 +1,17 @@
+﻿src/components/steps/Step3ItensServico.tsx(3,34): error TS2307: Cannot find module '../../../types/propostaForm' or its corresponding type declarations.
+src/components/steps/Step4Revisao.tsx(2,34): error TS2307: Cannot find module '../../../types/propostaForm' or its corresponding type declarations.
+src/hooks/useConfiguracoes.ts(4,49): error TS2307: Cannot find module '../types' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(4,29): error TS2307: Cannot find module '../types' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(5,31): error TS2307: Cannot find module '../../services/propostaService' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(7,34): error TS2307: Cannot find module './steps/Step1TipoServico' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(8,34): error TS2307: Cannot find module './steps/Step2ClienteObra' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(9,35): error TS2307: Cannot find module './steps/Step3ItensServico' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(10,30): error TS2307: Cannot find module './steps/Step4Revisao' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(115,54): error TS2322: Type '{ message: string; type: "success" | "error"; onClose: () => void; }' is not assignable to type 'IntrinsicAttributes & { message: string; variant?: "default" | "destructive" | "success"; onClose: () => void; }'.
+  Property 'type' does not exist on type 'IntrinsicAttributes & { message: string; variant?: "default" | "destructive" | "success"; onClose: () => void; }'.
+src/pages/Orcamentos.tsx(5,27): error TS2307: Cannot find module '../types' or its corresponding type declarations.
+src/pages/Orcamentos.tsx(7,31): error TS2307: Cannot find module '../components/orcamentos/OrcamentoForm' or its corresponding type declarations.
+src/pages/Propostas.tsx(5,42): error TS2307: Cannot find module '../types' or its corresponding type declarations.
+src/utils/calculosProposta.ts(50,121): error TS2339: Property 'metrosTotal' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(91,95): error TS2339: Property 'metrosTotal' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(103,125): error TS2339: Property 'metrosTotal' does not exist on type 'ItemProposta'.

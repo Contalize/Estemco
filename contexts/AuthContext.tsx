@@ -83,10 +83,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // (which rely on getTenantId()) don't reject everything.
             import('firebase/firestore').then(({ setDoc }) => {
               const defaultProfile: UserProfile = {
-                role: 'Administrador',
+                role: 'Engenheiro',
                 tenantId: `tenant_${currentUser.uid}`,
                 nome: currentUser.displayName || currentUser.email?.split('@')[0] || 'Usuário',
-                permissoes: defaultPermissions['Administrador']
+                permissoes: defaultPermissions['Engenheiro']
               };
               setDoc(docRef, defaultProfile).then(() => {
                 setProfile(defaultProfile);

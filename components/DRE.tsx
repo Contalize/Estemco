@@ -8,6 +8,7 @@ import { FileText, Download, TrendingUp, TrendingDown, Clock, Activity, AlertCir
 import { ConstructionSite, DREObra, GlobalConfig } from '../types';
 import { Page, Text, View, Document, StyleSheet, pdf } from '@react-pdf/renderer';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
+import { formatarData } from '../src/utils/formatDate';
 
 interface DREProps {
   config: GlobalConfig;
@@ -430,7 +431,7 @@ export const DRE: React.FC<DREProps> = ({ config }) => {
                   {obra?.statusObra}
                 </Badge>
                 <div className="text-slate-300 text-sm flex items-center gap-1">
-                  <Calendar size={14} /> Início: {obra?.dataInicio ? new Date(obra.dataInicio.seconds * 1000).toLocaleDateString() : 'N/D'}
+                  <Calendar size={14} /> Início: {obra?.dataInicio ? formatarData(obra.dataInicio) : 'N/D'}
                 </div>
               </div>
               <h2 className="text-3xl font-black text-white">{obra?.clienteNome}</h2>

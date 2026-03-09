@@ -40,7 +40,7 @@ type CompanySettings = {
   textoTermoAceite: string;
 };
 
-export const Settings: React.FC = () => {
+export const Settings: React.FC<{ onNavigate?: (tab: any) => void }> = ({ onNavigate }) => {
   const [activeTab, setActiveTab] = useState<'dados' | 'equipamentos' | 'textos'>('dados');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -284,55 +284,23 @@ export const Settings: React.FC = () => {
 
               {/* TAB: EQUIPAMENTOS E CUSTOS */}
               <div className={activeTab === 'equipamentos' ? 'block space-y-6' : 'hidden'}>
-                <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <h3 className="text-lg font-medium text-slate-900">Equipamentos Cadastrados</h3>
-                    <p className="text-sm text-slate-500">Gerencie a frota e os custos operacionais para cálculo do DRE.</p>
-                  </div>
-                  <Button type="button" onClick={() => setIsEquipmentModalOpen(true)} className="gap-2">
-                    <Plus size={16} /> Adicionar Equipamento
-                  </Button>
+                <div className="rounded-xl border-2 border-dashed border-slate-200 p-8 text-center">
+                  <Drill size={40} className="mx-auto mb-4 text-slate-300" />
+                  <h3 className="text-lg font-semibold text-slate-800 mb-2">Gerencie os Equipamentos em um só lugar</h3>
+                  <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
+                    O cadastro de máquinas, perfuratrizes e equipamentos operacionais é gerenciado na página <strong>Máquinas e Equipamentos</strong>. Clique abaixo para ir.
+                  </p>
+                  {onNavigate ? (
+                    <Button type="button" onClick={() => onNavigate('machines')} className="gap-2 bg-amber-600 hover:bg-amber-700 text-white">
+                      <Drill size={16} /> Ir para Máquinas e Equipamentos
+                    </Button>
+                  ) : (
+                    <p className="text-xs text-slate-400">Acesse pelo menu lateral: <strong>Equipamentos</strong></p>
+                  )}
                 </div>
-
-                <div className="border border-slate-200 rounded-lg overflow-hidden">
-                  <table className="w-full text-sm text-left">
-                    <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
-                      <tr>
-                        <th className="px-4 py-3 font-medium">Equipamento</th>
-                        <th className="px-4 py-3 font-medium">Diâmetros Suportados</th>
-                        <th className="px-4 py-3 font-medium">Custo Médio/Hora</th>
-                        <th className="px-4 py-3 font-medium">Status</th>
-                        <th className="px-4 py-3 font-medium text-right">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {equipamentos.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
-                            Nenhum equipamento cadastrado.
-                          </td>
-                        </tr>
-                      ) : (
-                        equipamentos.map((eq, index) => (
-                          <tr key={eq.id} className="bg-white hover:bg-slate-50 cursor-pointer group">
-                            <td className="px-4 py-3 font-medium text-slate-900">{eq.nome}</td>
-                            <td className="px-4 py-3 text-slate-600">{eq.diametros}</td>
-                            <td className="px-4 py-3 text-slate-600">R$ {eq.custoHora?.toFixed(2)}</td>
-                            <td className="px-4 py-3">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${eq.status === 'Ativo' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-800'}`}>
-                                {eq.status}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              <Button variant="action" className="opacity-0 group-hover:opacity-100 transition-opacity" title="Remover Equipamento" onClick={() => removeEquipamento(index)}>
-                                <Trash2 size={16} className="text-red-500" />
-                              </Button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="text-sm font-semibold text-blue-800 mb-1">Predefinições para Cálculo de DRE</h4>
+                  <p className="text-xs text-blue-700 mb-3">Os custos de hora parada, taxa de diesel e mão de obra clássicos estão disponíveis na aba <strong>Dados da Empresa</strong> acima.</p>
                 </div>
               </div>
 

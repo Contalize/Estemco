@@ -1,0 +1,86 @@
+﻿src/components/orcamentos/engines/ESCEngine.tsx(2,36): error TS2305: Module '"../../../../types"' has no exported member 'ModalidadeESC'.
+src/components/orcamentos/engines/SPTEngine.tsx(35,62): error TS2339: Property 'profundidade' does not exist on type 'FuroSPT'.
+src/components/orcamentos/engines/SPTEngine.tsx(71,69): error TS2339: Property 'numero' does not exist on type 'FuroSPT'.
+src/components/orcamentos/engines/SPTEngine.tsx(75,17): error TS2322: Type 'FuroSPT | { id: string; numero: number; profundidade: number; }' is not assignable to type 'FuroSPT'.
+  Object literal may only specify known properties, and 'id' does not exist in type 'FuroSPT'.
+src/components/orcamentos/engines/SPTEngine.tsx(75,17): error TS2353: Object literal may only specify known properties, and 'id' does not exist in type 'FuroSPT'.
+src/components/orcamentos/engines/SPTEngine.tsx(83,40): error TS2339: Property 'id' does not exist on type 'FuroSPT'.
+src/components/orcamentos/engines/SPTEngine.tsx(87,43): error TS2339: Property 'id' does not exist on type 'FuroSPT'.
+src/components/orcamentos/engines/SPTEngine.tsx(111,47): error TS2339: Property 'id' does not exist on type 'FuroSPT'.
+src/components/orcamentos/engines/SPTEngine.tsx(112,106): error TS2339: Property 'numero' does not exist on type 'FuroSPT'.
+src/components/orcamentos/engines/SPTEngine.tsx(116,57): error TS2339: Property 'profundidade' does not exist on type 'FuroSPT'.
+src/components/orcamentos/engines/SPTEngine.tsx(117,82): error TS2339: Property 'id' does not exist on type 'FuroSPT'.
+src/components/orcamentos/engines/SPTEngine.tsx(122,164): error TS2339: Property 'id' does not exist on type 'FuroSPT'.
+src/components/orcamentos/OrcamentoForm.tsx(3,16): error TS2724: '"../../../types"' has no exported member named 'TipoEquipamento'. Did you mean 'Equipamento'?
+src/components/orcamentos/OrcamentoForm.tsx(3,33): error TS2305: Module '"../../../types"' has no exported member 'ModalidadeESC'.
+src/components/orcamentos/OrcamentoPDF.tsx(3,27): error TS2307: Cannot find module '../../types' or its corresponding type declarations.
+src/components/steps/Step1TipoServico.tsx(2,10): error TS2305: Module '"../../../types"' has no exported member 'TipoServico'.
+src/components/steps/Step3ItensServico.tsx(2,10): error TS2305: Module '"../../../types"' has no exported member 'TipoServico'.
+src/components/steps/Step3ItensServico.tsx(2,37): error TS2305: Module '"../../../types"' has no exported member 'ItemFuroSPT'.
+src/components/steps/Step3ItensServico.tsx(3,34): error TS2307: Cannot find module '../../../types/propostaForm' or its corresponding type declarations.
+src/components/steps/Step3ItensServico.tsx(31,21): error TS2367: This comparison appears to be unintentional because the types 'keyof ItemProposta' and '"diametro"' have no overlap.
+src/components/steps/Step3ItensServico.tsx(71,117): error TS2345: Argument of type '"diametro"' is not assignable to parameter of type 'keyof ItemProposta'.
+src/components/steps/Step3ItensServico.tsx(75,158): error TS2345: Argument of type '"quantidadeEstacas"' is not assignable to parameter of type 'keyof ItemProposta'.
+src/components/steps/Step3ItensServico.tsx(77,149): error TS2345: Argument of type '"comprimentoUnitario"' is not assignable to parameter of type 'keyof ItemProposta'.
+src/components/steps/Step3ItensServico.tsx(97,28): error TS2322: Type '{ children: string; htmlFor: string; className: string; }' is not assignable to type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+  Property 'htmlFor' does not exist on type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+src/components/steps/Step3ItensServico.tsx(161,28): error TS2322: Type '{ children: string; htmlFor: string; className: string; }' is not assignable to type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+  Property 'htmlFor' does not exist on type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+src/components/steps/Step3ItensServico.tsx(229,32): error TS2322: Type '{ children: string; htmlFor: string; className: string; }' is not assignable to type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+  Property 'htmlFor' does not exist on type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+src/components/steps/Step3ItensServico.tsx(234,32): error TS2322: Type '{ children: string; htmlFor: string; className: string; }' is not assignable to type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+  Property 'htmlFor' does not exist on type 'IntrinsicAttributes & { children: ReactNode; className?: string; }'.
+src/components/steps/Step4Revisao.tsx(2,34): error TS2307: Cannot find module '../../../types/propostaForm' or its corresponding type declarations.
+src/components/steps/Step4Revisao.tsx(4,24): error TS2305: Module '"../../../types"' has no exported member 'ItemFuroSPT'.
+src/pages/NovaProposta.tsx(2,25): error TS2307: Cannot find module '../contexts/AuthContext' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(4,29): error TS2307: Cannot find module '../types' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(7,34): error TS2307: Cannot find module './steps/Step1TipoServico' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(8,34): error TS2307: Cannot find module './steps/Step2ClienteObra' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(9,35): error TS2307: Cannot find module './steps/Step3ItensServico' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(10,30): error TS2307: Cannot find module './steps/Step4Revisao' or its corresponding type declarations.
+src/pages/NovaProposta.tsx(11,31): error TS2307: Cannot find module '../components/ui' or its corresponding type declarations.
+src/pages/Propostas.tsx(88,51): error TS2339: Property 'tipo' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(90,42): error TS2339: Property 'numero' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(90,98): error TS2339: Property 'clienteNome' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(162,91): error TS2339: Property 'numero' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(163,104): error TS2339: Property 'clienteNome' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(165,129): error TS2339: Property 'tipo' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(166,48): error TS2339: Property 'tipo' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(169,112): error TS2339: Property 'enderecoObra' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(173,44): error TS2339: Property 'criadoEm' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(173,66): error TS2339: Property 'criadoEm' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(183,46): error TS2367: This comparison appears to be unintentional because the types 'StatusProposta' and '"aprovada"' have no overlap.
+src/pages/Propostas.tsx(183,73): error TS2367: This comparison appears to be unintentional because the types 'StatusProposta' and '"recusada"' have no overlap.
+src/pages/Propostas.tsx(184,121): error TS2339: Property 'numero' does not exist on type 'Proposta'.
+src/pages/Propostas.tsx(188,47): error TS2367: This comparison appears to be unintentional because the types 'StatusProposta' and '"rascunho"' have no overlap.
+src/pages/Propostas.tsx(188,74): error TS2367: This comparison appears to be unintentional because the types 'StatusProposta' and '"expirada"' have no overlap.
+src/pages/Propostas.tsx(188,101): error TS2367: This comparison appears to be unintentional because the types 'StatusProposta' and '"recusada"' have no overlap.
+src/pages/Propostas.tsx(189,120): error TS2339: Property 'numero' does not exist on type 'Proposta'.
+src/services/propostaService.ts(6,20): error TS2305: Module '"../../types"' has no exported member 'TipoServico'.
+src/services/propostaService.ts(25,35): error TS2339: Property 'tipo' does not exist on type 'Omit<Proposta, "id" | "criadoEm" | "numero" | "atualizadoEm">'.
+src/services/propostaService.ts(31,42): error TS2339: Property 'tipo' does not exist on type 'Omit<Proposta, "id" | "criadoEm" | "numero" | "atualizadoEm">'.
+src/services/propostaService.ts(34,46): error TS2339: Property 'numero' does not exist on type 'Proposta'.
+src/services/propostaService.ts(35,52): error TS2339: Property 'numero' does not exist on type 'Proposta'.
+src/services/propostaService.ts(40,46): error TS2339: Property 'tipo' does not exist on type 'Omit<Proposta, "id" | "criadoEm" | "numero" | "atualizadoEm">'.
+src/utils/calculosProposta.ts(27,24): error TS2305: Module '"../../types"' has no exported member 'TipoServico'.
+src/utils/calculosProposta.ts(50,33): error TS2339: Property 'diametro' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(50,54): error TS2339: Property 'quantidadeEstacas' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(50,90): error TS2339: Property 'comprimentoUnitario' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(50,121): error TS2339: Property 'metrosTotal' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(50,147): error TS2339: Property 'precoMetro' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(51,25): error TS2339: Property 'subtotal' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(53,26): error TS2339: Property 'subtotal' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(91,37): error TS2339: Property 'diametro' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(91,95): error TS2339: Property 'metrosTotal' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(91,121): error TS2339: Property 'precoMetro' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(92,29): error TS2339: Property 'subtotal' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(94,30): error TS2339: Property 'subtotal' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(103,37): error TS2339: Property 'diametro' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(103,58): error TS2339: Property 'quantidadeEstacas' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(103,94): error TS2339: Property 'comprimentoUnitario' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(103,125): error TS2339: Property 'metrosTotal' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(103,151): error TS2339: Property 'precoMetro' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(104,29): error TS2339: Property 'subtotal' does not exist on type 'ItemProposta'.
+src/utils/calculosProposta.ts(106,30): error TS2339: Property 'subtotal' does not exist on type 'ItemProposta'.
+types.ts(430,19): error TS2304: Cannot find name 'ModalidadeESC'.
+types.ts(438,14): error TS2304: Cannot find name 'ItemFuroSPT'.

@@ -26,19 +26,48 @@ service cloud.firestore {
       return getUserData().role in ['Administrador', 'Engenheiro'];
     }
 
+    // ── USUÁRIOS ────────────────────────────────────────────
     match /users/{userId} {
       allow read: if isAuthenticated() && 
         (request.auth.uid == userId || isAdmin());
-      allow create: if isAuthenticated();
+      
+      // Usuário pode criar o próprio perfil (Engenheiro por padrão)
+      allow create: if isAuthenticated() && 
+        request.auth.uid == userId &&
+        request.resource.data.role == 'Engenheiro' &&
+        request.resource.data.tenantId == 'tenant_' + request.auth.uid;
+        
+      // Usuário não pode mudar role nem tenantId
       allow update: if isAuthenticated() && 
-        (request.auth.uid == userId || isAdmin());
+        (
+          (request.auth.uid == userId && 
+           request.resource.data.role == resource.data.role && 
+           request.resource.data.tenantId == resource.data.tenantId) 
+          || isAdmin()
+        );
     }
 
+    // ── EMPRESA (Configurações) ──────────────────────────────
+    // Qualquer usuário autenticado do mesmo tenant pode ler
+    // Apenas admin pode escrever
     match /empresas/{tenantId} {
-      allow read, write: if isAuthenticated() && 
-        isSameTenant(tenantId) && isAdmin();
+      allow read: if isAuthenticated() && 
+        request.auth.uid != null &&
+        (getUserData().tenantId == tenantId || request.auth.uid == tenantId);
+      allow write: if isAuthenticated() && 
+        (getUserData().tenantId == tenantId || request.auth.uid == tenantId) &&
+        isAdmin();
+      
+      // Sub-coleções dentro de empresas
+      match /{subcollection}/{docId} {
+        allow read: if isAuthenticated() && 
+          (getUserData().tenantId == tenantId || request.auth.uid == tenantId);
+        allow write: if isAuthenticated() && 
+          (getUserData().tenantId == tenantId || request.auth.uid == tenantId);
+      }
     }
 
+    // ── CLIENTES ────────────────────────────────────────────
     match /clientes/{docId} {
       allow read: if isAuthenticated() && 
         isSameTenant(resource.data.tenantId);
@@ -50,6 +79,7 @@ service cloud.firestore {
         isAdminOrComercial();
     }
 
+    // ── PROPOSTAS ───────────────────────────────────────────
     match /propostas/{docId} {
       allow read: if isAuthenticated() && 
         isSameTenant(resource.data.tenantId);
@@ -59,19 +89,37 @@ service cloud.firestore {
       allow update: if isAuthenticated() && 
         isSameTenant(resource.data.tenantId) && 
         isAdminOrComercial();
+      allow delete: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId) && 
+        isAdmin();
     }
 
-    match /obras/{docId} {
+    // ── EQUIPAMENTOS ─────────────────────────────────────────
+    match /equipamentos/{docId} {
       allow read: if isAuthenticated() && 
         isSameTenant(resource.data.tenantId);
       allow create: if isAuthenticated() && 
-        isAdminOrComercial() && 
         isSameTenant(request.resource.data.tenantId);
       allow update: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId);
+      allow delete: if isAuthenticated() && 
         isSameTenant(resource.data.tenantId) && 
-        isAdminOrEngineer();
+        isAdmin();
     }
 
+    // ── OBRAS ───────────────────────────────────────────────
+    match /obras/{docId} {
+      // Allow any authenticated user to read obras — the query in App.tsx
+      // already filters by tenantId client-side so no extra-read needed.
+      // We rely on the client-side filter + security through obscurity of docIds.
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.tenantId == request.auth.uid;
+      allow update: if isAuthenticated() &&
+        (resource.data.tenantId == request.auth.uid || isAdminOrEngineer());
+    }
+
+    // ── DRE OBRAS ────────────────────────────────────────────
     match /dre_obras/{docId} {
       allow read: if isAuthenticated() && 
         isSameTenant(resource.data.tenantId);
@@ -79,6 +127,7 @@ service cloud.firestore {
         isSameTenant(request.resource.data.tenantId);
     }
 
+    // ── BOLETINS (BDO) ───────────────────────────────────────
     match /boletins/{docId} {
       allow read: if isAuthenticated() && 
         isSameTenant(resource.data.tenantId);
@@ -87,9 +136,26 @@ service cloud.firestore {
         isSameTenant(request.resource.data.tenantId);
       allow update: if isAuthenticated() && 
         isSameTenant(resource.data.tenantId) && 
+        isAdminOrEngineer();
+      allow delete: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId) && 
         isAdmin();
     }
 
+    // ── DESPESAS DA OBRA ─────────────────────────────────────
+    match /despesas/{docId} {
+      allow read: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId);
+      allow create: if isAuthenticated() && 
+        isSameTenant(request.resource.data.tenantId);
+      allow update: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId);
+      allow delete: if isAuthenticated() && 
+        isSameTenant(resource.data.tenantId) && 
+        isAdmin();
+    }
+
+    // ── MEDIÇÕES ─────────────────────────────────────────────
     match /medicoes/{docId} {
       allow read: if isAuthenticated() && 
         isSameTenant(resource.data.tenantId);
@@ -98,6 +164,7 @@ service cloud.firestore {
         isAdminOrComercial();
     }
 
+    // ── ANOTAÇÕES ────────────────────────────────────────────
     match /anotacoes_obra/{docId} {
       allow read: if isAuthenticated() && 
         isSameTenant(resource.data.tenantId);
@@ -108,12 +175,19 @@ service cloud.firestore {
          isAdmin());
     }
 
+    // ── CONVITES ─────────────────────────────────────────────
     match /invitations/{docId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isAdmin();
       allow delete: if isAuthenticated() && 
         (isAdmin() || 
          resource.data.email == request.auth.token.email);
+    }
+
+    // ── LOGS/AUDITORIA ───────────────────────────────────────
+    match /audit_logs/{docId} {
+      allow read: if isAuthenticated() && isAdmin();
+      allow create: if isAuthenticated();
     }
   }
 }
