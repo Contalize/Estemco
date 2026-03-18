@@ -1,7 +1,7 @@
 import { db } from '../../lib/firebase';
 import {
     collection, addDoc, updateDoc, doc, serverTimestamp,
-    runTransaction, setDoc
+    runTransaction, setDoc, deleteDoc
 } from 'firebase/firestore';
 import { TipoServico, StatusProposta } from '../../types';
 import { proximoNumeroAtomico } from '../lib/numeracao';
@@ -43,4 +43,12 @@ export async function atualizarStatus(
     status: StatusProposta
 ): Promise<void> {
     await atualizarProposta(empresaId, propostaId, { status });
+}
+
+export async function excluirProposta(
+    empresaId: string,
+    propostaId: string
+): Promise<void> {
+    const docRef = doc(db, `empresas/${empresaId}/propostas`, propostaId);
+    await deleteDoc(docRef);
 }

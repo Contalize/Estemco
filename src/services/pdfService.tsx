@@ -7,14 +7,34 @@ import { FileDown } from 'lucide-react';
 import { calcularPropostaHCM, calcularPropostaESC, calcularPropostaSPT } from '../utils/calculosProposta';
 import { ItemProposta, ItemFuroSPT } from '../../types';
 
-// Utilitários de Formatação
-const formatCurrency = (valor: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+// Utilitários de Formatação com Fallbacks Rigorosos
+const formatCurrency = (valor: number | undefined | null) => {
+    if (valor === undefined || valor === null || isNaN(valor)) return 'R$ 0,00';
+    try {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+    } catch (e) {
+        return 'R$ 0,00';
+    }
 };
 
-const formatMeters = (valor: number) => {
-    if (valor === undefined || valor === null) return '0,00 m';
-    return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' m';
+const formatMeters = (valor: number | undefined | null) => {
+    if (valor === undefined || valor === null || isNaN(valor)) return '0,00 m';
+    try {
+        return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' m';
+    } catch (e) {
+        return '0,00 m';
+    }
+};
+
+const safeFormatDate = (date: any, formatStr: string) => {
+    if (!date) return 'A combinar';
+    try {
+        const d = date instanceof Date ? date : new Date(date);
+        if (isNaN(d.getTime())) return 'A combinar';
+        return format(d, formatStr, { locale: ptBR });
+    } catch (e) {
+        return 'A combinar';
+    }
 };
 
 const styles = StyleSheet.create({
@@ -215,15 +235,22 @@ interface PDFProps {
 const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
     // Cálculo de valores usando os mesmos utilitários do sistema
     let calc: any = { linhasDetalhadas: [], valorTotal: 0, valorMobilizacao: 0, valorART: 0, valorImposto: 0 };
-    if (data.tipo === 'HCM') calc = calcularPropostaHCM(data.itens as ItemProposta[], data.mobilizacao, data.faturamentoMinimo, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
-    if (data.tipo === 'ESC') calc = calcularPropostaESC(data.itens as ItemProposta[], data.mobilizacao, data.modalidadeESC, data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC, data.faturamentoMinimo, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
-    if (data.tipo === 'SPT') calc = calcularPropostaSPT(data.itens as ItemFuroSPT[], data.mobilizacao, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
+    
+    try {
+        if (data?.tipo === 'HCM') calc = calcularPropostaHCM(data.itens as ItemProposta[], data.mobilizacao || 0, data.faturamentoMinimo, data.incluirART, data.valorART || 0, data.emiteNotaFiscal, data.percentualImposto || 0);
+        if (data?.tipo === 'ESC') calc = calcularPropostaESC(data.itens as ItemProposta[], data.mobilizacao || 0, data.modalidadeESC || 'por_metro', data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC, data.faturamentoMinimo, data.incluirART, data.valorART || 0, data.emiteNotaFiscal, data.percentualImposto || 0);
+        if (data?.tipo === 'SPT') calc = calcularPropostaSPT(data.itens as ItemFuroSPT[], data.mobilizacao || 0, data.incluirART, data.valorART || 0, data.emiteNotaFiscal, data.percentualImposto || 0);
+    } catch (e) {
+        console.error("Erro no cálculo do PDF:", e);
+    }
 
-    const totalMetros = data.itens.reduce((acc, item) => acc + (item.totalMetros || item.profundidade || 0), 0);
-    const tipoTexto = data.tipo === 'HCM' ? 'HÉLICE CONTÍNUA' : data.tipo === 'ESC' ? 'ESCAVADA' : 'SPT (SONDAGEM)';
+    const totalMetros = (data?.itens || []).reduce((acc, item) => acc + (item?.totalMetros || item?.profundidade || 0), 0);
+    const tipoTexto = data?.tipo === 'HCM' ? 'HÉLICE CONTÍNUA' : data?.tipo === 'ESC' ? 'ESCAVADA' : 'SPT (SONDAGEM)';
+    const dataEmissao = safeFormatDate(new Date(), 'dd/MM/yyyy');
+    const validadeTexto = "15 dias";
 
     return (
-        <Document title={`Proposta ${data.clienteNome}`}>
+        <Document title={`Proposta ${data?.clienteNome || 'Sem Nome'}`}>
             <Page size="A4" style={styles.page}>
                 
                 {/* A. CABEÇALHO */}
@@ -237,9 +264,9 @@ const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
                     </View>
                     <View style={styles.docInfo}>
                         <Text style={styles.docTitle}>PROPOSTA DE PRESTAÇÃO DE SERVIÇO</Text>
-                        <Text style={styles.metaText}>Nº {data.tipo || '---'}-{format(new Date(), 'yyyyMMdd')}</Text>
-                        <Text style={styles.metaText}>Emitida em: {format(new Date(), 'dd/MM/yyyy')}</Text>
-                        <Text style={styles.metaText}>Validade: 15 dias</Text>
+                        <Text style={styles.metaText}>Nº {data?.tipo || '---'}-{format(new Date(), 'yyyyMMdd')}</Text>
+                        <Text style={styles.metaText}>Emitida em: {dataEmissao}</Text>
+                        <Text style={styles.metaText}>Validade: {validadeTexto}</Text>
                     </View>
                 </View>
 
@@ -249,13 +276,13 @@ const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
                     <View style={{ marginTop: 5 }}>
                         <View style={styles.row}>
                             <Text style={styles.label}>CLIENTE:</Text>
-                            <Text style={styles.value}>{data.clienteNome || '---'}</Text>
+                            <Text style={styles.value}>{data?.clienteNome || '---'}</Text>
                         </View>
                         <View style={styles.row}>
                             <Text style={styles.label}>OBRA:</Text>
                             <Text style={styles.value}>
-                                {data.enderecoObra.logradouro}, {data.enderecoObra.numero} - {data.enderecoObra.bairro}{"\n"}
-                                {data.enderecoObra.cidade} / {data.enderecoObra.estado} - CEP: {data.enderecoObra.cep}
+                                {data?.enderecoObra?.logradouro || '---'}, {data?.enderecoObra?.numero || 'S/N'} - {data?.enderecoObra?.bairro || '---'}{"\n"}
+                                {data?.enderecoObra?.cidade || '---'} / {data?.enderecoObra?.estado || '---'} - CEP: {data?.enderecoObra?.cep || '---'}
                             </Text>
                         </View>
                     </View>
@@ -272,22 +299,22 @@ const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
                             <View style={[styles.tableCol, { width: '15%' }]}><Text style={[styles.tableCell, styles.textRight]}>COMP. (m)</Text></View>
                             <View style={[styles.tableCol, { width: '15%', borderRightWidth: 0 }]}><Text style={[styles.tableCell, styles.textRight]}>TOTAL (m)</Text></View>
                         </View>
-                        {data.itens.map((item, index) => (
+                        {(data?.itens || []).map((item, index) => (
                             <View style={styles.tableRow} key={index}>
                                 <View style={[styles.tableCol, { width: '40%' }]}>
-                                    <Text style={styles.tableCell}>{item.descricao || (data.tipo === 'SPT' ? `Furo ${item.numeroFuro}` : 'Peça de fundação')}</Text>
+                                    <Text style={styles.tableCell}>{item?.descricao || (data?.tipo === 'SPT' ? `Furo ${item?.numeroFuro || (index + 1)}` : 'Peça de fundação')}</Text>
                                 </View>
                                 <View style={[styles.tableCol, { width: '15%' }]}>
-                                    <Text style={[styles.tableCell, styles.textCenter]}>{item.diametro ? `${item.diametro} mm` : '---'}</Text>
+                                    <Text style={[styles.tableCell, styles.textCenter]}>{item?.diametro ? `${item.diametro} mm` : '---'}</Text>
                                 </View>
                                 <View style={[styles.tableCol, { width: '15%' }]}>
-                                    <Text style={[styles.tableCell, styles.textCenter]}>{item.quantidadeEstacas || item.quantidade || (data.tipo === 'SPT' ? 1 : 0)}</Text>
+                                    <Text style={[styles.tableCell, styles.textCenter]}>{item?.quantidadeEstacas || item?.quantidade || (data?.tipo === 'SPT' ? 1 : 0)}</Text>
                                 </View>
                                 <View style={[styles.tableCol, { width: '15%' }]}>
-                                    <Text style={[styles.tableCell, styles.textRight]}>{formatMeters(item.comprimentoUnitario || item.profundidade || 0).replace(' m', '')}</Text>
+                                    <Text style={[styles.tableCell, styles.textRight]}>{formatMeters(item?.comprimentoUnitario || item?.profundidade || 0).replace(' m', '')}</Text>
                                 </View>
                                 <View style={[styles.tableCol, { width: '15%', borderRightWidth: 0 }]}>
-                                    <Text style={[styles.tableCell, styles.textRight]}>{formatMeters(item.totalMetros || item.profundidade || 0)}</Text>
+                                    <Text style={[styles.tableCell, styles.textRight]}>{formatMeters(item?.totalMetros || item?.profundidade || 0)}</Text>
                                 </View>
                             </View>
                         ))}
@@ -302,8 +329,8 @@ const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
                     <Text style={styles.sectionHeader}>PRAZO DE EXECUÇÃO</Text>
                     <View style={styles.executionBox}>
                         <Text style={styles.executionText}>
-                            Levando em conta o quantitativo apresentado, o prazo de execução para esta referida obra será de {data.diasExecucao || 0} dias úteis.
-                            O início das atividades está previsto para o dia {data.dataPrevistaInicio ? format(new Date(data.dataPrevistaInicio), 'dd/MM/yyyy') : 'A combinar'}.
+                            Levando em conta o quantitativo apresentado, o prazo de execução para esta referida obra será de {data?.diasExecucao || 0} dias úteis.
+                            O início das atividades está previsto para o dia {safeFormatDate(data?.dataPrevistaInicio, 'dd/MM/yyyy')}.
                         </Text>
                     </View>
                 </View>
@@ -316,7 +343,7 @@ const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
                     <Text style={styles.responsibilityItem}>• Fornecimento de toda mão-de-obra, ferramentas e equipamentos necessários para a execução dos serviços.</Text>
                     <Text style={styles.responsibilityItem}>• Fornecimento e uso obrigatório de EPIs por todos os colaboradores.</Text>
                     <Text style={styles.responsibilityItem}>• Supervisão técnica e execução rigorosa conforme as normas de engenharia vigentes.</Text>
-                    {data.incluirART && (
+                    {data?.incluirART && (
                         <Text style={styles.responsibilityItem}>• Providenciar e recolher a ART (Anotação de Responsabilidade Técnica) junto ao CREA, conforme valores descritos no investimento.</Text>
                     )}
 
@@ -333,25 +360,25 @@ const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
                     <View style={styles.investmentGrid}>
                         <View style={styles.investmentCard}>
                             <Text style={styles.cardLabel}>MOBILIZAÇÃO</Text>
-                            <Text style={styles.cardValue}>{formatCurrency(data.mobilizacao)}</Text>
+                            <Text style={styles.cardValue}>{formatCurrency(data?.mobilizacao || 0)}</Text>
                         </View>
-                        {data.incluirART && (
+                        {data?.incluirART && (
                             <View style={styles.investmentCard}>
                                 <Text style={styles.cardLabel}>TAXA ART</Text>
-                                <Text style={styles.cardValue}>{formatCurrency(data.valorART)}</Text>
+                                <Text style={styles.cardValue}>{formatCurrency(data?.valorART || 0)}</Text>
                             </View>
                         )}
                         <View style={[styles.investmentCard, styles.totalCard]}>
                             <Text style={[styles.cardLabel, { color: '#ffffff' }]}>VALOR TOTAL ESTIMADO</Text>
-                            <Text style={[styles.cardValue, { color: '#ffffff', fontSize: 12 }]}>{formatCurrency(calc.valorTotal)}</Text>
+                            <Text style={[styles.cardValue, { color: '#ffffff', fontSize: 12 }]}>{formatCurrency(calc?.valorTotal || 0)}</Text>
                         </View>
                     </View>
                     
                     <View style={{ marginTop: 15 }}>
                         <Text style={styles.label}>FATURAMENTO E IMPOSTOS:</Text>
                         <Text style={[styles.value, { marginTop: 2 }]}>
-                            {data.emiteNotaFiscal 
-                                ? `Os valores acima contemplam a emissão de Nota Fiscal de Serviços com alíquota de impostos inclusa de ${data.percentualImposto}%.`
+                            {data?.emiteNotaFiscal 
+                                ? `Os valores acima contemplam a emissão de Nota Fiscal de Serviços com alíquota de impostos inclusa de ${data?.percentualImposto || 0}%.`
                                 : "Os valores apresentados não contemplam a emissão de Nota Fiscal. Caso haja necessidade de faturamento oficial, será acrescida a carga tributária correspondente."
                             }
                         </Text>
@@ -360,9 +387,9 @@ const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
                     <View style={{ marginTop: 10 }}>
                         <Text style={styles.label}>CONDIÇÕES DE PAGAMENTO:</Text>
                         <View style={{ marginTop: 4 }}>
-                            {data.condicoesPagamento.map((cp, idx) => (
+                            {(data?.condicoesPagamento || []).map((cp, idx) => (
                                 <Text key={idx} style={{ fontSize: 8, marginBottom: 2 }}>
-                                    • {cp.descricao}: {cp.percentual}% ({formatCurrency((cp.percentual/100) * calc.valorTotal)}) — {cp.prazo} via {cp.formaPagamento.toUpperCase()}
+                                    • {cp?.descricao || 'Parcela'}: {cp?.percentual || 0}% ({formatCurrency(((cp?.percentual || 0)/100) * (calc?.valorTotal || 0))}) — {cp?.prazo || 'A combinar'} via {(cp?.formaPagamento || 'PIX').toUpperCase()}
                                 </Text>
                             ))}
                         </View>
@@ -387,7 +414,7 @@ const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
                         </View>
                         <View style={styles.signatureBox}>
                             <View style={styles.signatureLine} />
-                            <Text style={styles.signatureLabel}>{data.clienteNome || 'RESPONSÁVEL DO CLIENTE'}</Text>
+                            <Text style={styles.signatureLabel}>{data?.clienteNome || 'RESPONSÁVEL DO CLIENTE'}</Text>
                             <Text style={styles.signatureSub}>CPF/CNPJ: __________________________</Text>
                             <Text style={styles.signatureSub}>Data: ____ / ____ / ________</Text>
                         </View>
@@ -420,7 +447,7 @@ export const downloadBlob = (blob: Blob, filename: string) => {
 };
 
 export const DownloadPropostaPDF: React.FC<PDFProps> = ({ data }) => {
-    const filename = `ORC_${data.tipo || 'PROPOSTA'}_${data.clienteNome.replace(/\s+/g, '_')}.pdf`;
+    const filename = `ORC_${data?.tipo || 'PROPOSTA'}_${(data?.clienteNome || 'CLIENTE').replace(/\s+/g, '_')}.pdf`;
 
     const handleDownload = async () => {
         try {

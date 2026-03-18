@@ -8,6 +8,7 @@ import { Button, Input, Select, Toast, ConfirmDialog } from '../../components/ui
 import { FileText, Plus, Search, Eye, FileDown, Trash2, Edit, CheckCircle2 } from 'lucide-react';
 import { formatarData } from '../utils/formatDate';
 import { PDFPreviewModal } from '../../components/PDFPreviewModal';
+import { excluirProposta } from '../services/propostaService';
 
 interface PropostasListProps {
     onNavigate: (tab: any) => void;
@@ -62,7 +63,8 @@ export const Propostas: React.FC<PropostasListProps> = ({ onNavigate }) => {
             variant: 'destructive',
             onConfirm: async () => {
                 try {
-                    await deleteDoc(doc(db, 'empresas', profile!.tenantId, 'propostas', id));
+                    if (!profile?.tenantId) return;
+                    await excluirProposta(profile.tenantId, id);
                 } catch (err) {
                     alert('Erro ao excluir proposta.');
                 }

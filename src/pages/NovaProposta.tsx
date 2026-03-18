@@ -235,7 +235,7 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
                 {step === 1 && <Step1TipoServico tipo={data.tipo} onSelect={t => updateData({ tipo: t })} />}
                 {step === 2 && <Step2ClienteObra data={data} updateData={updateData} />}
                 {step === 3 && <Step3ItensServico data={data} updateData={updateData} />}
-                {step === 4 && <Step4Revisao data={data} updateData={updateData} onSave={handleSave} isSaving={isSaving} />}
+                {step === 4 && <Step4Revisao data={data} updateData={updateData} onSave={handleSave} isSaving={isSaving} onNavigate={onNavigate} />}
             </div>
 
             {/* NAVBAR BOTTOM */}
