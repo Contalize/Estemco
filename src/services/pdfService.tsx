@@ -7,175 +7,204 @@ import { FileDown } from 'lucide-react';
 import { calcularPropostaHCM, calcularPropostaESC, calcularPropostaSPT } from '../utils/calculosProposta';
 import { ItemProposta, ItemFuroSPT } from '../../types';
 
+// Utilitários de Formatação
+const formatCurrency = (valor: number) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+};
+
+const formatMeters = (valor: number) => {
+    if (valor === undefined || valor === null) return '0,00 m';
+    return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' m';
+};
+
 const styles = StyleSheet.create({
     page: {
-        padding: 40,
+        paddingTop: 30,
+        paddingBottom: 60,
+        paddingHorizontal: 40,
         fontSize: 10,
         fontFamily: 'Helvetica',
-        color: '#334155',
+        color: '#1e293b',
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        borderBottom: '1px solid #cbd5e1',
-        paddingBottom: 20,
+        borderBottom: '2px solid #1e1b4b',
+        paddingBottom: 10,
         marginBottom: 20,
     },
-    logoContainer: {
-        flexDirection: 'column',
-    },
-    companyName: {
-        fontSize: 20,
+    companyTitle: {
+        fontSize: 18,
         fontWeight: 'bold',
         color: '#1e1b4b',
     },
-    companySub: {
+    companyContact: {
+        fontSize: 7,
+        color: '#64748b',
+        marginTop: 4,
+        lineHeight: 1.4,
+    },
+    docInfo: {
+        textAlign: 'right',
+    },
+    docTitle: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#1e1b4b',
+    },
+    metaText: {
         fontSize: 8,
-        textTransform: 'uppercase',
-        letterSpacing: 1,
         color: '#64748b',
         marginTop: 2,
     },
-    headerInfo: {
-        textAlign: 'right',
-    },
-    title: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        marginBottom: 4,
-    },
-    meta: {
-        fontSize: 9,
-        color: '#64748b',
-    },
-    sectionTitle: {
-        fontSize: 10,
-        fontWeight: 'bold',
-        textTransform: 'uppercase',
-        backgroundColor: '#f8fafc',
-        padding: 6,
-        borderLeft: '4px solid #4f46e5',
-        marginBottom: 10,
-        marginTop: 15,
-    },
-    grid: {
-        flexDirection: 'row',
-        gap: 20,
+    section: {
         marginBottom: 15,
     },
-    column: {
-        flex: 1,
+    sectionHeader: {
+        fontSize: 11,
+        fontWeight: 'bold',
+        backgroundColor: '#f1f5f9',
+        padding: 5,
+        color: '#1e1b4b',
+        textTransform: 'uppercase',
+        borderLeft: '4px solid #1e1b4b',
+        marginBottom: 8,
+    },
+    row: {
+        flexDirection: 'row',
+        marginBottom: 4,
     },
     label: {
-        fontSize: 8,
         fontWeight: 'bold',
-        color: '#94a3b8',
-        textTransform: 'uppercase',
-        marginBottom: 2,
+        width: 80,
+        fontSize: 9,
+        color: '#475569',
     },
     value: {
-        fontSize: 10,
-        fontWeight: 'semibold',
+        flex: 1,
+        fontSize: 9,
     },
     table: {
-        width: 'auto',
+        width: '100%',
+        marginTop: 10,
         borderStyle: 'solid',
         borderWidth: 1,
         borderColor: '#e2e8f0',
-        borderRightWidth: 0,
-        borderBottomWidth: 0,
     },
     tableRow: {
-        margin: 'auto',
         flexDirection: 'row',
+        borderBottomColor: '#e2e8f0',
+        borderBottomWidth: 1,
+        minHeight: 24,
+        alignItems: 'center',
     },
-    tableColHeader: {
-        borderStyle: 'solid',
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
-        borderLeftWidth: 0,
-        borderTopWidth: 0,
+    tableHeader: {
         backgroundColor: '#f8fafc',
-        padding: 5,
         fontWeight: 'bold',
     },
     tableCol: {
-        borderStyle: 'solid',
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
-        borderLeftWidth: 0,
-        borderTopWidth: 0,
-        padding: 5,
+        paddingHorizontal: 5,
+        borderRightColor: '#e2e8f0',
+        borderRightWidth: 1,
     },
     tableCell: {
-        margin: 'auto',
-        fontSize: 9,
+        fontSize: 8,
     },
-    footerTable: {
-        flexDirection: 'row',
-        borderTop: '1px solid #e2e8f0',
-        backgroundColor: '#f8fafc',
-        padding: 5,
-        fontWeight: 'bold',
-    },
+    textCenter: { textAlign: 'center' },
+    textRight: { textAlign: 'right' },
+    
     executionBox: {
-        backgroundColor: '#f5f7ff',
+        backgroundColor: '#f8fafc',
         padding: 10,
-        border: '1px solid #e0e7ff',
         borderRadius: 4,
-        marginTop: 10,
+        border: '1px solid #e2e8f0',
+        marginTop: 5,
     },
     executionText: {
-        fontSize: 10,
-        color: '#1e1b4b',
+        fontSize: 9,
         lineHeight: 1.5,
     },
-    investmentRow: {
+    
+    responsibilityTitle: {
+        fontSize: 9,
+        fontWeight: 'bold',
+        color: '#1e1b4b',
+        marginTop: 8,
+        marginBottom: 4,
+        textDecoration: 'underline',
+    },
+    responsibilityItem: {
+        fontSize: 8,
+        marginLeft: 10,
+        marginBottom: 2,
+        lineHeight: 1.3,
+    },
+    
+    investmentGrid: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 15,
+        marginTop: 10,
         gap: 10,
     },
     investmentCard: {
         flex: 1,
-        padding: 8,
+        padding: 10,
         border: '1px solid #e2e8f0',
         borderRadius: 4,
-        textAlign: 'center',
+        alignItems: 'center',
     },
     totalCard: {
         backgroundColor: '#1e1b4b',
-        color: '#ffffff',
         borderColor: '#1e1b4b',
     },
-    disclaimer: {
-        fontSize: 8,
-        color: '#94a3b8',
-        marginTop: 30,
-        paddingTop: 10,
-        borderTop: '1px solid #f1f5f9',
+    cardLabel: {
+        fontSize: 7,
+        fontWeight: 'bold',
+        color: '#64748b',
+        textTransform: 'uppercase',
+        marginBottom: 4,
     },
-    signatureSection: {
-        marginTop: 50,
+    cardValue: {
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    
+    acceptanceTitle: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginTop: 30,
+        marginBottom: 15,
+    },
+    acceptanceText: {
+        fontSize: 8,
+        textAlign: 'justify',
+        lineHeight: 1.5,
+        color: '#475569',
+    },
+    signatureContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'space-around',
+        marginTop: 40,
+    },
+    signatureBox: {
+        alignItems: 'center',
+        width: 200,
     },
     signatureLine: {
-        borderTop: '1px solid #334155',
-        width: 200,
-        marginTop: 40,
-        paddingTop: 5,
-        textAlign: 'center',
+        width: '100%',
+        borderTopWidth: 1,
+        borderTopColor: '#000',
+        marginBottom: 5,
     },
-    signatureInfo: {
+    signatureLabel: {
         fontSize: 8,
+        fontWeight: 'bold',
+    },
+    signatureSub: {
+        fontSize: 7,
         color: '#64748b',
-    },
-    clause: {
-        fontSize: 8,
-        color: '#475569',
-        marginBottom: 4,
-        lineHeight: 1.4,
+        marginTop: 2,
     }
 });
 
@@ -184,153 +213,192 @@ interface PDFProps {
 }
 
 const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
-    const formatDate = (dateStr: string | undefined) => {
-        if (!dateStr) return 'A combinar';
-        try {
-            return format(new Date(dateStr), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-        } catch {
-            return dateStr;
-        }
-    };
-
+    // Cálculo de valores usando os mesmos utilitários do sistema
     let calc: any = { linhasDetalhadas: [], valorTotal: 0, valorMobilizacao: 0, valorART: 0, valorImposto: 0 };
     if (data.tipo === 'HCM') calc = calcularPropostaHCM(data.itens as ItemProposta[], data.mobilizacao, data.faturamentoMinimo, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
     if (data.tipo === 'ESC') calc = calcularPropostaESC(data.itens as ItemProposta[], data.mobilizacao, data.modalidadeESC, data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC, data.faturamentoMinimo, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
     if (data.tipo === 'SPT') calc = calcularPropostaSPT(data.itens as ItemFuroSPT[], data.mobilizacao, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
 
     const totalMetros = data.itens.reduce((acc, item) => acc + (item.totalMetros || item.profundidade || 0), 0);
+    const tipoTexto = data.tipo === 'HCM' ? 'HÉLICE CONTÍNUA' : data.tipo === 'ESC' ? 'ESCAVADA' : 'SPT (SONDAGEM)';
 
     return (
-        <Document>
+        <Document title={`Proposta ${data.clienteNome}`}>
             <Page size="A4" style={styles.page}>
-                {/* Header */}
-                <View style={styles.header}>
-                    <View style={styles.logoContainer}>
-                        <Text style={styles.companyName}>ESTEMCO</Text>
-                        <Text style={styles.companySub}>Engenharia de Fundações</Text>
-                        <Text style={{ fontSize: 7, marginTop: 10, color: '#94a3b8' }}>Rod. Capitão Barduíno, Km 131 - Socorro/SP</Text>
-                    </View>
-                    <View style={styles.headerInfo}>
-                        <Text style={styles.title}>PROPOSTA DE PRESTAÇÃO DE SERVIÇO</Text>
-                        <Text style={styles.meta}>Nº {data.tipo || '---'}-{format(new Date(), 'yyyyMMdd')}</Text>
-                        <Text style={styles.meta}>Data de emissão: {format(new Date(), 'dd/MM/yyyy')}</Text>
-                        <Text style={styles.meta}>Validade: {data.validadeProposta} dias</Text>
-                    </View>
-                </View>
-
-                {/* Identification */}
-                <View style={styles.grid}>
-                    <View style={styles.column}>
-                        <Text style={styles.label}>Cliente / Contratante</Text>
-                        <Text style={styles.value}>{data.clienteNome || '---'}</Text>
-                    </View>
-                    <View style={styles.column}>
-                        <Text style={styles.label}>Local da Obra</Text>
-                        <Text style={styles.value}>{data.enderecoObra.logradouro}, {data.enderecoObra.numero}</Text>
-                        <Text style={[styles.value, { color: '#64748b', fontSize: 9 }]}>{data.enderecoObra.bairro} - {data.enderecoObra.cidade}/{data.enderecoObra.estado}</Text>
-                    </View>
-                </View>
-
-                {/* Technical Specs */}
-                <Text style={styles.sectionTitle}>Especificações Técnicas</Text>
-                <View style={styles.table}>
-                    <View style={styles.tableRow}>
-                        <View style={[styles.tableColHeader, { width: '40%' }]}><Text style={styles.tableCell}>Descrição</Text></View>
-                        <View style={[styles.tableColHeader, { width: '15%' }]}><Text style={styles.tableCell}>Ø (mm)</Text></View>
-                        <View style={[styles.tableColHeader, { width: '15%' }]}><Text style={styles.tableCell}>Qtd</Text></View>
-                        <View style={[styles.tableColHeader, { width: '15%' }]}><Text style={styles.tableCell}>Comp. (m)</Text></View>
-                        <View style={[styles.tableColHeader, { width: '15%' }]}><Text style={styles.tableCell}>Total (m)</Text></View>
-                    </View>
-                    {data.itens.map((item, i) => (
-                        <View style={styles.tableRow} key={i}>
-                            <View style={[styles.tableCol, { width: '40%' }]}><Text style={styles.tableCell}>{item.descricao || (data.tipo === 'SPT' ? `Furo ${item.numeroFuro}` : 'Item de Serviço')}</Text></View>
-                            <View style={[styles.tableCol, { width: '15%' }]}><Text style={styles.tableCell}>{item.diametro || '---'}</Text></View>
-                            <View style={[styles.tableCol, { width: '15%' }]}><Text style={styles.tableCell}>{item.quantidadeEstacas || item.quantidade || 1}</Text></View>
-                            <View style={[styles.tableCol, { width: '15%' }]}><Text style={styles.tableCell}>{item.comprimentoUnitario || item.profundidade || 0}</Text></View>
-                            <View style={[styles.tableCol, { width: '15%' }]}><Text style={styles.tableCell}>{item.totalMetros || item.profundidade || 0}m</Text></View>
-                        </View>
-                    ))}
-                    <View style={styles.footerTable}>
-                        <Text style={{ width: '85%', textAlign: 'right', paddingRight: 10, fontSize: 8 }}>METRAGEM TOTAL ESTIMADA:</Text>
-                        <Text style={{ width: '15%', textAlign: 'left' }}>{totalMetros}m</Text>
-                    </View>
-                </View>
-
-                {/* Execution Clause */}
-                <View style={styles.executionBox}>
-                    <Text style={[styles.label, { color: '#4f46e5' }]}>Prazos de Execução</Text>
-                    <Text style={styles.executionText}>
-                        Levando em conta o quantitativo acima, o prazo de execução será de {data.diasExecucao || 0} dias úteis. 
-                        O início das atividades está previsto para o dia {formatDate(data.dataPrevistaInicio)}.
-                        {data.textoPrazoExecucao ? `\nObs: ${data.textoPrazoExecucao}` : ''}
-                    </Text>
-                </View>
-
-                {/* Investment */}
-                <Text style={styles.sectionTitle}>Investimento e Condições</Text>
-                <View style={styles.investmentRow}>
-                    <View style={styles.investmentCard}>
-                        <Text style={styles.label}>Mobilização</Text>
-                        <Text style={styles.value}>R$ {data.mobilizacao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
-                    </View>
-                    {data.incluirART && (
-                        <View style={styles.investmentCard}>
-                            <Text style={styles.label}>Taxa ART</Text>
-                            <Text style={styles.value}>R$ {data.valorART.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
-                        </View>
-                    )}
-                    {data.emiteNotaFiscal && (
-                        <View style={styles.investmentCard}>
-                            <Text style={styles.label}>Impostos ({data.percentualImposto}%)</Text>
-                            <Text style={[styles.value, { color: '#dc2626' }]}>R$ {calc.valorImposto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
-                        </View>
-                    )}
-                    <View style={[styles.investmentCard, styles.totalCard]}>
-                        <Text style={[styles.label, { color: '#ffffff', opacity: 0.8 }]}>Valor Total Final</Text>
-                        <Text style={[styles.value, { fontSize: 12 }]}>R$ {calc.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
-                    </View>
-                </View>
-
-                <View style={{ marginTop: 10 }}>
-                    <Text style={styles.label}>Formas de Pagamento:</Text>
-                    {data.condicoesPagamento.map((cp, i) => (
-                        <Text key={i} style={{ fontSize: 8, marginTop: 2 }}>
-                            • {cp.descricao}: {cp.percentual}% (R$ {((cp.percentual/100)*calc.valorTotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}) — {cp.prazo} via {cp.formaPagamento.toUpperCase()}
+                
+                {/* A. CABEÇALHO */}
+                <View style={styles.header} fixed>
+                    <View>
+                        <Text style={styles.companyTitle}>ESTEMCO - ENGENHARIA EM FUNDAÇÕES</Text>
+                        <Text style={styles.companyContact}>
+                            Rod. Capitão Barduíno, Km 131 Margem da SP 008 - Socorro/SP{"\n"}
+                            Tel: (19) 3895-2630 / WhatsApp: (19) 9.9703.8028 | contato@estemco.com.br
                         </Text>
-                    ))}
+                    </View>
+                    <View style={styles.docInfo}>
+                        <Text style={styles.docTitle}>PROPOSTA DE PRESTAÇÃO DE SERVIÇO</Text>
+                        <Text style={styles.metaText}>Nº {data.tipo || '---'}-{format(new Date(), 'yyyyMMdd')}</Text>
+                        <Text style={styles.metaText}>Emitida em: {format(new Date(), 'dd/MM/yyyy')}</Text>
+                        <Text style={styles.metaText}>Validade: 15 dias</Text>
+                    </View>
                 </View>
 
-                {/* Standard Responsibilities & Clauses */}
-                <Text style={styles.sectionTitle}>Cláusulas e Responsabilidades</Text>
-                <View style={{ padding: 5 }}>
+                {/* B. IDENTIFICAÇÃO */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionHeader}>PROPOSTA DE PRESTAÇÃO DE SERVIÇO DE {tipoTexto}</Text>
+                    <View style={{ marginTop: 5 }}>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>CLIENTE:</Text>
+                            <Text style={styles.value}>{data.clienteNome || '---'}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>OBRA:</Text>
+                            <Text style={styles.value}>
+                                {data.enderecoObra.logradouro}, {data.enderecoObra.numero} - {data.enderecoObra.bairro}{"\n"}
+                                {data.enderecoObra.cidade} / {data.enderecoObra.estado} - CEP: {data.enderecoObra.cep}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+
+                {/* C. ESPECIFICAÇÕES TÉCNICAS */}
+                <View style={styles.section} wrap={false}>
+                    <Text style={styles.sectionHeader}>ESPECIFICAÇÕES TÉCNICAS</Text>
+                    <View style={styles.table}>
+                        <View style={[styles.tableRow, styles.tableHeader]}>
+                            <View style={[styles.tableCol, { width: '40%' }]}><Text style={styles.tableCell}>DESCRIÇÃO</Text></View>
+                            <View style={[styles.tableCol, { width: '15%' }]}><Text style={[styles.tableCell, styles.textCenter]}>DIÂMETRO</Text></View>
+                            <View style={[styles.tableCol, { width: '15%' }]}><Text style={[styles.tableCell, styles.textCenter]}>QTD</Text></View>
+                            <View style={[styles.tableCol, { width: '15%' }]}><Text style={[styles.tableCell, styles.textRight]}>COMP. (m)</Text></View>
+                            <View style={[styles.tableCol, { width: '15%', borderRightWidth: 0 }]}><Text style={[styles.tableCell, styles.textRight]}>TOTAL (m)</Text></View>
+                        </View>
+                        {data.itens.map((item, index) => (
+                            <View style={styles.tableRow} key={index}>
+                                <View style={[styles.tableCol, { width: '40%' }]}>
+                                    <Text style={styles.tableCell}>{item.descricao || (data.tipo === 'SPT' ? `Furo ${item.numeroFuro}` : 'Peça de fundação')}</Text>
+                                </View>
+                                <View style={[styles.tableCol, { width: '15%' }]}>
+                                    <Text style={[styles.tableCell, styles.textCenter]}>{item.diametro ? `${item.diametro} mm` : '---'}</Text>
+                                </View>
+                                <View style={[styles.tableCol, { width: '15%' }]}>
+                                    <Text style={[styles.tableCell, styles.textCenter]}>{item.quantidadeEstacas || item.quantidade || (data.tipo === 'SPT' ? 1 : 0)}</Text>
+                                </View>
+                                <View style={[styles.tableCol, { width: '15%' }]}>
+                                    <Text style={[styles.tableCell, styles.textRight]}>{formatMeters(item.comprimentoUnitario || item.profundidade || 0).replace(' m', '')}</Text>
+                                </View>
+                                <View style={[styles.tableCol, { width: '15%', borderRightWidth: 0 }]}>
+                                    <Text style={[styles.tableCell, styles.textRight]}>{formatMeters(item.totalMetros || item.profundidade || 0)}</Text>
+                                </View>
+                            </View>
+                        ))}
+                    </View>
+                    <View style={{ marginTop: 5, alignItems: 'flex-end' }}>
+                        <Text style={{ fontSize: 9, fontWeight: 'bold' }}>METRAGEM TOTAL DA OBRA: {formatMeters(totalMetros)}</Text>
+                    </View>
+                </View>
+
+                {/* D. PRAZO DE EXECUÇÃO */}
+                <View style={styles.section} wrap={false}>
+                    <Text style={styles.sectionHeader}>PRAZO DE EXECUÇÃO</Text>
+                    <View style={styles.executionBox}>
+                        <Text style={styles.executionText}>
+                            Levando em conta o quantitativo apresentado, o prazo de execução para esta referida obra será de {data.diasExecucao || 0} dias úteis.
+                            O início das atividades está previsto para o dia {data.dataPrevistaInicio ? format(new Date(data.dataPrevistaInicio), 'dd/MM/yyyy') : 'A combinar'}.
+                        </Text>
+                    </View>
+                </View>
+
+                {/* E. RESPONSABILIDADES CONTRATUAIS */}
+                <View style={styles.section} wrap={false}>
+                    <Text style={styles.sectionHeader}>RESPONSABILIDADES CONTRATUAIS</Text>
+                    
+                    <Text style={styles.responsibilityTitle}>1. RESPONSABILIDADE DA PROPONENTE (ESTEMCO):</Text>
+                    <Text style={styles.responsibilityItem}>• Fornecimento de toda mão-de-obra, ferramentas e equipamentos necessários para a execução dos serviços.</Text>
+                    <Text style={styles.responsibilityItem}>• Fornecimento e uso obrigatório de EPIs por todos os colaboradores.</Text>
+                    <Text style={styles.responsibilityItem}>• Supervisão técnica e execução rigorosa conforme as normas de engenharia vigentes.</Text>
                     {data.incluirART && (
-                        <Text style={styles.clause}>• ART: A responsabilidade técnica será comprovada mediante recolhimento de ART junto ao CREA, inclusa no valor.</Text>
+                        <Text style={styles.responsibilityItem}>• Providenciar e recolher a ART (Anotação de Responsabilidade Técnica) junto ao CREA, conforme valores descritos no investimento.</Text>
                     )}
-                    {data.emiteNotaFiscal ? (
-                        <Text style={styles.clause}>• FATURAMENTO: Inclusa a emissão de Nota Fiscal com incidência de {data.percentualImposto}% de impostos.</Text>
-                    ) : (
-                        <Text style={styles.clause}>• IMPOSTOS: Valores sem Nota Fiscal. Caso necessária, será acrescida a carga tributária correspondente.</Text>
-                    )}
-                    <Text style={styles.clause}>• CONTRATANTE: Garantir acesso, pontos de energia/água, locação dos eixos e remoção de solo excedente.</Text>
-                    <Text style={styles.clause}>• CONTRATADA: Fornecer equipamento, mão de obra qualificada e supervisão técnica.</Text>
+
+                    <Text style={styles.responsibilityTitle}>2. RESPONSABILIDADE DO CONTRATANTE:</Text>
+                    <Text style={styles.responsibilityItem}>• Limpeza, desobstrução e nivelamento adequado do terreno para movimentação do equipamento.</Text>
+                    <Text style={styles.responsibilityItem}>• Demarcação/locação precisa de todos os pontos de perfuração conforme projeto.</Text>
+                    <Text style={styles.responsibilityItem}>• Fornecimento de pontos de água e energia elétrica compatíveis com a operação.</Text>
+                    <Text style={styles.responsibilityItem}>• Remoção e destino final de todo o solo excedente resultante das perfurações.</Text>
                 </View>
 
-                {/* Acceptance */}
-                <View style={styles.signatureSection}>
-                    <View>
-                        <Text style={styles.signatureLine}>Estemco Engenharia</Text>
-                        <Text style={styles.signatureInfo}>CNPJ: 00.000.000/0000-00</Text>
+                {/* F. INVESTIMENTO E CONDIÇÕES DE PAGAMENTO */}
+                <View style={styles.section} wrap={false}>
+                    <Text style={styles.sectionHeader}>INVESTIMENTO E CONDIÇÕES DE PAGAMENTO</Text>
+                    <View style={styles.investmentGrid}>
+                        <View style={styles.investmentCard}>
+                            <Text style={styles.cardLabel}>MOBILIZAÇÃO</Text>
+                            <Text style={styles.cardValue}>{formatCurrency(data.mobilizacao)}</Text>
+                        </View>
+                        {data.incluirART && (
+                            <View style={styles.investmentCard}>
+                                <Text style={styles.cardLabel}>TAXA ART</Text>
+                                <Text style={styles.cardValue}>{formatCurrency(data.valorART)}</Text>
+                            </View>
+                        )}
+                        <View style={[styles.investmentCard, styles.totalCard]}>
+                            <Text style={[styles.cardLabel, { color: '#ffffff' }]}>VALOR TOTAL ESTIMADO</Text>
+                            <Text style={[styles.cardValue, { color: '#ffffff', fontSize: 12 }]}>{formatCurrency(calc.valorTotal)}</Text>
+                        </View>
                     </View>
-                    <View>
-                        <Text style={styles.signatureLine}>{data.clienteNome || 'Assinatura do Cliente'}</Text>
-                        <Text style={styles.signatureInfo}>Aceite em: ____/____/________</Text>
+                    
+                    <View style={{ marginTop: 15 }}>
+                        <Text style={styles.label}>FATURAMENTO E IMPOSTOS:</Text>
+                        <Text style={[styles.value, { marginTop: 2 }]}>
+                            {data.emiteNotaFiscal 
+                                ? `Os valores acima contemplam a emissão de Nota Fiscal de Serviços com alíquota de impostos inclusa de ${data.percentualImposto}%.`
+                                : "Os valores apresentados não contemplam a emissão de Nota Fiscal. Caso haja necessidade de faturamento oficial, será acrescida a carga tributária correspondente."
+                            }
+                        </Text>
+                    </View>
+
+                    <View style={{ marginTop: 10 }}>
+                        <Text style={styles.label}>CONDIÇÕES DE PAGAMENTO:</Text>
+                        <View style={{ marginTop: 4 }}>
+                            {data.condicoesPagamento.map((cp, idx) => (
+                                <Text key={idx} style={{ fontSize: 8, marginBottom: 2 }}>
+                                    • {cp.descricao}: {cp.percentual}% ({formatCurrency((cp.percentual/100) * calc.valorTotal)}) — {cp.prazo} via {cp.formaPagamento.toUpperCase()}
+                                </Text>
+                            ))}
+                        </View>
                     </View>
                 </View>
 
-                <View style={styles.disclaimer}>
-                    <Text>Observações: {data.observacoes || 'Sem observações adicionais.'}</Text>
-                    <Text style={{ marginTop: 5 }}>Documento gerado eletronicamente pelo Sistema Estemco.</Text>
+                {/* G. TERMO DE ACEITAÇÃO DA PROPOSTA */}
+                <View style={[styles.section, { marginTop: 20 }]} wrap={false}>
+                    <Text style={styles.acceptanceTitle}>TERMO DE ACEITAÇÃO DA PROPOSTA</Text>
+                    <Text style={styles.acceptanceText}>
+                        Ao assinar este documento, o CONTRATANTE declara estar de acordo com as especificações técnicas, prazos, 
+                        responsabilidades e condições financeiras descritas nesta proposta, autorizando a ESTEMCO a iniciar o 
+                        planejamento e mobilização para a execução da obra. Esta proposta passará a vigorar como contrato de 
+                        prestação de serviços para todos os fins legais após a assinatura eletrônica ou física de ambas as partes.
+                    </Text>
+
+                    <View style={styles.signatureContainer}>
+                        <View style={styles.signatureBox}>
+                            <View style={styles.signatureLine} />
+                            <Text style={styles.signatureLabel}>ESTEMCO ENGENHARIA LTDA</Text>
+                            <Text style={styles.signatureSub}>SOCORRO - SP</Text>
+                        </View>
+                        <View style={styles.signatureBox}>
+                            <View style={styles.signatureLine} />
+                            <Text style={styles.signatureLabel}>{data.clienteNome || 'RESPONSÁVEL DO CLIENTE'}</Text>
+                            <Text style={styles.signatureSub}>CPF/CNPJ: __________________________</Text>
+                            <Text style={styles.signatureSub}>Data: ____ / ____ / ________</Text>
+                        </View>
+                    </View>
                 </View>
+
+                {/* Footer Page Number */}
+                <Text style={{ position: 'absolute', bottom: 30, left: 0, right: 0, textAlign: 'center', fontSize: 7, color: '#94a3b8' }} render={({ pageNumber, totalPages }) => (
+                    `Página ${pageNumber} de ${totalPages} | Gerado em ${format(new Date(), 'dd/MM HH:mm', { locale: ptBR })}`
+                )} />
+
             </Page>
         </Document>
     );
