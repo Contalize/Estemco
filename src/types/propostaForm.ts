@@ -41,7 +41,11 @@ export interface NovaPropostaData {
     metrosDiariosESC?: number;
     precoExcedenteESC?: number;
 
-    // Custom SPT
+    // Custom SPT / Gerais
     incluirART: boolean;
     valorART: number;
+
+    // Faturamento / NF
+    emiteNotaFiscal: boolean;
+    percentualImposto: number;
 }

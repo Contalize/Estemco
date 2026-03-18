@@ -141,7 +141,15 @@ export const Step3ItensServico: React.FC<Step3Props> = ({ data, updateData }) =>
 
     const renderHCM = () => {
         const conf = config as ConfigHCM;
-        const calc = calcularPropostaHCM(data.itens as ItemProposta[], data.mobilizacao);
+        const calc = calcularPropostaHCM(
+            data.itens as ItemProposta[], 
+            data.mobilizacao, 
+            data.faturamentoMinimo,
+            data.incluirART,
+            data.valorART,
+            data.emiteNotaFiscal,
+            data.percentualImposto
+        );
         const addItem = () => {
             const firstDiam = DIAMETROS_HCM_CM[0];
             const confDiam = conf.diametros?.find(d => d.mm === cmToMm(firstDiam));
@@ -195,10 +203,32 @@ export const Step3ItensServico: React.FC<Step3Props> = ({ data, updateData }) =>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <input type="checkbox" id="mobHCM" checked={data.mobilizacao > 0} onChange={e => updateData({ mobilizacao: e.target.checked ? (conf.mobilizacaoPadrao || 4000) : 0 })} className="w-5 h-5 rounded border-slate-300 accent-indigo-600" />
-                    <Label className="text-base font-medium">Incluir Mobilização</Label>
-                    {data.mobilizacao > 0 && <Input type="number" value={data.mobilizacao} onChange={e => updateData({ mobilizacao: Number(e.target.value) })} className="w-36 bg-white" />}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <input type="checkbox" id="mobHCM" checked={data.mobilizacao > 0} onChange={e => updateData({ mobilizacao: e.target.checked ? (conf.mobilizacaoPadrao || 4000) : 0 })} className="w-5 h-5 rounded border-slate-300 accent-indigo-600" />
+                        <Label className="text-base font-medium">Incluir Mobilização</Label>
+                        {data.mobilizacao > 0 && <Input type="number" value={data.mobilizacao} onChange={e => updateData({ mobilizacao: Number(e.target.value) })} className="w-36 bg-white" />}
+                    </div>
+                    <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <input type="checkbox" id="artHCM" checked={data.incluirART} onChange={e => updateData({ incluirART: e.target.checked })} className="w-5 h-5 rounded border-slate-300 accent-indigo-600" />
+                        <Label className="text-base font-medium">Incluir recolhimento A.R.T</Label>
+                        {data.incluirART && (
+                            <div className="relative w-36">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium pointer-events-none">R$</span>
+                                <Input type="number" value={data.valorART} onChange={e => updateData({ valorART: Number(e.target.value) })} className="pl-7 bg-white" />
+                            </div>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <input type="checkbox" id="nfHCM" checked={data.emiteNotaFiscal} onChange={e => updateData({ emiteNotaFiscal: e.target.checked })} className="w-5 h-5 rounded border-slate-300 accent-indigo-600" />
+                        <Label className="text-base font-medium">Emitir Nota Fiscal (Impostos)</Label>
+                        {data.emiteNotaFiscal && (
+                            <div className="flex items-center gap-1">
+                                <Input type="number" value={data.percentualImposto} onChange={e => updateData({ percentualImposto: Number(e.target.value) })} className="w-20 bg-white" />
+                                <span className="text-xs font-bold text-slate-400">%</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="text-right p-5 bg-indigo-50 border border-indigo-100 rounded-xl">
@@ -213,7 +243,19 @@ export const Step3ItensServico: React.FC<Step3Props> = ({ data, updateData }) =>
 
     const renderESC = () => {
         const conf = config as ConfigESC;
-        const calc = calcularPropostaESC(data.itens as ItemProposta[], data.mobilizacao, data.modalidadeESC, data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC);
+        const calc = calcularPropostaESC(
+            data.itens as ItemProposta[], 
+            data.mobilizacao, 
+            data.modalidadeESC, 
+            data.precoFechadoESC, 
+            data.metrosDiariosESC, 
+            data.precoExcedenteESC,
+            data.faturamentoMinimo,
+            data.incluirART,
+            data.valorART,
+            data.emiteNotaFiscal,
+            data.percentualImposto
+        );
 
         const addItemESC = () => {
             const firstDiam = DIAMETROS_ESC_CM[0];
@@ -300,10 +342,32 @@ export const Step3ItensServico: React.FC<Step3Props> = ({ data, updateData }) =>
                     </div>
                 )}
 
-                <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <input type="checkbox" id="mobESC" checked={data.mobilizacao > 0} onChange={e => updateData({ mobilizacao: e.target.checked ? (conf.mobilizacaoPadrao || 500) : 0 })} className="w-5 h-5 rounded border-slate-300 accent-indigo-600" />
-                    <Label className="text-base font-medium">Incluir Mobilização</Label>
-                    {data.mobilizacao > 0 && <Input type="number" value={data.mobilizacao} onChange={e => updateData({ mobilizacao: Number(e.target.value) })} className="w-36 bg-white" />}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <input type="checkbox" id="mobESC" checked={data.mobilizacao > 0} onChange={e => updateData({ mobilizacao: e.target.checked ? (conf.mobilizacaoPadrao || 500) : 0 })} className="w-5 h-5 rounded border-slate-300 accent-indigo-600" />
+                        <Label className="text-base font-medium">Incluir Mobilização</Label>
+                        {data.mobilizacao > 0 && <Input type="number" value={data.mobilizacao} onChange={e => updateData({ mobilizacao: Number(e.target.value) })} className="w-36 bg-white" />}
+                    </div>
+                    <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <input type="checkbox" id="artESC" checked={data.incluirART} onChange={e => updateData({ incluirART: e.target.checked })} className="w-5 h-5 rounded border-slate-300 accent-indigo-600" />
+                        <Label className="text-base font-medium">Incluir recolhimento A.R.T</Label>
+                        {data.incluirART && (
+                            <div className="relative w-36">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium pointer-events-none">R$</span>
+                                <Input type="number" value={data.valorART} onChange={e => updateData({ valorART: Number(e.target.value) })} className="pl-7 bg-white" />
+                            </div>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <input type="checkbox" id="nfESC" checked={data.emiteNotaFiscal} onChange={e => updateData({ emiteNotaFiscal: e.target.checked })} className="w-5 h-5 rounded border-slate-300 accent-indigo-600" />
+                        <Label className="text-base font-medium">Emitir Nota Fiscal (Impostos)</Label>
+                        {data.emiteNotaFiscal && (
+                            <div className="flex items-center gap-1">
+                                <Input type="number" value={data.percentualImposto} onChange={e => updateData({ percentualImposto: Number(e.target.value) })} className="w-20 bg-white" />
+                                <span className="text-xs font-bold text-slate-400">%</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="text-right p-5 bg-blue-50 border border-blue-100 rounded-xl">
@@ -322,7 +386,14 @@ export const Step3ItensServico: React.FC<Step3Props> = ({ data, updateData }) =>
     const renderSPT = () => {
         const conf = config as ConfigSPT;
         const furos = data.itens as ItemFuroSPT[];
-        const calc = calcularPropostaSPT(furos, data.mobilizacao, data.incluirART, data.valorART);
+        const calc = calcularPropostaSPT(
+            furos, 
+            data.mobilizacao, 
+            data.incluirART, 
+            data.valorART,
+            data.emiteNotaFiscal,
+            data.percentualImposto
+        );
         const totalM = furos.reduce((a, b) => a + b.profundidade, 0);
 
         const addFuro = () => updateData({ itens: [...furos, { id: Date.now().toString(), numeroFuro: furos.length + 1, profundidade: conf.metrosPorFuroEstimado || 13.33 }] });
@@ -377,7 +448,22 @@ export const Step3ItensServico: React.FC<Step3Props> = ({ data, updateData }) =>
                     <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
                         <input type="checkbox" id="artSPT" checked={data.incluirART} onChange={e => updateData({ incluirART: e.target.checked })} className="w-5 h-5 rounded border-slate-300 accent-indigo-600" />
                         <Label className="text-base font-medium">Incluir recolhimento A.R.T</Label>
-                        {data.incluirART && <Input type="number" value={data.valorART} onChange={e => updateData({ valorART: Number(e.target.value) })} className="w-36 bg-white" />}
+                        {data.incluirART && (
+                            <div className="relative w-36">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium pointer-events-none">R$</span>
+                                <Input type="number" value={data.valorART} onChange={e => updateData({ valorART: Number(e.target.value) })} className="pl-7 bg-white" />
+                            </div>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <input type="checkbox" id="nfSPT" checked={data.emiteNotaFiscal} onChange={e => updateData({ emiteNotaFiscal: e.target.checked })} className="w-5 h-5 rounded border-slate-300 accent-indigo-600" />
+                        <Label className="text-base font-medium">Emitir Nota Fiscal (Impostos)</Label>
+                        {data.emiteNotaFiscal && (
+                            <div className="flex items-center gap-1">
+                                <Input type="number" value={data.percentualImposto} onChange={e => updateData({ percentualImposto: Number(e.target.value) })} className="w-20 bg-white" />
+                                <span className="text-xs font-bold text-slate-400">%</span>
+                            </div>
+                        )}
                     </div>
                 </div>
 

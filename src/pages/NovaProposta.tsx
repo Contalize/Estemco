@@ -30,6 +30,8 @@ const INITIAL_DATA: NovaPropostaData = {
     modalidadeESC: 'por_metro',
     incluirART: true,
     valorART: 108.39,
+    emiteNotaFiscal: false,
+    percentualImposto: 16.33,
     condicoesPagamento: [
         { id: '1', descricao: 'Sinal / Entrada', percentual: 50, prazo: '3 dias após assinatura do contrato', formaPagamento: 'pix' },
         { id: '2', descricao: 'Saldo Final', percentual: 50, prazo: '7 dias após entrega da medição', formaPagamento: 'pix' },
@@ -73,6 +75,10 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
                         prazoExecucao: obj.prazoExecucao || 30,
                         dataPrevistaInicio: obj.dataPrevistaInicio || '',
                         diasExecucao: obj.diasExecucao || 0,
+                        incluirART: obj.incluirART !== undefined ? obj.incluirART : true,
+                        valorART: obj.valorART || 108.39,
+                        emiteNotaFiscal: obj.emiteNotaFiscal || false,
+                        percentualImposto: obj.percentualImposto || 16.33,
                     };
 
                     if (obj.tipo === 'HCM') {
@@ -88,8 +94,6 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
                     } else if (obj.tipo === 'SPT') {
                         prefilledData.itens = obj.itensSPT || [];
                         prefilledData.mobilizacao = obj.mobilizacaoSPT || prefilledData.mobilizacao;
-                        prefilledData.incluirART = obj.incluirART;
-                        prefilledData.valorART = obj.valorART || 0;
                     }
 
                     setData(prefilledData);
@@ -131,6 +135,10 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
                 dataPrevistaInicio: data.dataPrevistaInicio,
                 diasExecucao: data.diasExecucao,
                 faturamentoMinimo: data.faturamentoMinimo,
+                incluirART: data.incluirART,
+                valorART: data.incluirART ? data.valorART : 0,
+                emiteNotaFiscal: data.emiteNotaFiscal,
+                percentualImposto: data.percentualImposto,
                 tenantId: profile.tenantId,
                 criadoPor: profile.nome || 'Sistema'
             };
@@ -142,7 +150,7 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
             if (data.tipo === 'HCM') {
                 payload.itensHCM = data.itens;
                 payload.mobilizacaoHCM = data.mobilizacao;
-                calc = calcularPropostaHCM(data.itens, data.mobilizacao, data.faturamentoMinimo);
+                calc = calcularPropostaHCM(data.itens, data.mobilizacao, data.faturamentoMinimo, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
             } else if (data.tipo === 'ESC') {
                 payload.itensESC = data.itens;
                 payload.mobilizacaoESC = data.mobilizacao;
@@ -150,17 +158,17 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
                 payload.precoFechado = data.precoFechadoESC;
                 payload.metrosDiarios = data.metrosDiariosESC;
                 payload.precoExcedente = data.precoExcedenteESC;
-                calc = calcularPropostaESC(data.itens, data.mobilizacao, data.modalidadeESC, data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC, data.faturamentoMinimo);
+                calc = calcularPropostaESC(data.itens, data.mobilizacao, data.modalidadeESC, data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC, data.faturamentoMinimo, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
             } else if (data.tipo === 'SPT') {
                 payload.itensSPT = data.itens;
                 payload.mobilizacaoSPT = data.mobilizacao;
-                payload.incluirART = data.incluirART;
-                payload.valorART = data.incluirART ? data.valorART : 0;
-                calc = calcularPropostaSPT(data.itens, data.mobilizacao, data.incluirART, data.valorART);
+                calc = calcularPropostaSPT(data.itens, data.mobilizacao, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
             }
 
             payload.subtotalExecucao = calc.subtotalExecucao;
             payload.valorMobilizacao = calc.valorMobilizacao;
+            payload.valorART = calc.valorART;
+            payload.valorImposto = calc.valorImposto;
             payload.valorTotal = calc.valorTotal;
             payload.valorSinal = calc.valorSinal;
             payload.valorSaldo = calc.valorSaldo;
@@ -178,11 +186,6 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
                 setToast({ message: 'Proposta salva com sucesso!', type: 'success' });
                 return newId;
             }
-
-            setTimeout(() => {
-                onNavigate('PROPOSALS'); // Volta pra listagem
-            }, 1500);
-
         } catch (error) {
             console.error(error);
             setToast({ message: 'Erro ao salvar a proposta.', type: 'error' });

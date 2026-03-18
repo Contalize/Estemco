@@ -40,8 +40,8 @@ export const Step4Revisao: React.FC<Step4Props> = ({ data, updateData, onSave, i
     const { profile } = useAuth();
     let calc: any = { linhasDetalhadas: [], valorTotal: 0, valorSinal: 0, valorSaldo: 0, condicoesPagamento: '' };
 
-    if (data.tipo === 'HCM') calc = calcularPropostaHCM(data.itens as ItemProposta[], data.mobilizacao, data.faturamentoMinimo);
-    if (data.tipo === 'ESC') calc = calcularPropostaESC(data.itens as ItemProposta[], data.mobilizacao, data.modalidadeESC, data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC, data.faturamentoMinimo);
+    if (data.tipo === 'HCM') calc = calcularPropostaHCM(data.itens as ItemProposta[], data.mobilizacao, data.faturamentoMinimo, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
+    if (data.tipo === 'ESC') calc = calcularPropostaESC(data.itens as ItemProposta[], data.mobilizacao, data.modalidadeESC, data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC, data.faturamentoMinimo, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
     if (data.tipo === 'SPT') calc = calcularPropostaSPT(data.itens as ItemFuroSPT[], data.mobilizacao, data.incluirART, data.valorART);
 
     // Seed moved to NovaProposta.tsx INITIAL_DATA to ensure stability across renders

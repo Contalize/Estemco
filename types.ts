@@ -344,9 +344,18 @@ export interface Proposta {
   itens: ItemProposta[];
   valorTotal: number;
   pagamento: CondicaoPagamento;
+  
+  // Timing / Prazos
   dataPrevistaInicio?: string;
   diasExecucao?: number;
   textoPrazoExecucao?: string;
+
+  // ART e Faturamento
+  incluirART: boolean;
+  valorART: number;
+  emiteNotaFiscal: boolean;
+  percentualImposto: number;
+
   criadoEm?: any;
   atualizadoEm?: any;
 }

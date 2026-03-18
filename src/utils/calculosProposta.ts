@@ -30,6 +30,7 @@ export interface ResultadoCalculo {
     subtotalExecucao: number;
     valorMobilizacao: number;
     valorART: number;
+    valorImposto: number;
     valorTotal: number;
     valorSinal: number;
     valorSaldo: number;
@@ -41,7 +42,11 @@ export interface ResultadoCalculo {
 export function calcularPropostaHCM(
     itens: ItemProposta[],
     mobilizacao: number = MOBILIZACAO_HCM,
-    faturamentoMinimo: number = MINIMO_DIARIO_HCM
+    faturamentoMinimo: number = MINIMO_DIARIO_HCM,
+    incluirART: boolean = true,
+    valorART: number = 0,
+    emiteNF: boolean = false,
+    percentualNF: number = 0
 ): ResultadoCalculo {
     const linhas = [];
     let subtotal = 0;
@@ -55,13 +60,28 @@ export function calcularPropostaHCM(
     }
 
     linhas.push({ descricao: 'Mobilização e desmobilização', valor: mobilizacao });
-    const total = subtotal + mobilizacao;
+    
+    let art = 0;
+    if (incluirART && valorART > 0) {
+        art = valorART;
+        linhas.push({ descricao: 'ART (Anotação de Responsabilidade Técnica)', valor: art });
+    }
+
+    const totalSemImposto = subtotal + mobilizacao + art;
+    let imposto = 0;
+    if (emiteNF && percentualNF > 0) {
+        imposto = totalSemImposto * (percentualNF / 100);
+        linhas.push({ descricao: `Impostos / Nota Fiscal (${percentualNF}%)`, valor: imposto });
+    }
+
+    const total = totalSemImposto + imposto;
     const sinal = total * 0.5;
 
     return {
         subtotalExecucao: subtotal,
         valorMobilizacao: mobilizacao,
-        valorART: 0,
+        valorART: art,
+        valorImposto: imposto,
         valorTotal: total,
         valorSinal: sinal,
         valorSaldo: total - sinal,
@@ -79,7 +99,11 @@ export function calcularPropostaESC(
     precoFechado?: number,
     metrosDiarios?: number,
     precoExcedente?: number,
-    faturamentoMinimo: number = MINIMO_OBRA_ESC
+    faturamentoMinimo: number = MINIMO_OBRA_ESC,
+    incluirART: boolean = true,
+    valorART: number = 0,
+    emiteNF: boolean = false,
+    percentualNF: number = 0
 ): ResultadoCalculo {
     const linhas = [];
     let subtotal = 0;
@@ -110,24 +134,39 @@ export function calcularPropostaESC(
     }
 
     linhas.push({ descricao: 'Mobilização e desmobilização', valor: mobilizacao });
-    const totalBruto = subtotal + mobilizacao;
-    // REGRA: mínimo é da OBRA, não diário
-    const total = Math.max(totalBruto, faturamentoMinimo);
+    
+    let art = 0;
+    if (incluirART && valorART > 0) {
+        art = valorART;
+        linhas.push({ descricao: 'ART (Anotação de Responsabilidade Técnica)', valor: art });
+    }
 
-    if (total > totalBruto) {
+    const totalBase = subtotal + mobilizacao + art;
+    // REGRA: mínimo é da OBRA, não diário
+    const totalSemNF = Math.max(totalBase, faturamentoMinimo);
+
+    if (totalSemNF > totalBase) {
         linhas.push({
             descricao: `Ajuste faturamento mínimo da obra (R$ ${faturamentoMinimo.toLocaleString('pt-BR')})`,
-            valor: total - totalBruto,
+            valor: totalSemNF - totalBase,
             destaque: true,
         });
     }
 
+    let imposto = 0;
+    if (emiteNF && percentualNF > 0) {
+        imposto = totalSemNF * (percentualNF / 100);
+        linhas.push({ descricao: `Impostos / Nota Fiscal (${percentualNF}%)`, valor: imposto });
+    }
+
+    const total = totalSemNF + imposto;
     const sinal = total * 0.5;
 
     return {
         subtotalExecucao: subtotal,
         valorMobilizacao: mobilizacao,
-        valorART: 0,
+        valorART: art,
+        valorImposto: imposto,
         valorTotal: total,
         valorSinal: sinal,
         valorSaldo: total - sinal,
@@ -142,7 +181,9 @@ export function calcularPropostaSPT(
     furos: { profundidade: number }[],
     mobilizacao: number = CONFIG_SPT.mobilizacao,
     incluirART: boolean = true,
-    valorART: number = CONFIG_SPT.art
+    valorART: number = CONFIG_SPT.art,
+    emiteNF: boolean = false,
+    percentualNF: number = 0
 ): ResultadoCalculo {
     const totalMetros = furos.reduce((acc, f) => acc + f.profundidade, 0);
     const metrosFaturados = Math.max(totalMetros, CONFIG_SPT.metragemMinima);
@@ -162,7 +203,15 @@ export function calcularPropostaSPT(
         linhas.push({ descricao: 'ART (Anotação de Responsabilidade Técnica)', valor: art });
     }
 
-    const total = execucao + mobilizacao + art;
+    const totalSemNF = execucao + mobilizacao + art;
+    
+    let imposto = 0;
+    if (emiteNF && percentualNF > 0) {
+        imposto = totalSemNF * (percentualNF / 100);
+        linhas.push({ descricao: `Impostos / Nota Fiscal (${percentualNF}%)`, valor: imposto });
+    }
+
+    const total = totalSemNF + imposto;
     // REGRA: sinal FIXO R$ 1.500, não percentual
     const sinal = Math.min(CONFIG_SPT.sinalFixo, total);
 
@@ -170,6 +219,7 @@ export function calcularPropostaSPT(
         subtotalExecucao: execucao,
         valorMobilizacao: mobilizacao,
         valorART: art,
+        valorImposto: imposto,
         valorTotal: total,
         valorSinal: sinal,
         valorSaldo: total - sinal,

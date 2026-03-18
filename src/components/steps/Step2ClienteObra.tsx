@@ -199,14 +199,6 @@ export const Step2ClienteObra: React.FC<Step2Props> = ({ data, updateData }) => 
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label className="text-sm font-medium mb-2 block">Validade (dias úteis)</Label>
-                                <Input
-                                    type="number"
-                                    value={data.validadeProposta}
-                                    onChange={e => updateData({ validadeProposta: Number(e.target.value) })}
-                                />
-                            </div>
-                            <div>
                                 <Label className="text-sm font-medium mb-2 block">Dias Execução</Label>
                                 <Input
                                     type="number"
@@ -214,8 +206,6 @@ export const Step2ClienteObra: React.FC<Step2Props> = ({ data, updateData }) => 
                                     onChange={e => updateData({ diasExecucao: Number(e.target.value) })}
                                 />
                             </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <Label className="text-sm font-medium mb-2 block">Previsão de Início</Label>
                                 <Input
@@ -224,14 +214,14 @@ export const Step2ClienteObra: React.FC<Step2Props> = ({ data, updateData }) => 
                                     onChange={e => updateData({ dataPrevistaInicio: e.target.value })}
                                 />
                             </div>
-                            <div>
-                                <Label className="text-sm font-medium mb-2 block">Validade Proposta</Label>
-                                <Input
-                                    type="number"
-                                    value={data.validadeProposta}
-                                    onChange={e => updateData({ validadeProposta: Number(e.target.value) })}
-                                />
-                            </div>
+                        </div>
+                        <div>
+                            <Label className="text-sm font-medium mb-2 block">Validade da Proposta (Dias Úteis)</Label>
+                            <Input
+                                type="number"
+                                value={data.validadeProposta}
+                                onChange={e => updateData({ validadeProposta: Number(e.target.value) })}
+                            />
                         </div>
                         <div>
                             <Label className="text-sm font-medium mb-2 block">Observações de Engenharia</Label>

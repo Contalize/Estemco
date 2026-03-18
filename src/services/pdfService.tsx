@@ -4,12 +4,8 @@ import { NovaPropostaData } from '../types/propostaForm';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FileDown } from 'lucide-react';
-
-// Registro de Fontes (Opcional, mas melhora a estética)
-// Font.register({
-//   family: 'Roboto',
-//   src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-light-webfont.ttf'
-// });
+import { calcularPropostaHCM, calcularPropostaESC, calcularPropostaSPT } from '../utils/calculosProposta';
+import { ItemProposta, ItemFuroSPT } from '../../types';
 
 const styles = StyleSheet.create({
     page: {
@@ -148,9 +144,9 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     totalCard: {
-        backgroundColor: '#4f46e5',
+        backgroundColor: '#1e1b4b',
         color: '#ffffff',
-        borderColor: '#4338ca',
+        borderColor: '#1e1b4b',
     },
     disclaimer: {
         fontSize: 8,
@@ -174,6 +170,12 @@ const styles = StyleSheet.create({
     signatureInfo: {
         fontSize: 8,
         color: '#64748b',
+    },
+    clause: {
+        fontSize: 8,
+        color: '#475569',
+        marginBottom: 4,
+        lineHeight: 1.4,
     }
 });
 
@@ -191,8 +193,12 @@ const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
         }
     };
 
-    const totalMetros = data.itens.reduce((acc, item) => acc + (item.totalMetros || 0), 0);
-    const totalGeral = data.itens.reduce((acc, item) => acc + (item.total || 0), 0) + (data.mobilizacao || 0) + (data.incluirART ? (data.valorART || 0) : 0);
+    let calc: any = { linhasDetalhadas: [], valorTotal: 0, valorMobilizacao: 0, valorART: 0, valorImposto: 0 };
+    if (data.tipo === 'HCM') calc = calcularPropostaHCM(data.itens as ItemProposta[], data.mobilizacao, data.faturamentoMinimo, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
+    if (data.tipo === 'ESC') calc = calcularPropostaESC(data.itens as ItemProposta[], data.mobilizacao, data.modalidadeESC, data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC, data.faturamentoMinimo, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
+    if (data.tipo === 'SPT') calc = calcularPropostaSPT(data.itens as ItemFuroSPT[], data.mobilizacao, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
+
+    const totalMetros = data.itens.reduce((acc, item) => acc + (item.totalMetros || item.profundidade || 0), 0);
 
     return (
         <Document>
@@ -237,11 +243,11 @@ const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
                     </View>
                     {data.itens.map((item, i) => (
                         <View style={styles.tableRow} key={i}>
-                            <View style={[styles.tableCol, { width: '40%' }]}><Text style={styles.tableCell}>{item.descricao}</Text></View>
+                            <View style={[styles.tableCol, { width: '40%' }]}><Text style={styles.tableCell}>{item.descricao || (data.tipo === 'SPT' ? `Furo ${item.numeroFuro}` : 'Item de Serviço')}</Text></View>
                             <View style={[styles.tableCol, { width: '15%' }]}><Text style={styles.tableCell}>{item.diametro || '---'}</Text></View>
-                            <View style={[styles.tableCol, { width: '15%' }]}><Text style={styles.tableCell}>{item.quantidadeEstacas || item.quantidade || 0}</Text></View>
+                            <View style={[styles.tableCol, { width: '15%' }]}><Text style={styles.tableCell}>{item.quantidadeEstacas || item.quantidade || 1}</Text></View>
                             <View style={[styles.tableCol, { width: '15%' }]}><Text style={styles.tableCell}>{item.comprimentoUnitario || item.profundidade || 0}</Text></View>
-                            <View style={[styles.tableCol, { width: '15%' }]}><Text style={styles.tableCell}>{item.totalMetros || 0}m</Text></View>
+                            <View style={[styles.tableCol, { width: '15%' }]}><Text style={styles.tableCell}>{item.totalMetros || item.profundidade || 0}m</Text></View>
                         </View>
                     ))}
                     <View style={styles.footerTable}>
@@ -256,6 +262,7 @@ const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
                     <Text style={styles.executionText}>
                         Levando em conta o quantitativo acima, o prazo de execução será de {data.diasExecucao || 0} dias úteis. 
                         O início das atividades está previsto para o dia {formatDate(data.dataPrevistaInicio)}.
+                        {data.textoPrazoExecucao ? `\nObs: ${data.textoPrazoExecucao}` : ''}
                     </Text>
                 </View>
 
@@ -272,9 +279,15 @@ const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
                             <Text style={styles.value}>R$ {data.valorART.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
                         </View>
                     )}
+                    {data.emiteNotaFiscal && (
+                        <View style={styles.investmentCard}>
+                            <Text style={styles.label}>Impostos ({data.percentualImposto}%)</Text>
+                            <Text style={[styles.value, { color: '#dc2626' }]}>R$ {calc.valorImposto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
+                        </View>
+                    )}
                     <View style={[styles.investmentCard, styles.totalCard]}>
-                        <Text style={[styles.label, { color: '#ffffff', opacity: 0.8 }]}>Valor Total Estimado</Text>
-                        <Text style={[styles.value, { fontSize: 12 }]}>R$ {totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
+                        <Text style={[styles.label, { color: '#ffffff', opacity: 0.8 }]}>Valor Total Final</Text>
+                        <Text style={[styles.value, { fontSize: 12 }]}>R$ {calc.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</Text>
                     </View>
                 </View>
 
@@ -282,17 +295,25 @@ const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
                     <Text style={styles.label}>Formas de Pagamento:</Text>
                     {data.condicoesPagamento.map((cp, i) => (
                         <Text key={i} style={{ fontSize: 8, marginTop: 2 }}>
-                            • {cp.descricao}: {cp.percentual}% ({cp.prazo}) via {cp.formaPagamento.toUpperCase()}
+                            • {cp.descricao}: {cp.percentual}% (R$ {((cp.percentual/100)*calc.valorTotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}) — {cp.prazo} via {cp.formaPagamento.toUpperCase()}
                         </Text>
                     ))}
                 </View>
 
-                {/* Standard Responsibilities */}
-                <Text style={styles.sectionTitle}>Responsabilidades</Text>
-                <Text style={{ fontSize: 8, lineHeight: 1.4 }}>
-                    CONTRATADA: Fornecer equipamento em perfeitas condições, mão de obra qualificada e supervisão técnica.{"\n"}
-                    CONTRATANTE: Garantir acesso ao local, pontos de energia/água, locação dos eixos e remoção de solo excedente.
-                </Text>
+                {/* Standard Responsibilities & Clauses */}
+                <Text style={styles.sectionTitle}>Cláusulas e Responsabilidades</Text>
+                <View style={{ padding: 5 }}>
+                    {data.incluirART && (
+                        <Text style={styles.clause}>• ART: A responsabilidade técnica será comprovada mediante recolhimento de ART junto ao CREA, inclusa no valor.</Text>
+                    )}
+                    {data.emiteNotaFiscal ? (
+                        <Text style={styles.clause}>• FATURAMENTO: Inclusa a emissão de Nota Fiscal com incidência de {data.percentualImposto}% de impostos.</Text>
+                    ) : (
+                        <Text style={styles.clause}>• IMPOSTOS: Valores sem Nota Fiscal. Caso necessária, será acrescida a carga tributária correspondente.</Text>
+                    )}
+                    <Text style={styles.clause}>• CONTRATANTE: Garantir acesso, pontos de energia/água, locação dos eixos e remoção de solo excedente.</Text>
+                    <Text style={styles.clause}>• CONTRATADA: Fornecer equipamento, mão de obra qualificada e supervisão técnica.</Text>
+                </View>
 
                 {/* Acceptance */}
                 <View style={styles.signatureSection}>
