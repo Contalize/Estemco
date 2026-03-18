@@ -115,7 +115,7 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
         setStep(s => s + 1);
     };
 
-    const handleSave = async (status: 'RASCUNHO' | 'ACEITA') => {
+    const handleSave = async (status: 'RASCUNHO' | 'ACEITA'): Promise<string | void> => {
         if (!profile?.tenantId) return;
         setIsSaving(true);
         try {
@@ -172,9 +172,11 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
             if (editPropostaId) {
                 await atualizarProposta(profile.tenantId, editPropostaId, payload);
                 setToast({ message: 'Proposta atualizada com sucesso!', type: 'success' });
+                return editPropostaId;
             } else {
-                await criarProposta(profile.tenantId, payload);
+                const newId = await criarProposta(profile.tenantId, payload);
                 setToast({ message: 'Proposta salva com sucesso!', type: 'success' });
+                return newId;
             }
 
             setTimeout(() => {

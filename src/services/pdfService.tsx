@@ -1,8 +1,9 @@
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, PDFDownloadLink, Image, Font } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, PDFDownloadLink, Image, Font, pdf } from '@react-pdf/renderer';
 import { NovaPropostaData } from '../types/propostaForm';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { FileDown } from 'lucide-react';
 
 // Registro de Fontes (Opcional, mas melhora a estética)
 // Font.register({
@@ -314,16 +315,40 @@ const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
     );
 };
 
+export const generatePropostaBlob = async (data: NovaPropostaData): Promise<Blob> => {
+    return await pdf(<PropostaDocument data={data} />).toBlob();
+};
+
+export const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+};
+
 export const DownloadPropostaPDF: React.FC<PDFProps> = ({ data }) => {
     const filename = `ORC_${data.tipo || 'PROPOSTA'}_${data.clienteNome.replace(/\s+/g, '_')}.pdf`;
 
+    const handleDownload = async () => {
+        try {
+            const blob = await generatePropostaBlob(data);
+            downloadBlob(blob, filename);
+        } catch (error) {
+            console.error('Erro ao gerar PDF:', error);
+            alert('Houve um erro ao gerar o PDF. Por favor, tente novamente.');
+        }
+    };
+
     return (
-        <PDFDownloadLink
-            document={<PropostaDocument data={data} />}
-            fileName={filename}
+        <button
+            onClick={handleDownload}
             className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md font-bold hover:bg-indigo-700 transition-colors shadow-sm gap-2"
         >
-            {({ loading }) => (loading ? 'Gerando PDF...' : 'Baixar Proposta (PDF)')}
-        </PDFDownloadLink>
+            <FileDown size={18} /> Baixar Proposta (PDF)
+        </button>
     );
 };

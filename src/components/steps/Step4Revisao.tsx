@@ -6,12 +6,16 @@ import { Building2, Save, FileDown, Plus, Trash2, CreditCard, Eye } from 'lucide
 import { Button, Input, Label, Select } from '../../../components/ui';
 import { useAuth } from '../../../contexts/AuthContext';
 import { PropostaPreview } from '../PropostaPreview';
-import { DownloadPropostaPDF } from '../../services/pdfService';
+import { DownloadPropostaPDF, generatePropostaBlob } from '../../services/pdfService';
+import { storage } from '../../../lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../../../lib/firebase';
 
 interface Step4Props {
     data: NovaPropostaData;
     updateData: (d: Partial<NovaPropostaData>) => void;
-    onSave: (status: 'RASCUNHO' | 'ACEITA') => void;
+    onSave: (status: 'RASCUNHO' | 'ACEITA', extraData?: any) => Promise<string | void>;
     isSaving: boolean;
 }
 
@@ -140,13 +144,42 @@ export const Step4Revisao: React.FC<Step4Props> = ({ data, updateData, onSave, i
                 </div>
             </div>
 
-
             {/* Actions */}
             <div className="flex gap-4 p-4 bg-slate-50 border rounded-lg justify-end mt-8">
                 <Button onClick={() => onSave('RASCUNHO')} disabled={isSaving || !percentualOk} variant="outline" className="gap-2 bg-white">
                     <Save size={18} /> Salvar Rascunho
                 </Button>
-                <Button onClick={() => onSave('ACEITA')} disabled={isSaving || !percentualOk} className="gap-2 bg-indigo-600 text-white hover:bg-indigo-700 shadow-md">
+                <Button 
+                    onClick={async () => {
+                        try {
+                            const propostaId = await onSave('ACEITA');
+                            if (propostaId) {
+                                // 1. Gerar o Blob
+                                const blob = await generatePropostaBlob(data);
+                                // 2. Upload para o Firebase Storage
+                                const filename = `propostas/${propostaId}_${data.clienteNome.replace(/\s+/g, '_')}.pdf`;
+                                const storageRef = ref(storage, filename);
+                                await uploadBytes(storageRef, blob);
+                                const downloadURL = await getDownloadURL(storageRef);
+                                // 3. Salvar URL no Firestore
+                                const propostaRef = doc(db, 'empresas', profile?.tenantId || '', 'propostas', propostaId);
+                                await updateDoc(propostaRef, { pdfUrl: downloadURL });
+                                // 4. Download local
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = `ORC_${data.tipo || 'PROPOSTA'}_${data.clienteNome.replace(/\s+/g, '_')}.pdf`;
+                                link.click();
+                                URL.revokeObjectURL(url);
+                            }
+                        } catch (error) {
+                            console.error('Erro ao salvar/gerar PDF:', error);
+                            alert('Erro ao processar a proposta.');
+                        }
+                    }} 
+                    disabled={isSaving || !percentualOk} 
+                    className="gap-2 bg-indigo-600 text-white hover:bg-indigo-700 shadow-md"
+                >
                     {isSaving ? 'Salvando...' : <><FileDown size={18} /> Salvar e Gerar PDF</>}
                 </Button>
             </div>
