@@ -9,6 +9,8 @@ export interface UserProfile {
   role: UserRole;
   tenantId: string;
   nome?: string;
+  nomeEmpresa?: string;
+  cnpjEmpresa?: string;
   permissoes?: any; // To avoid circular deep type issues right here, though pulling from types.ts is better
 }
 

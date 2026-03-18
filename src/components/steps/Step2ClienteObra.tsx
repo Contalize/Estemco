@@ -207,11 +207,29 @@ export const Step2ClienteObra: React.FC<Step2Props> = ({ data, updateData }) => 
                                 />
                             </div>
                             <div>
-                                <Label className="text-sm font-medium mb-2 block">Execução (dias)</Label>
+                                <Label className="text-sm font-medium mb-2 block">Dias Execução</Label>
                                 <Input
                                     type="number"
-                                    value={data.prazoExecucao}
-                                    onChange={e => updateData({ prazoExecucao: Number(e.target.value) })}
+                                    value={data.diasExecucao}
+                                    onChange={e => updateData({ diasExecucao: Number(e.target.value) })}
+                                />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label className="text-sm font-medium mb-2 block">Previsão de Início</Label>
+                                <Input
+                                    type="date"
+                                    value={data.dataPrevistaInicio}
+                                    onChange={e => updateData({ dataPrevistaInicio: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <Label className="text-sm font-medium mb-2 block">Validade Proposta</Label>
+                                <Input
+                                    type="number"
+                                    value={data.validadeProposta}
+                                    onChange={e => updateData({ validadeProposta: Number(e.target.value) })}
                                 />
                             </div>
                         </div>

@@ -4,8 +4,9 @@ import { calcularPropostaHCM, calcularPropostaESC, calcularPropostaSPT, fmt } fr
 import { ItemProposta, ItemFuroSPT } from '../../../types';
 import { Building2, Save, FileDown, Plus, Trash2, CreditCard, Eye } from 'lucide-react';
 import { Button, Input, Label, Select } from '../../../components/ui';
-import { PDFPreviewModal } from '../../PDFPreviewModal';
 import { useAuth } from '../../../contexts/AuthContext';
+import { PropostaPreview } from '../PropostaPreview';
+import { DownloadPropostaPDF } from '../../services/pdfService';
 
 interface Step4Props {
     data: NovaPropostaData;
@@ -33,7 +34,6 @@ const newParcela = (): ParcelaProposta => ({
 
 export const Step4Revisao: React.FC<Step4Props> = ({ data, updateData, onSave, isSaving }) => {
     const { profile } = useAuth();
-    const [showPreview, setShowPreview] = React.useState(false);
     let calc: any = { linhasDetalhadas: [], valorTotal: 0, valorSinal: 0, valorSaldo: 0, condicoesPagamento: '' };
 
     if (data.tipo === 'HCM') calc = calcularPropostaHCM(data.itens as ItemProposta[], data.mobilizacao, data.faturamentoMinimo);
@@ -64,59 +64,15 @@ export const Step4Revisao: React.FC<Step4Props> = ({ data, updateData, onSave, i
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
 
-            {/* Preview card */}
-            <div className="bg-white border-2 border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                <div className="bg-slate-50 p-6 border-b border-slate-200 flex justify-between items-start">
-                    <div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Resumo da Proposta Comercial</p>
-                        <h3 className="text-2xl font-bold text-slate-800">{data.clienteNome || 'Cliente não informado'}</h3>
-                        <p className="text-slate-500 mt-1 flex items-center gap-2">
-                            <Building2 size={16} /> {data.enderecoObra.cidade} / {data.enderecoObra.estado}
-                        </p>
-                    </div>
-                    <div className="text-right">
-                        <span className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 font-bold font-mono rounded text-sm mb-2">{data.tipo}</span>
-                        <p className="text-xs text-slate-400">Gerada eletronicamente</p>
-                    </div>
+            {/* Visual Preview */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                        <Eye size={18} className="text-indigo-600" /> Pré-visualização do PDF
+                    </h3>
+                    <DownloadPropostaPDF data={data} />
                 </div>
-
-                {/* Line items */}
-                <div className="p-6">
-                    <div className="space-y-3 mb-8">
-                        {calc.linhasDetalhadas.map((linha: any, i: number) => (
-                            <div key={i} className={`flex justify-between items-center py-2 border-b border-slate-100 ${linha.destaque ? 'text-amber-600 font-bold' : 'text-slate-600'}`}>
-                                <span>{linha.descricao}</span>
-                                <span className="font-mono">{fmt(linha.valor)}</span>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Totals */}
-                    <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-                        <div className="flex justify-between items-center pb-4 border-b border-slate-200">
-                            <span className="text-lg font-bold text-slate-700">VALOR TOTAL:</span>
-                            <span className="text-2xl font-black text-slate-900">{fmt(calc.valorTotal)}</span>
-                        </div>
-                        {parcelaValores.length > 0 && (
-                            <div className="pt-4 grid gap-2">
-                                {parcelaValores.map((p, i) => (
-                                    <div key={p.id} className="flex justify-between text-sm">
-                                        <span className="text-slate-600">{i + 1}. {p.descricao} ({p.percentual}%) — {FORMA_LABELS[p.formaPagamento]}</span>
-                                        <span className="font-mono font-semibold text-slate-800">{fmt(p.valor)}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Payment conditions text */}
-                    <div className="mt-6 text-sm text-slate-600">
-                        <p className="font-bold text-slate-800 mb-1">Condições de Pagamento:</p>
-                        <p>{condicoesPagamentoTexto || calc.condicoesPagamento}</p>
-                        <p className="mt-4"><span className="font-bold text-slate-800">Validade da Proposta:</span> {data.validadeProposta} dias úteis</p>
-                        <p><span className="font-bold text-slate-800">Prazo de Execução:</span> {data.prazoExecucao} dias</p>
-                    </div>
-                </div>
+                <PropostaPreview data={data} />
             </div>
 
             {/* ── Payment conditions editor ─────────────────────────────────── */}
@@ -184,26 +140,9 @@ export const Step4Revisao: React.FC<Step4Props> = ({ data, updateData, onSave, i
                 </div>
             </div>
 
-            {/* Preview Modal */}
-            <PDFPreviewModal 
-                isOpen={showPreview} 
-                onClose={() => setShowPreview(false)} 
-                propostaData={data}
-                cliente={{
-                    nomeRazaoSocial: data.clienteNome,
-                    enderecoObra: data.enderecoObra
-                }}
-                empresa={{
-                    razaoSocial: profile?.nomeEmpresa || 'Estemco Engenharia',
-                    cnpj: profile?.cnpjEmpresa || '57.486.102/0001-86'
-                }}
-            />
 
             {/* Actions */}
-            <div className="flex gap-4 p-4 bg-slate-50 border rounded-lg justify-end">
-                <Button onClick={() => setShowPreview(true)} variant="outline" className="gap-2 bg-white">
-                    <Eye size={18} /> Visualizar Proposta
-                </Button>
+            <div className="flex gap-4 p-4 bg-slate-50 border rounded-lg justify-end mt-8">
                 <Button onClick={() => onSave('RASCUNHO')} disabled={isSaving || !percentualOk} variant="outline" className="gap-2 bg-white">
                     <Save size={18} /> Salvar Rascunho
                 </Button>

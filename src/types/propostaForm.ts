@@ -31,6 +31,9 @@ export interface NovaPropostaData {
     // Novos Campos
     faturamentoMinimo?: number;
     prazoExecucao?: number;
+    dataPrevistaInicio?: string;
+    diasExecucao?: number;
+    textoPrazoExecucao?: string;
 
     // Custom ESC
     modalidadeESC: 'por_metro' | 'preco_fechado' | 'saida_diaria';

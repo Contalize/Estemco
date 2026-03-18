@@ -344,6 +344,9 @@ export interface Proposta {
   itens: ItemProposta[];
   valorTotal: number;
   pagamento: CondicaoPagamento;
+  dataPrevistaInicio?: string;
+  diasExecucao?: number;
+  textoPrazoExecucao?: string;
   criadoEm?: any;
   atualizadoEm?: any;
 }

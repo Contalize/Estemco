@@ -35,7 +35,9 @@ const INITIAL_DATA: NovaPropostaData = {
         { id: '2', descricao: 'Saldo Final', percentual: 50, prazo: '7 dias após entrega da medição', formaPagamento: 'pix' },
     ],
     faturamentoMinimo: 8000,
-    prazoExecucao: 30
+    prazoExecucao: 30,
+    dataPrevistaInicio: '',
+    diasExecucao: 0
 };
 
 export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editPropostaId }) => {
@@ -69,6 +71,8 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
                         mobilizacao: obj.valorMobilizacao || 0,
                         faturamentoMinimo: obj.faturamentoMinimo || (obj.tipo === 'HCM' ? 8000 : obj.tipo === 'ESC' ? 3000 : 0),
                         prazoExecucao: obj.prazoExecucao || 30,
+                        dataPrevistaInicio: obj.dataPrevistaInicio || '',
+                        diasExecucao: obj.diasExecucao || 0,
                     };
 
                     if (obj.tipo === 'HCM') {
@@ -124,6 +128,8 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
                 observacoes: data.observacoes,
                 validadeProposta: data.validadeProposta,
                 prazoExecucao: data.prazoExecucao,
+                dataPrevistaInicio: data.dataPrevistaInicio,
+                diasExecucao: data.diasExecucao,
                 faturamentoMinimo: data.faturamentoMinimo,
                 tenantId: profile.tenantId,
                 criadoPor: profile.nome || 'Sistema'
