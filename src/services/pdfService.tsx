@@ -265,14 +265,14 @@ const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
                     <View style={styles.docInfo}>
                         <Text style={styles.docTitle}>PROPOSTA DE PRESTAÇÃO DE SERVIÇO</Text>
                         <Text style={styles.metaText}>Nº {data?.tipo || '---'}-{format(new Date(), 'yyyyMMdd')}</Text>
-                        <Text style={styles.metaText}>Emitida em: {dataEmissao}</Text>
-                        <Text style={styles.metaText}>Validade: {validadeTexto}</Text>
+                        <Text style={styles.metaText}>Emitida em: {dataEmissao || '---'}</Text>
+                        <Text style={styles.metaText}>Validade: {validadeTexto || '15 dias'}</Text>
                     </View>
                 </View>
 
                 {/* B. IDENTIFICAÇÃO */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionHeader}>PROPOSTA DE PRESTAÇÃO DE SERVIÇO DE {tipoTexto}</Text>
+                    <Text style={styles.sectionHeader}>PROPOSTA DE PRESTAÇÃO DE SERVIÇO DE {tipoTexto || '---'}</Text>
                     <View style={{ marginTop: 5 }}>
                         <View style={styles.row}>
                             <Text style={styles.label}>CLIENTE:</Text>
@@ -320,7 +320,7 @@ const PropostaDocument: React.FC<PDFProps> = ({ data }) => {
                         ))}
                     </View>
                     <View style={{ marginTop: 5, alignItems: 'flex-end' }}>
-                        <Text style={{ fontSize: 9, fontWeight: 'bold' }}>METRAGEM TOTAL DA OBRA: {formatMeters(totalMetros)}</Text>
+                        <Text style={{ fontSize: 9, fontWeight: 'bold' }}>METRAGEM TOTAL DA OBRA: {formatMeters(totalMetros || 0)}</Text>
                     </View>
                 </View>
 

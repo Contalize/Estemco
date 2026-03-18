@@ -92,10 +92,9 @@ export const Step4Revisao: React.FC<Step4Props> = ({ data, updateData, onSave, i
                     URL.revokeObjectURL(url);
                 }
                 
-                // Pequeno delay para o usuário ver o toast de sucesso antes de redirecionar
-                setTimeout(() => {
-                    onNavigate('PROPOSALS');
-                }, 1500);
+                // Feedback visual imediato e redirecionamento
+                window.alert('Proposta salva com sucesso!');
+                onNavigate('PROPOSALS');
             }
         } catch (error) {
             console.error('Erro ao salvar/gerar PDF:', error);

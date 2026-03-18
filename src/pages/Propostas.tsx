@@ -55,21 +55,18 @@ export const Propostas: React.FC<PropostasListProps> = ({ onNavigate }) => {
         return () => unsub();
     }, [profile]);
 
-    const handleDelete = (id: string, numero: string) => {
-        setConfirmConfig({
-            isOpen: true,
-            title: 'Excluir Proposta',
-            message: `Atenção: Você tem certeza que deseja excluir a proposta ${numero}? Isso não pode ser desfeito.`,
-            variant: 'destructive',
-            onConfirm: async () => {
-                try {
-                    if (!profile?.tenantId) return;
-                    await excluirProposta(profile.tenantId, id);
-                } catch (err) {
-                    alert('Erro ao excluir proposta.');
-                }
-            }
-        });
+    const handleDelete = async (id: string, numero: string) => {
+        const confirmacao = window.confirm(`Atenção: Tem certeza que deseja excluir a proposta ${numero}? Esta ação não pode ser desfeita.`);
+        if (!confirmacao) return;
+
+        try {
+            if (!profile?.tenantId) return;
+            await excluirProposta(profile.tenantId, id);
+            window.alert('Proposta excluída com sucesso!');
+        } catch (err) {
+            console.error(err);
+            alert('Erro ao excluir proposta.');
+        }
     };
 
     const handleApprove = (id: string, numero: string) => {
@@ -210,26 +207,54 @@ export const Propostas: React.FC<PropostasListProps> = ({ onNavigate }) => {
                                         {o.criadoEm ? formatarData(o.criadoEm) : 'Hoje'}
                                     </td>
                                     <td className="px-6 py-3 text-right">
-                                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-600" title="Visualizar" onClick={() => handlePreview(o)}>
+                                        <div className="flex items-center justify-end gap-1 opacity-100">
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-600" 
+                                                title="Visualizar" 
+                                                onClick={() => o?.id && handlePreview(o)}
+                                            >
                                                 <Eye size={16} />
                                             </Button>
-                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-500 hover:text-blue-600" title="Editar" onClick={() => onNavigate({ tab: 'quote', propostaId: o.id, mode: 'edit' })}>
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                className="h-8 w-8 p-0 text-slate-500 hover:text-blue-600" 
+                                                title="Editar" 
+                                                onClick={() => o?.id && onNavigate({ tab: 'quote', propostaId: o.id, mode: 'edit' })}
+                                            >
                                                 <Edit size={16} />
                                             </Button>
-                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-500 hover:text-amber-600" title="Gerar PDF" onClick={() => handlePreview(o)}>
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                className="h-8 w-8 p-0 text-slate-500 hover:text-amber-600" 
+                                                title="Gerar PDF" 
+                                                onClick={() => o?.id && handlePreview(o)}
+                                            >
                                                 <FileDown size={16} />
                                             </Button>
-                                            {o.status !== 'ACEITA' && o.status !== 'RECUSADA' && (
-                                                <Button variant="ghost" size="sm" onClick={() => handleApprove(o.id!, o.numero)} className="h-8 w-8 p-0 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50" title="Aprovar Diretamente">
+                                            {o?.id && o.status !== 'ACEITA' && o.status !== 'RECUSADA' && (
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="sm" 
+                                                    onClick={() => handleApprove(o.id!, o.numero)} 
+                                                    className="h-8 w-8 p-0 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50" 
+                                                    title="Aprovar Diretamente"
+                                                >
                                                     <CheckCircle2 size={16} />
                                                 </Button>
                                             )}
-                                            {(o.status === 'RASCUNHO' || o.status === 'RECUSADA') && (
-                                                <Button variant="ghost" size="sm" onClick={() => handleDelete(o.id!, o.numero)} className="h-8 w-8 p-0 text-slate-500 hover:text-red-600 hover:bg-red-50" title="Excluir">
-                                                    <Trash2 size={16} />
-                                                </Button>
-                                            )}
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                onClick={() => o?.id && handleDelete(o.id!, o.numero)} 
+                                                className="h-8 w-8 p-0 text-slate-500 hover:text-red-600 hover:bg-red-50" 
+                                                title="Excluir"
+                                            >
+                                                <Trash2 size={16} />
+                                            </Button>
                                         </div>
                                     </td>
                                 </tr>
