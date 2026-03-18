@@ -47,18 +47,16 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   }
-  
+
   const errorString = JSON.stringify(errInfo);
   console.error('Firestore Error: ', errorString);
-  
+
   // Prevent throwing hard errors that crash the React app for permission issues.
   // The hook will still return the error in its state, allowing components to gracefully degrade.
   if (errInfo.error.includes('permission-denied') || errInfo.error.includes('Missing or insufficient permissions')) {
-    // throw new Error(errorString);
     return;
   }
-  
-  // Also avoid throwing other random firestore read errors to the window level
-  // if they occur in hooks, since React state will capture them.
-  return;
+
+  // Re-throw other errors so they can be handled by ErrorBoundaries or the app's error state
+  throw error;
 }

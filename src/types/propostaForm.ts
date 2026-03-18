@@ -28,6 +28,10 @@ export interface NovaPropostaData {
     // Condições de Pagamento Customizadas
     condicoesPagamento: ParcelaProposta[];
 
+    // Novos Campos
+    faturamentoMinimo?: number;
+    prazoExecucao?: number;
+
     // Custom ESC
     modalidadeESC: 'por_metro' | 'preco_fechado' | 'saida_diaria';
     precoFechadoESC?: number;

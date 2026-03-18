@@ -152,7 +152,7 @@ export interface BoletimDiario {
   createdBy: string;
 }
 
-export type StatusProposta = 'RASCUNHO' | 'ENVIADA' | 'ACEITA' | 'RECUSADA';
+export type StatusProposta = 'RASCUNHO' | 'ENVIADA' | 'ACEITA' | 'RECUSADA' | 'EXPIRADA';
 export type TipoItem = 'SERVICO_METRO' | 'TAXA_FIXA' | 'HORA_PARADA';
 export type OrigemEquipamento = 'PROPRIO' | 'TERCEIRO';
 export type FormaPagamento = 'BOLETO' | 'PIX' | 'TED' | 'CARTAO_CREDITO';
@@ -215,6 +215,7 @@ export interface ItemProposta {
   origem: OrigemEquipamento;
   subtotal?: number;
   total: number;
+  faturamentoMinimo?: number;
 }
 
 export type CategoriaParada =
@@ -258,6 +259,7 @@ export interface Boletim {
   // Produção
   estacasExecutadas: number;
   metrosExecutados: number;
+  faturamentoMinimoAplicado?: number;
 
   // Horários Globais do Dia
   horaInicioObra?: string;

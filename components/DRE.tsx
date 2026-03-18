@@ -212,8 +212,8 @@ const DREPDFConsolidado = ({ dres, obras }: { dres: DREObra[], obras: Constructi
 
           {consolidated.map((d, i) => (
             <View key={i} style={styles.tableRow}>
-              <Text style={styles.tableColWide}>{getObraName(d.obraId)}</Text>
-              <Text style={styles.tableCol}>{getObraStatus(d.obraId)}</Text>
+              <Text style={styles.tableColWide}>{getObraName(d.obraId || '')}</Text>
+              <Text style={styles.tableCol}>{getObraStatus(d.obraId || '')}</Text>
               <Text style={styles.tableCol}>{formatCurrency(d.receitaContratada)}</Text>
               <Text style={styles.tableCol}>{formatCurrency(d.custo)}</Text>
               <Text style={{ ...styles.tableCol, color: d.margem >= 0 ? 'green' : 'red' }}>{formatCurrency(d.margem)}</Text>
@@ -324,7 +324,7 @@ export const DRE: React.FC<DREProps> = ({ config }) => {
           // Apply Engineer Filter if 'todos' is not selected
           if (filtroEngenheiro !== 'todos') {
             const allowedObrasIds = obrasList.filter(o => o.responsavelEngenheiro === filtroEngenheiro).map(o => o.id);
-            docs = docs.filter(d => allowedObrasIds.includes(d.obraId));
+            docs = docs.filter(d => d.obraId && allowedObrasIds.includes(d.obraId));
           }
 
           setConsolidatedDres(docs);
@@ -651,7 +651,7 @@ export const DRE: React.FC<DREProps> = ({ config }) => {
                 <Tooltip
                   cursor={{ fill: '#F1F5F9' }}
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: number) => [`${value.toFixed(1)}%`, 'Margem Contribuição']}
+                  formatter={(value: any) => [`${Number(value).toFixed(1)}%`, 'Margem Contribuição']}
                 />
                 <ReferenceLine y={0} stroke="#000" />
                 <Bar dataKey="pct" radius={[4, 4, 0, 0]}>

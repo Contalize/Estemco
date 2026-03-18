@@ -13,8 +13,8 @@ interface Step3Props {
 }
 
 // Full diameter list by technology
-const DIAMETROS_HCM_CM = [30, 35, 40, 50, 60, 70, 80, 90, 100, 120, 150];
-const DIAMETROS_ESC_CM = [25, 30, 35, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 180, 200, 250, 300];
+const DIAMETROS_HCM_CM = [10, 12, 15, 20, 25, 30, 35, 40, 50, 60, 70, 80, 90, 100, 120, 150];
+const DIAMETROS_ESC_CM = [10, 12, 15, 20, 25, 30, 35, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 180, 200, 250, 300];
 const DIAMETROS_RAIZ_CM = [10, 12, 15, 16, 20, 25, 31, 35, 40, 45, 50];
 const DIAMETROS_STRAUSS_CM = [25, 32, 40, 45, 50];
 
@@ -57,7 +57,7 @@ export const Step3ItensServico: React.FC<Step3Props> = ({ data, updateData }) =>
                 });
             }
         }
-    }, [loading, config, data.tipo]);
+    }, [loading, config, data.tipo, updateData]);
 
     if (loading) return <div className="p-12 text-center text-slate-500">Carregando parâmetros comerciais...</div>;
     if (!config) return <div className="p-12 text-center text-red-500">Erro ao carregar configurações de preço para {data.tipo}. Verifique se você parametrizou os custos em Configurações.</div>;
@@ -157,8 +157,17 @@ export const Step3ItensServico: React.FC<Step3Props> = ({ data, updateData }) =>
                 <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-md flex gap-3 shadow-sm">
                     <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={18} />
                     <div>
-                        <h4 className="font-bold text-amber-800">Faturamento mínimo diário: R$ {(conf.faturamentoMinimoDiario || 8000).toLocaleString('pt-BR')}/dia de máquina.</h4>
-                        <p className="text-sm text-amber-700 mt-1">Cobrado por: falta de concreto, bomba, mangotes, locação, horários restritos, dificuldades de perfuração, estacas em blocos (NBR 6122:2019 Anexo N.7). Isenção: condições climáticas e quebra do equipamento HCM.</p>
+                        <h4 className="font-bold text-amber-800">Faturamento mínimo diário: R$ {(data.faturamentoMinimo || conf.faturamentoMinimoDiario || 8000).toLocaleString('pt-BR')}/dia de máquina.</h4>
+                        <p className="text-sm text-amber-700 mt-1">Cobrado por: falta de concreto, bomba, mangotes, locação, horários restritos, dificuldades de perfuração, estacas em blocos (NBR 6122:2019 Anexo N.7). <b>Isenção: condições climáticas e quebra do equipamento HCM.</b></p>
+                        <div className="mt-3 flex items-center gap-3">
+                            <Label className="text-xs font-bold text-amber-900 uppercase">Alterar Mínimo (R$):</Label>
+                            <Input 
+                                type="number" 
+                                value={data.faturamentoMinimo} 
+                                onChange={e => updateData({ faturamentoMinimo: Number(e.target.value) })}
+                                className="w-32 h-8 bg-white/50 border-amber-200 text-amber-900 font-bold"
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -220,8 +229,17 @@ export const Step3ItensServico: React.FC<Step3Props> = ({ data, updateData }) =>
                 <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-md flex gap-3 shadow-sm">
                     <Info className="text-blue-600 shrink-0 mt-0.5" size={18} />
                     <div>
-                        <h4 className="font-bold text-blue-800">Faturamento mínimo: R$ {(conf.faturamentoMinimoObra || 3000).toLocaleString('pt-BR')} da OBRA.</h4>
+                        <h4 className="font-bold text-blue-800">Faturamento mínimo: R$ {(data.faturamentoMinimo || conf.faturamentoMinimoObra || 3000).toLocaleString('pt-BR')} da OBRA.</h4>
                         <p className="text-sm text-blue-700 mt-1">Taxa hora parada: R$ {(conf.taxaHoraParada || 500).toFixed(2)}/h por nível d'água, pedras, modificação de projeto, fretes.</p>
+                        <div className="mt-3 flex items-center gap-3">
+                            <Label className="text-xs font-bold text-blue-900 uppercase">Alterar Mínimo (R$):</Label>
+                            <Input 
+                                type="number" 
+                                value={data.faturamentoMinimo} 
+                                onChange={e => updateData({ faturamentoMinimo: Number(e.target.value) })}
+                                className="w-32 h-8 bg-white/50 border-blue-200 text-blue-900 font-bold"
+                            />
+                        </div>
                     </div>
                 </div>
 

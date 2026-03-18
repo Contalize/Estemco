@@ -489,7 +489,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ sites, config, onNavigate 
                     <Tooltip
                       contentStyle={{ borderRadius: '8px', border: '1px solid #E2E8F0', padding: '10px' }}
                       itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
-                      formatter={(value: number, name: string) => [name === 'Margem' ? `${value}%` : formatCurrency(value), name]}
+                      formatter={(value: any, name: any) => [name === 'Margem' ? `${value}%` : formatCurrency(value), name]}
                     />
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
                     <Bar yAxisId="left" dataKey="Receita" barSize={30} fill="#10b981" radius={[4, 4, 0, 0]} />
@@ -665,7 +665,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ sites, config, onNavigate 
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v: number, n: string) => [formatCurrency(v), n]} itemStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
+                    <Tooltip formatter={(v: any, n: any) => [formatCurrency(v), n]} itemStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>

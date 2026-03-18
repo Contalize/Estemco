@@ -12,13 +12,21 @@ export interface AnalysisResponse {
 }
 
 const parseConstructionDataForPrompt = (site: ConstructionSite, dieselPrice: number): string => {
-  const breakdown = site.data.map(d => `- ${d.name}: ${d.value}%`).join('\n');
-  const margin = site.revenue > 0 ? ((site.revenue - site.totalCost) / site.revenue) * 100 : 0;
-  const progress = site.contractMeters > 0 ? (site.executedMeters / site.contractMeters) * 100 : 0;
-  const overbreak = site.concreteTheoreticalVol > 0 
-    ? ((site.concreteRealVol - site.concreteTheoreticalVol) / site.concreteTheoreticalVol) * 100 
+  const breakdown = (site.data || []).map(d => `- ${d.name}: ${d.value}%`).join('\n');
+  const revenue = site.revenue || 0;
+  const totalCost = site.totalCost || 0;
+  const margin = revenue > 0 ? ((revenue - totalCost) / revenue) * 100 : 0;
+
+  const contractMeters = site.contractMeters || 0;
+  const executedMeters = site.executedMeters || 0;
+  const progress = contractMeters > 0 ? (executedMeters / contractMeters) * 100 : 0;
+
+  const concreteTheoreticalVol = site.concreteTheoreticalVol || 0;
+  const concreteRealVol = site.concreteRealVol || 0;
+  const overbreak = concreteTheoreticalVol > 0
+    ? ((concreteRealVol - concreteTheoreticalVol) / concreteTheoreticalVol) * 100
     : 0;
-  
+
   return `
     Você é o Engenheiro Controller Sênior da Estemco Engenharia.
     Audite financeiramente a obra: ${site.name}.
@@ -54,7 +62,7 @@ export const analyzeSiteHealth = async (site: ConstructionSite, dieselPrice: num
 
     const sources: GroundingSource[] = [];
     const metadata = response.candidates?.[0]?.groundingMetadata;
-    
+
     if (metadata?.groundingChunks) {
       metadata.groundingChunks.forEach((chunk: any) => {
         if (chunk.web) {
@@ -76,7 +84,7 @@ export const analyzeSiteHealth = async (site: ConstructionSite, dieselPrice: num
 export const analyzeLogistics = async (site: ConstructionSite): Promise<AnalysisResponse> => {
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
-    
+
     const prompt = `
       Analise a logística de entorno para a obra: ${site.name} em ${site.address}.
       Coordenadas: ${site.latitude}, ${site.longitude}.
@@ -105,7 +113,7 @@ export const analyzeLogistics = async (site: ConstructionSite): Promise<Analysis
 
     const sources: GroundingSource[] = [];
     const metadata = response.candidates?.[0]?.groundingMetadata;
-    
+
     if (metadata?.groundingChunks) {
       metadata.groundingChunks.forEach((chunk: any) => {
         if (chunk.maps) {

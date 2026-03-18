@@ -513,7 +513,7 @@ export const Financeiro: React.FC = () => {
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                             <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} dy={10} />
                             <YAxis tickFormatter={(val) => `R$ ${val / 1000}k`} axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
-                            <Tooltip formatter={(value: number) => formatCurrency(value)} cursor={{ fill: '#F1F5F9' }} />
+                            <Tooltip formatter={(value: any) => formatCurrency(value)} cursor={{ fill: '#F1F5F9' }} />
                             <Legend wrapperStyle={{ paddingTop: '20px' }} />
                             <Bar dataKey="Medido" fill="#3B82F6" radius={[4, 4, 0, 0]} maxBarSize={40} />
                             <Bar dataKey="Recebido" fill="#10B981" radius={[4, 4, 0, 0]} maxBarSize={40} />

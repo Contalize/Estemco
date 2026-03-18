@@ -3,10 +3,10 @@ import { logAudit } from '../src/utils/audit';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { useCollection } from '../src/firebase/firestore/use-collection';
 import { useAuth } from '../contexts/AuthContext';
-import { where, collection, Timestamp, doc, runTransaction, getDoc } from 'firebase/firestore';
+import { where, collection, Timestamp, doc, runTransaction, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Card, Label, Input, Select, Button, Textarea, Toast } from './ui';
-import { Plus, Trash2, Save, X, Search, Calendar as CalendarIcon, Drill, DollarSign, Users, Fuel, Activity, MapPin, Loader2, CloudRain, Sun, Cloud, Image as ImageIcon, FileText } from 'lucide-react';
+import { Plus, Trash2, Save, X, Search, Calendar as CalendarIcon, Drill, DollarSign, Users, Fuel, Activity, MapPin, Loader2, CloudRain, Sun, Cloud, Image as ImageIcon, FileText, Printer, Edit2 } from 'lucide-react';
 import { GlobalConfig, ConstructionSite, Boletim, DREObra } from '../types';
 import { formatarData } from '../src/utils/formatDate';
 
@@ -54,14 +54,19 @@ type BoletimFormData = {
 
   // Obs
   observacoes: string;
+  faturamentoMinimoAplicado: number;
 };
 
 export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config, initialObraId }) => {
   const { user, profile } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedBdoForPdf, setSelectedBdoForPdf] = useState<Boletim | null>(null);
+  const [isPreviewPdfOpen, setIsPreviewPdfOpen] = useState(false);
+  const [editingBdoId, setEditingBdoId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'obra' | 'producao' | 'consumos' | 'obs'>('obra');
   const [isSaving, setIsSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // List Filters
   const [filtroObraId, setFiltroObraId] = useState<string>(initialObraId || '');
@@ -135,7 +140,8 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config, initialObr
       horaInicioObra: '',
       horaFimObra: '',
       paradas: [],
-      caminhoes: []
+      caminhoes: [],
+      faturamentoMinimoAplicado: 0
     }
   });
 
@@ -184,6 +190,59 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config, initialObr
   const totalDiaTracker = custoDiesel + custoHorasParadas + custoEquipeForm; // (Somados no banco)
 
 
+  // -------- DELETE BDO --------
+  const handleDeleteBdo = async (bdoId: string) => {
+    if (!profile?.tenantId) return;
+    if (!window.confirm('Tem certeza que deseja excluir este BDO? Esta ação é irreversível.')) return;
+    try {
+      await deleteDoc(doc(db, 'boletins', bdoId));
+      setConfirmDeleteId(null);
+      setToastMessage('BDO excluído com sucesso.');
+      setTimeout(() => setToastMessage(''), 3000);
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao excluir o BDO.');
+    }
+  };
+
+  // -------- EDIT BDO (pre-fill form) --------
+  const handleEditBdo = (bdo: Boletim) => {
+    const dataStr = bdo.data?.toDate ? bdo.data.toDate().toISOString().split('T')[0] : String(bdo.data).split('T')[0];
+    reset({
+      obraId: bdo.obraId,
+      data: dataStr,
+      equipamentoId: bdo.equipamentoId || '',
+      operadorNome: bdo.operador || '',
+      estacasExecutadas: bdo.estacasExecutadas || 0,
+      metrosExecutados: bdo.metrosExecutados || 0,
+      horasProducao: bdo.horasProducao || 0,
+      horasParada: bdo.horasParada || 0,
+      motivoParada: bdo.motivoParada || '',
+      descricaoParada: bdo.descricaoParada || '',
+      dieselConsumidoLitros: bdo.dieselConsumidoLitros || 0,
+      concretoConsumidoM3: bdo.concretoConsumidoM3 || 0,
+      horaChegadaBetoneira: '',
+      horaTerminoBetoneira: '',
+      horaInicioObra: bdo.horaInicioObra || '',
+      horaFimObra: bdo.horaFimObra || '',
+      condicaoClima: bdo.condicaoClima || 'Ensolarado',
+      condicaoSolo: bdo.condicaoSolo || 'Normal',
+      equipe: bdo.equipe || [],
+      paradas: (bdo.paradas || []).map(p => ({ ...p, cobravel: (p as any).cobravel ?? true })),
+      caminhoes: (bdo.caminhoesBetoneira || []).map((c: any) => ({ numeroFaturamento: c.numeroFaturamento || '', volumeM3: c.volumeM3 || 0, horaChegada: c.horaChegada || '', horaSaida: c.horaSaida || '' })),
+      observacoes: bdo.observacoes || '',
+      faturamentoMinimoAplicado: bdo.faturamentoMinimoAplicado || 0,
+    });
+    setEditingBdoId(bdo.id || null);
+    setActiveTab('obra');
+    setIsModalOpen(true);
+  };
+
+  const handlePrintBdo = (bdo: Boletim) => {
+    setSelectedBdoForPdf(bdo);
+    setIsPreviewPdfOpen(true);
+  };
+
   // -------- SAVE TRANSACTION --------
   const onSubmit = async (data: BoletimFormData) => {
     if (!profile?.tenantId || !user?.uid) return;
@@ -205,6 +264,7 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config, initialObr
 
         estacasExecutadas: data.estacasExecutadas,
         metrosExecutados: data.metrosExecutados,
+        faturamentoMinimoAplicado: data.faturamentoMinimoAplicado,
         // profundidadeMedia,
 
         horasProducao: data.horasProducao,
@@ -255,72 +315,87 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config, initialObr
       const obraRef = doc(db, 'obras', data.obraId);
       const boletimRef = doc(collection(db, 'boletins'));
 
-      await runTransaction(db, async (transaction) => {
-        // 1. TODOS OS GETs PRIMEIRO
-        const dreSnap = await transaction.get(dreRef);
-        const obraSnapshot = await transaction.get(obraRef);
+      if (editingBdoId) {
+        // UPDATE existing BDO
+        const boletimUpdateRef = doc(db, 'boletins', editingBdoId);
+        await runTransaction(db, async (transaction) => {
+          transaction.update(boletimUpdateRef, bdoDoc as any);
+        });
+        await logAudit(user.uid, 'ATUALIZADO', 'boletim', `BDO editado: ${editingBdoId}`, profile.tenantId);
+        setToastMessage('BDO atualizado com sucesso!');
+        setTimeout(() => setToastMessage(''), 3000);
+        setEditingBdoId(null);
+        setIsModalOpen(false);
+        reset();
+      } else {
+        // CREATE new BDO
+        await runTransaction(db, async (transaction) => {
+          // 1. TODOS OS GETs PRIMEIRO
+          const dreSnap = await transaction.get(dreRef);
+          const obraSnapshot = await transaction.get(obraRef);
 
-        // 2. TODOS OS SETs E UPDATEs DEPOIS
-        transaction.set(boletimRef, bdoDoc as Boletim);
+          // 2. TODOS OS SETs E UPDATEs DEPOIS
+          transaction.set(boletimRef, bdoDoc as Boletim);
 
-        if (dreSnap.exists()) {
-          const dreAtual = dreSnap.data() as DREObra;
-          const novosMetros = (dreAtual.totalMetrosExecutados || 0) + data.metrosExecutados;
-          const novoOverbreak = calcularOverbreakMedioPonderado(dreAtual, data.metrosExecutados, overbreakPct);
+          if (dreSnap.exists()) {
+            const dreAtual = dreSnap.data() as DREObra;
+            const novosMetros = (dreAtual.totalMetrosExecutados || 0) + data.metrosExecutados;
+            const novoOverbreak = calcularOverbreakMedioPonderado(dreAtual, data.metrosExecutados, overbreakPct);
 
-          transaction.update(dreRef, {
-            totalMetrosExecutados: novosMetros,
-            totalDieselGasto: (dreAtual.totalDieselGasto || 0) + custoDiesel,
-            totalHorasParadas: (dreAtual.totalHorasParadas || 0) + data.horasParada,
-            totalCustoMaoDeObra: (dreAtual.totalCustoMaoDeObra || 0) + custoEquipeForm,
-            totalBoletins: (dreAtual.totalBoletins || 0) + 1,
-            totalHorasProducao: (dreAtual.totalHorasProducao || 0) + data.horasProducao,
-            totalCustoHorasParadas: (dreAtual.totalCustoHorasParadas || 0) + custoHorasParadas,
-            totalCustoConcreto: (dreAtual.totalCustoConcreto || 0) + custoConcreto,
-            overbreakMedio: novoOverbreak,
-            updatedAt: Timestamp.now()
-          });
-        } else {
-          transaction.set(dreRef, {
-            tenantId: profile.tenantId!,
-            obraId: data.obraId,
-            receitaContratada: obraSelecionadaForm?.totalBudget || 0,
-            receitaMedidaAcumulada: 0,
-            totalMetrosExecutados: data.metrosExecutados,
-            totalDieselGasto: custoDiesel,
-            totalHorasParadas: data.horasParada,
-            totalHorasProducao: data.horasProducao,
-            totalCustoHorasParadas: custoHorasParadas,
-            totalCustoMaoDeObra: custoEquipeForm,
-            totalCustoConcreto: custoConcreto,
-            totalBoletins: 1,
-            overbreakMedio: overbreakPct,
-            custoMobilizacao: 0,
-            custoART: 0,
-            updatedAt: Timestamp.now()
-          } as DREObra);
-        }
+            transaction.update(dreRef, {
+              totalMetrosExecutados: novosMetros,
+              totalDieselGasto: (dreAtual.totalDieselGasto || 0) + custoDiesel,
+              totalHorasParadas: (dreAtual.totalHorasParadas || 0) + data.horasParada,
+              totalCustoMaoDeObra: (dreAtual.totalCustoMaoDeObra || 0) + custoEquipeForm,
+              totalBoletins: (dreAtual.totalBoletins || 0) + 1,
+              totalHorasProducao: (dreAtual.totalHorasProducao || 0) + data.horasProducao,
+              totalCustoHorasParadas: (dreAtual.totalCustoHorasParadas || 0) + custoHorasParadas,
+              totalCustoConcreto: (dreAtual.totalCustoConcreto || 0) + custoConcreto,
+              overbreakMedio: novoOverbreak,
+              updatedAt: Timestamp.now()
+            });
+          } else {
+            transaction.set(dreRef, {
+              tenantId: profile.tenantId!,
+              obraId: data.obraId,
+              receitaContratada: obraSelecionadaForm?.totalBudget || 0,
+              receitaMedidaAcumulada: 0,
+              totalMetrosExecutados: data.metrosExecutados,
+              totalDieselGasto: custoDiesel,
+              totalHorasParadas: data.horasParada,
+              totalHorasProducao: data.horasProducao,
+              totalCustoHorasParadas: custoHorasParadas,
+              totalCustoMaoDeObra: custoEquipeForm,
+              totalCustoConcreto: custoConcreto,
+              totalBoletins: 1,
+              overbreakMedio: overbreakPct,
+              custoMobilizacao: 0,
+              custoART: 0,
+              updatedAt: Timestamp.now()
+            } as DREObra);
+          }
 
-        if (obraSnapshot.exists()) {
-          const currO = obraSnapshot.data() as ConstructionSite;
-          transaction.update(obraRef, {
-            ultimoBoletim: Timestamp.now(),
-            executedMeters: (currO.executedMeters || 0) + data.metrosExecutados
-          });
-        }
-      });
+          if (obraSnapshot.exists()) {
+            const currO = obraSnapshot.data() as ConstructionSite;
+            transaction.update(obraRef, {
+              ultimoBoletim: Timestamp.now(),
+              executedMeters: (currO.executedMeters || 0) + data.metrosExecutados
+            });
+          }
+        });
 
-      await logAudit(
-        user.uid,
-        'CRIADO',
-        'boletim',
-        `Novo BDO lançado em ${data.data} para estaca Ø${diamPrincipalM * 100}cm`,
-        profile.tenantId
-      );
+        await logAudit(
+          user.uid,
+          'CRIADO',
+          'boletim',
+          `Novo BDO lançado em ${data.data} para estaca Ø${diamPrincipalM * 100}cm`,
+          profile.tenantId
+        );
 
-      setToastMessage('BDO registrado com sucesso!');
-      setIsModalOpen(false);
-      reset();
+        setToastMessage('BDO registrado com sucesso!');
+        setIsModalOpen(false);
+        reset();
+      }
     } catch (err: any) {
       console.error('Erro ao salvar boletim:', err);
       alert(`Erro ao salvar: ${err.message || 'Falha ao gravar no banco.'}`);
@@ -347,6 +422,7 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config, initialObr
             <FileText className="text-indigo-600" size={32} /> Diário de Obras (BDO)
           </h1>
           <p className="text-sm text-slate-500 mt-2">Apontamentos de campo, consumos e performance real.</p>
+
         </div>
         <Button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 h-10 px-6 font-bold shadow-sm">
           <Plus size={18} className="mr-2" /> Lançar BDO
@@ -412,14 +488,15 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config, initialObr
                 <th className="px-6 py-4">Obra Cliente</th>
                 <th className="px-6 py-4">Equipe / Eqp</th>
                 <th className="px-6 py-4 text-center">Furação</th>
-                <th className="px-6 py-4 text-center">Consumo (L)</th>
+                <th className="px-6 py-4 text-center">Concreto (m³)</th>
                 <th className="px-6 py-4 text-center">Overbreak</th>
                 <th className="px-6 py-4 text-right">R$ Operação/Dia</th>
+                <th className="px-6 py-4 text-center w-20">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {boletinsList.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-10 text-slate-500">Nenhum diário registrado neste período.</td></tr>
+                <tr><td colSpan={8} className="text-center py-10 text-slate-500">Nenhum diário registrado neste período.</td></tr>
               ) : (
                 boletinsList.map(b => (
                   <tr key={b.id} className="hover:bg-slate-50 transition-colors">
@@ -447,6 +524,19 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config, initialObr
                     </td>
                     <td className="px-6 py-4 text-right font-black text-rose-600 tracking-tight">
                       {formatCurrency((b.custoDiesel || 0) + (b.custoHorasParadas || 0) + (b.custoMaoDeObra || 0))}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleEditBdo(b)} className="text-slate-500 hover:text-indigo-600">
+                          <Edit2 size={16} />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handlePrintBdo(b)} className="text-slate-500 hover:text-blue-600">
+                          <Printer size={16} />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteBdo(b.id!)} className="text-slate-500 hover:text-red-600">
+                          <Trash2 size={16} />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -590,6 +680,18 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config, initialObr
                       <div className="mt-4 p-3 bg-slate-50 text-slate-600 text-xs rounded border border-slate-100 flex items-center justify-between">
                         <span>ℹ️ Profundidade Média (estatística):</span>
                         <span className="font-bold">{profMedia.toFixed(2)}m/estaca</span>
+                      </div>
+                      
+                      <div className="mt-4 pt-4 border-t border-slate-100">
+                        <Label className="text-amber-800 font-bold">Faturamento Mínimo Diário (R$)</Label>
+                        <div className="flex items-center gap-3 mt-1">
+                           <Input 
+                            type="number" 
+                            {...register('faturamentoMinimoAplicado', { valueAsNumber: true })} 
+                            className="w-40 font-bold text-lg h-10 border-amber-200"
+                           />
+                           <p className="text-[10px] text-slate-400">Padrão: {formatCurrency(taxaHoraParada * 8)}</p>
+                        </div>
                       </div>
                     </Card>
 
@@ -866,6 +968,13 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config, initialObr
         </div>
       )}
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage('')} variant="success" />}
+      {isPreviewPdfOpen && selectedBdoForPdf && (
+        <BoletimPDFPreviewModal
+            isOpen={isPreviewPdfOpen}
+            onClose={() => setIsPreviewPdfOpen(false)}
+            bdo={selectedBdoForPdf}
+        />
+      )}
     </div>
   );
 };

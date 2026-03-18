@@ -50,30 +50,35 @@ export function useConfiguracoes<T = ConfigHCM | ConfigESC | ConfigSPT>(empresaI
             return;
         }
 
+        let cancelled = false;
+
         const fetchConfig = async () => {
             try {
                 const ref = doc(db, 'empresas', empresaId, 'configuracoes', tipo);
                 const snap = await getDoc(ref);
 
+                if (cancelled) return;
+
                 if (snap.exists()) {
                     setConfig(snap.data() as T);
                 } else {
-                    // Auto-seed defaults so the wizard is always usable
                     const defaults = DEFAULTS[tipo] as T;
                     await setDoc(ref, defaults as object);
-                    setConfig(defaults);
+                    if (!cancelled) setConfig(defaults);
                 }
             } catch (err) {
                 console.error("Erro ao buscar configurações", err);
-                // Fallback to in-memory defaults so the UI never blocks
-                setConfig(DEFAULTS[tipo] as T);
-                setError("Usando parâmetros padrão. Personalize em Parâmetros do Sistema.");
+                if (!cancelled) {
+                    setConfig(DEFAULTS[tipo] as T);
+                    setError("Usando parâmetros padrão. Personalize em Parâmetros do Sistema.");
+                }
             } finally {
-                setLoading(false);
+                if (!cancelled) setLoading(false);
             }
         };
 
         fetchConfig();
+        return () => { cancelled = true; };
     }, [empresaId, tipo]);
 
     return { config, loading, error };

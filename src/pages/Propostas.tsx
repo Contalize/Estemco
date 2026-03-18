@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../lib/firebase';
-import { collection, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { Proposta, StatusProposta } from '../../types';
 
-import { Button, Input, Select, Toast } from '../../components/ui';
+import { Button, Input, Select, Toast, ConfirmDialog } from '../../components/ui';
 import { FileText, Plus, Search, Eye, FileDown, Trash2, Edit, CheckCircle2 } from 'lucide-react';
 import { formatarData } from '../utils/formatDate';
+import { PDFPreviewModal } from '../../components/PDFPreviewModal';
 
 interface PropostasListProps {
     onNavigate: (tab: any) => void;
@@ -16,10 +17,25 @@ export const Propostas: React.FC<PropostasListProps> = ({ onNavigate }) => {
     const { profile } = useAuth();
     const [propostas, setPropostas] = useState<Proposta[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedProposta, setSelectedProposta] = useState<any>(null);
+    const [showPreview, setShowPreview] = useState(false);
 
     const [filtroTipo, setFiltroTipo] = useState('Todos');
     const [filtroStatus, setFiltroStatus] = useState('Todos');
     const [busca, setBusca] = useState('');
+
+    const [confirmConfig, setConfirmConfig] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        variant?: 'primary' | 'destructive';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { }
+    });
 
     useEffect(() => {
         if (!profile?.tenantId) return;
@@ -38,44 +54,62 @@ export const Propostas: React.FC<PropostasListProps> = ({ onNavigate }) => {
         return () => unsub();
     }, [profile]);
 
-    const handleDelete = async (id: string, numero: string) => {
-        if (confirm(`Atenção: Você tem certeza que deseja excluir a proposta ${numero}? Isso não pode ser desfeito.`)) {
-            try {
-                await deleteDoc(doc(db, 'empresas', profile!.tenantId, 'propostas', id));
-            } catch (err) {
-                alert('Erro ao excluir proposta.');
+    const handleDelete = (id: string, numero: string) => {
+        setConfirmConfig({
+            isOpen: true,
+            title: 'Excluir Proposta',
+            message: `Atenção: Você tem certeza que deseja excluir a proposta ${numero}? Isso não pode ser desfeito.`,
+            variant: 'destructive',
+            onConfirm: async () => {
+                try {
+                    await deleteDoc(doc(db, 'empresas', profile!.tenantId, 'propostas', id));
+                } catch (err) {
+                    alert('Erro ao excluir proposta.');
+                }
             }
-        }
+        });
     };
 
-    const handleApprove = async (id: string, numero: string) => {
-        if (confirm(`Aprovar a proposta ${numero}? Ela passará a ter status de Aprovada.`)) {
-            try {
-                await updateDoc(doc(db, 'empresas', profile!.tenantId, 'propostas', id), {
-                    status: 'ACEITA'
-                });
-            } catch (err) {
-                alert('Erro ao aprovar proposta.');
+    const handleApprove = (id: string, numero: string) => {
+        setConfirmConfig({
+            isOpen: true,
+            title: 'Aprovar Proposta',
+            message: `Aprovar a proposta ${numero}? Ela passará a ter status de Aprovada.`,
+            variant: 'primary',
+            onConfirm: async () => {
+                try {
+                    await updateDoc(doc(db, 'empresas', profile!.tenantId, 'propostas', id), {
+                        status: 'ACEITA'
+                    });
+                } catch (err) {
+                    alert('Erro ao aprovar proposta.');
+                }
             }
-        }
+        });
+    };
+    
+    const handlePreview = (proposta: Proposta) => {
+        setSelectedProposta(proposta);
+        setShowPreview(true);
     };
 
     const getStatusBadge = (status: StatusProposta | undefined) => {
-        if (!status) status = 'RASCUNHO';
-        const maps = {
+        const s = status || 'RASCUNHO';
+        const maps: Record<StatusProposta, string> = {
             'RASCUNHO': 'bg-gray-100 text-gray-700 border-gray-200',
             'ENVIADA': 'bg-blue-100 text-blue-700 border-blue-200',
             'ACEITA': 'bg-green-100 text-green-700 border-green-200',
-            'RECUSADA': 'bg-red-100 text-red-700 border-red-200'
+            'RECUSADA': 'bg-red-100 text-red-700 border-red-200',
+            'EXPIRADA': 'bg-orange-100 text-orange-700 border-orange-200'
         };
-        const labels = {
-            'rascunho': 'Rascunho',
-            'enviada': 'Enviada',
-            'aprovada': 'Aprovada',
-            'recusada': 'Recusada',
-            'expirada': 'Expirada'
+        const labels: Record<StatusProposta, string> = {
+            'RASCUNHO': 'Rascunho',
+            'ENVIADA': 'Enviada',
+            'ACEITA': 'Aprovada',
+            'RECUSADA': 'Recusada',
+            'EXPIRADA': 'Expirada'
         };
-        return <span className={`px-2 py-1 text-xs font-bold rounded-full border ${maps[status] || maps['RASCUNHO']}`}>{labels[status] || 'Rascunho'}</span>;
+        return <span className={`px-2 py-1 text-xs font-bold rounded-full border ${maps[s] || maps['RASCUNHO']}`}>{labels[s] || 'Rascunho'}</span>;
     };
 
     const getTypeColor = (tipo: string) => {
@@ -124,11 +158,11 @@ export const Propostas: React.FC<PropostasListProps> = ({ onNavigate }) => {
 
                 <Select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)} className="w-40">
                     <option value="Todos">Status</option>
-                    <option value="rascunho">Rascunhos</option>
-                    <option value="enviada">Enviadas</option>
-                    <option value="aprovada">Aprovadas</option>
-                    <option value="recusada">Recusadas</option>
-                    <option value="expirada">Expiradas</option>
+                    <option value="RASCUNHO">Rascunhos</option>
+                    <option value="ENVIADA">Enviadas</option>
+                    <option value="ACEITA">Aprovadas</option>
+                    <option value="RECUSADA">Recusadas</option>
+                    <option value="EXPIRADA">Expiradas</option>
                 </Select>
             </div>
 
@@ -175,13 +209,13 @@ export const Propostas: React.FC<PropostasListProps> = ({ onNavigate }) => {
                                     </td>
                                     <td className="px-6 py-3 text-right">
                                         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-600" title="Visualizar" onClick={() => onNavigate({ tab: 'quote', propostaId: o.id })}>
+                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-600" title="Visualizar" onClick={() => handlePreview(o)}>
                                                 <Eye size={16} />
                                             </Button>
-                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-500 hover:text-blue-600" title="Editar" onClick={() => onNavigate({ tab: 'quote', propostaId: o.id })}>
+                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-500 hover:text-blue-600" title="Editar" onClick={() => onNavigate({ tab: 'quote', propostaId: o.id, mode: 'edit' })}>
                                                 <Edit size={16} />
                                             </Button>
-                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-500 hover:text-amber-600" title="Gerar PDF">
+                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-500 hover:text-amber-600" title="Gerar PDF" onClick={() => handlePreview(o)}>
                                                 <FileDown size={16} />
                                             </Button>
                                             {o.status !== 'ACEITA' && o.status !== 'RECUSADA' && (
@@ -202,6 +236,33 @@ export const Propostas: React.FC<PropostasListProps> = ({ onNavigate }) => {
                     </table>
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={confirmConfig.isOpen}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                variant={confirmConfig.variant}
+                onConfirm={confirmConfig.onConfirm}
+                onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+                confirmLabel="Confirmar"
+                cancelLabel="Cancelar"
+            />
+
+            {selectedProposta && (
+                <PDFPreviewModal
+                    isOpen={showPreview}
+                    onClose={() => setShowPreview(false)}
+                    propostaData={selectedProposta}
+                    cliente={{
+                        nomeRazaoSocial: selectedProposta.clienteNome,
+                        enderecoObra: selectedProposta.enderecoObra
+                    }}
+                    empresa={{
+                        razaoSocial: profile?.nomeEmpresa || 'Estemco Engenharia',
+                        cnpj: profile?.cnpjEmpresa || '57.486.102/0001-86'
+                    }}
+                />
+            )}
         </div>
     );
 };

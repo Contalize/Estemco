@@ -1,0 +1,53 @@
+﻿components/Dashboard.tsx(492,23): error TS2322: Type '(value: number, name: string) => [string, string]' is not assignable to type 'Formatter<ValueType, NameType> & ((value: ValueType, name: NameType, item: TooltipPayloadEntry, index: number, payload: TooltipPayload) => ReactNode | [...])'.
+  Type '(value: number, name: string) => [string, string]' is not assignable to type 'Formatter<ValueType, NameType>'.
+    Types of parameters 'value' and 'value' are incompatible.
+      Type 'ValueType | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+components/Dashboard.tsx(668,30): error TS2322: Type '(v: number, n: string) => [string, string]' is not assignable to type 'Formatter<ValueType, NameType> & ((value: ValueType, name: NameType, item: TooltipPayloadEntry, index: number, payload: TooltipPayload) => ReactNode | [...])'.
+  Type '(v: number, n: string) => [string, string]' is not assignable to type 'Formatter<ValueType, NameType>'.
+    Types of parameters 'v' and 'value' are incompatible.
+      Type 'ValueType | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+components/DRE.tsx(215,62): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/DRE.tsx(216,60): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/DRE.tsx(327,62): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/DRE.tsx(654,19): error TS2322: Type '(value: number) => [string, string]' is not assignable to type 'Formatter<ValueType, NameType> & ((value: ValueType, name: NameType, item: TooltipPayloadEntry, index: number, payload: TooltipPayload) => ReactNode | [...])'.
+  Type '(value: number) => [string, string]' is not assignable to type 'Formatter<ValueType, NameType>'.
+    Types of parameters 'value' and 'value' are incompatible.
+      Type 'ValueType | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+components/Financeiro.tsx(516,38): error TS2322: Type '(value: number) => string' is not assignable to type 'Formatter<ValueType, NameType> & ((value: ValueType, name: NameType, item: TooltipPayloadEntry, index: number, payload: TooltipPayload) => ReactNode | [...])'.
+  Type '(value: number) => string' is not assignable to type 'Formatter<ValueType, NameType>'.
+    Types of parameters 'value' and 'value' are incompatible.
+      Type 'ValueType | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+services/geminiService.ts(15,21): error TS18048: 'site.data' is possibly 'undefined'.
+services/geminiService.ts(16,18): error TS18048: 'site.revenue' is possibly 'undefined'.
+services/geminiService.ts(16,39): error TS18048: 'site.revenue' is possibly 'undefined'.
+services/geminiService.ts(16,54): error TS18048: 'site.totalCost' is possibly 'undefined'.
+services/geminiService.ts(16,72): error TS18048: 'site.revenue' is possibly 'undefined'.
+services/geminiService.ts(17,20): error TS18048: 'site.contractMeters' is possibly 'undefined'.
+services/geminiService.ts(17,47): error TS18048: 'site.executedMeters' is possibly 'undefined'.
+services/geminiService.ts(17,69): error TS18048: 'site.contractMeters' is possibly 'undefined'.
+services/geminiService.ts(18,21): error TS18048: 'site.concreteTheoreticalVol' is possibly 'undefined'.
+services/geminiService.ts(19,9): error TS18048: 'site.concreteRealVol' is possibly 'undefined'.
+services/geminiService.ts(19,32): error TS18048: 'site.concreteTheoreticalVol' is possibly 'undefined'.
+services/geminiService.ts(19,63): error TS18048: 'site.concreteTheoreticalVol' is possibly 'undefined'.
+src/pages/Propostas.tsx(78,128): error TS2551: Property 'RASCUNHO' does not exist on type '{ rascunho: string; enviada: string; aprovada: string; recusada: string; expirada: string; }'. Did you mean 'rascunho'?
+src/utils/calculosProposta.ts(53,21): error TS18048: 'item.subtotal' is possibly 'undefined'.
+src/utils/calculosProposta.ts(67,9): error TS2322: Type '{ descricao: string; valor: number | undefined; }[]' is not assignable to type '{ descricao: string; valor: number; destaque?: boolean | undefined; }[]'.
+  Type '{ descricao: string; valor: number | undefined; }' is not assignable to type '{ descricao: string; valor: number; destaque?: boolean | undefined; }'.
+    Types of property 'valor' are incompatible.
+      Type 'number | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+src/utils/calculosProposta.ts(94,25): error TS18048: 'item.subtotal' is possibly 'undefined'.
+src/utils/calculosProposta.ts(106,25): error TS18048: 'item.subtotal' is possibly 'undefined'.
+src/utils/calculosProposta.ts(132,9): error TS2322: Type '({ descricao: string; valor: number | undefined; } | { descricao: string; valor: number; destaque: boolean; })[]' is not assignable to type '{ descricao: string; valor: number; destaque?: boolean | undefined; }[]'.
+  Type '{ descricao: string; valor: number | undefined; } | { descricao: string; valor: number; destaque: boolean; }' is not assignable to type '{ descricao: string; valor: number; destaque?: boolean | undefined; }'.
+    Type '{ descricao: string; valor: number | undefined; }' is not assignable to type '{ descricao: string; valor: number; destaque?: boolean | undefined; }'.
+      Types of property 'valor' are incompatible.
+        Type 'number | undefined' is not assignable to type 'number'.
+          Type 'undefined' is not assignable to type 'number'.

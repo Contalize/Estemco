@@ -40,7 +40,8 @@ export interface ResultadoCalculo {
 // ─── HCM ─────────────────────────────────────────────────────
 export function calcularPropostaHCM(
     itens: ItemProposta[],
-    mobilizacao: number = MOBILIZACAO_HCM
+    mobilizacao: number = MOBILIZACAO_HCM,
+    faturamentoMinimo: number = MINIMO_DIARIO_HCM
 ): ResultadoCalculo {
     const linhas = [];
     let subtotal = 0;
@@ -48,9 +49,9 @@ export function calcularPropostaHCM(
     for (const item of itens) {
         linhas.push({
             descricao: `Ø${item.diametro}mm — ${item.quantidadeEstacas} estacas × ${item.comprimentoUnitario}m = ${item.totalMetros}m × R$ ${item.precoMetro}/m`,
-            valor: item.subtotal,
+            valor: item.subtotal || 0,
         });
-        subtotal += item.subtotal;
+        subtotal += item.subtotal || 0;
     }
 
     linhas.push({ descricao: 'Mobilização e desmobilização', valor: mobilizacao });
@@ -77,7 +78,8 @@ export function calcularPropostaESC(
     modalidade: 'por_metro' | 'preco_fechado' | 'saida_diaria' = 'por_metro',
     precoFechado?: number,
     metrosDiarios?: number,
-    precoExcedente?: number
+    precoExcedente?: number,
+    faturamentoMinimo: number = MINIMO_OBRA_ESC
 ): ResultadoCalculo {
     const linhas = [];
     let subtotal = 0;
@@ -89,9 +91,9 @@ export function calcularPropostaESC(
         for (const item of itens) {
             linhas.push({
                 descricao: `Ø${item.diametro}cm — Saída diária ${metrosDiarios}m/dia | ${item.totalMetros}m × R$ ${item.precoMetro}/m`,
-                valor: item.subtotal,
+                valor: item.subtotal || 0,
             });
-            subtotal += item.subtotal;
+            subtotal += item.subtotal || 0;
         }
         linhas.push({
             descricao: `Excedente acima de ${metrosDiarios}m/dia: R$ ${precoExcedente}/m (cobrado na medição)`,
@@ -101,20 +103,20 @@ export function calcularPropostaESC(
         for (const item of itens) {
             linhas.push({
                 descricao: `Ø${item.diametro}cm — ${item.quantidadeEstacas} estacas × ${item.comprimentoUnitario}m = ${item.totalMetros}m × R$ ${item.precoMetro}/m`,
-                valor: item.subtotal,
+                valor: item.subtotal || 0,
             });
-            subtotal += item.subtotal;
+            subtotal += item.subtotal || 0;
         }
     }
 
     linhas.push({ descricao: 'Mobilização e desmobilização', valor: mobilizacao });
     const totalBruto = subtotal + mobilizacao;
     // REGRA: mínimo é da OBRA, não diário
-    const total = Math.max(totalBruto, MINIMO_OBRA_ESC);
+    const total = Math.max(totalBruto, faturamentoMinimo);
 
     if (total > totalBruto) {
         linhas.push({
-            descricao: `Ajuste faturamento mínimo da obra (R$ ${MINIMO_OBRA_ESC.toLocaleString('pt-BR')})`,
+            descricao: `Ajuste faturamento mínimo da obra (R$ ${faturamentoMinimo.toLocaleString('pt-BR')})`,
             valor: total - totalBruto,
             destaque: true,
         });
@@ -162,7 +164,7 @@ export function calcularPropostaSPT(
 
     const total = execucao + mobilizacao + art;
     // REGRA: sinal FIXO R$ 1.500, não percentual
-    const sinal = CONFIG_SPT.sinalFixo;
+    const sinal = Math.min(CONFIG_SPT.sinalFixo, total);
 
     return {
         subtotalExecucao: execucao,
@@ -177,15 +179,7 @@ export function calcularPropostaSPT(
     };
 }
 
-// ─── GERADOR DE NÚMERO ────────────────────────────────────────
-export function gerarNumeroProposta(tipo: TipoServico, ultimoNumero: number): string {
-    const seq = String(ultimoNumero + 1).padStart(4, '0');
-    if (tipo === 'SPT') {
-        const ano = new Date().getFullYear().toString().slice(-2);
-        return `${seq}-${ano}`; // ex: 2040-26
-    }
-    return `${seq}-${tipo}`; // ex: 5016-HCM, 4917-ESC
-}
+// Gerador de número movido para src/lib/numeracao.ts (Atômico com runTransaction)
 
 export const fmt = (v: number) =>
     v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });

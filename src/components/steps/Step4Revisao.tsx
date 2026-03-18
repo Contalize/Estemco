@@ -2,13 +2,15 @@ import React, { useEffect } from 'react';
 import { NovaPropostaData, ParcelaProposta } from '../../types/propostaForm';
 import { calcularPropostaHCM, calcularPropostaESC, calcularPropostaSPT, fmt } from '../../utils/calculosProposta';
 import { ItemProposta, ItemFuroSPT } from '../../../types';
-import { Building2, Save, FileDown, Plus, Trash2, CreditCard } from 'lucide-react';
+import { Building2, Save, FileDown, Plus, Trash2, CreditCard, Eye } from 'lucide-react';
 import { Button, Input, Label, Select } from '../../../components/ui';
+import { PDFPreviewModal } from '../../PDFPreviewModal';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface Step4Props {
     data: NovaPropostaData;
     updateData: (d: Partial<NovaPropostaData>) => void;
-    onSave: (status: 'rascunho' | 'aprovada') => void;
+    onSave: (status: 'RASCUNHO' | 'ACEITA') => void;
     isSaving: boolean;
 }
 
@@ -30,23 +32,15 @@ const newParcela = (): ParcelaProposta => ({
 });
 
 export const Step4Revisao: React.FC<Step4Props> = ({ data, updateData, onSave, isSaving }) => {
+    const { profile } = useAuth();
+    const [showPreview, setShowPreview] = React.useState(false);
     let calc: any = { linhasDetalhadas: [], valorTotal: 0, valorSinal: 0, valorSaldo: 0, condicoesPagamento: '' };
 
-    if (data.tipo === 'HCM') calc = calcularPropostaHCM(data.itens as ItemProposta[], data.mobilizacao);
-    if (data.tipo === 'ESC') calc = calcularPropostaESC(data.itens as ItemProposta[], data.mobilizacao, data.modalidadeESC, data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC);
+    if (data.tipo === 'HCM') calc = calcularPropostaHCM(data.itens as ItemProposta[], data.mobilizacao, data.faturamentoMinimo);
+    if (data.tipo === 'ESC') calc = calcularPropostaESC(data.itens as ItemProposta[], data.mobilizacao, data.modalidadeESC, data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC, data.faturamentoMinimo);
     if (data.tipo === 'SPT') calc = calcularPropostaSPT(data.itens as ItemFuroSPT[], data.mobilizacao, data.incluirART, data.valorART);
 
-    // Seed default parcelas once from config if empty
-    useEffect(() => {
-        if (!data.condicoesPagamento || data.condicoesPagamento.length === 0) {
-            updateData({
-                condicoesPagamento: [
-                    { id: '1', descricao: 'Sinal / Entrada', percentual: 50, prazo: '3 dias após assinatura do contrato', formaPagamento: 'pix' },
-                    { id: '2', descricao: 'Saldo Final', percentual: 50, prazo: '7 dias após entrega da medição', formaPagamento: 'pix' },
-                ]
-            });
-        }
-    }, []);
+    // Seed moved to NovaProposta.tsx INITIAL_DATA to ensure stability across renders
 
     const parcelas = data.condicoesPagamento || [];
     const totalPercentual = parcelas.reduce((a, p) => a + p.percentual, 0);
@@ -120,6 +114,7 @@ export const Step4Revisao: React.FC<Step4Props> = ({ data, updateData, onSave, i
                         <p className="font-bold text-slate-800 mb-1">Condições de Pagamento:</p>
                         <p>{condicoesPagamentoTexto || calc.condicoesPagamento}</p>
                         <p className="mt-4"><span className="font-bold text-slate-800">Validade da Proposta:</span> {data.validadeProposta} dias úteis</p>
+                        <p><span className="font-bold text-slate-800">Prazo de Execução:</span> {data.prazoExecucao} dias</p>
                     </div>
                 </div>
             </div>
@@ -189,12 +184,30 @@ export const Step4Revisao: React.FC<Step4Props> = ({ data, updateData, onSave, i
                 </div>
             </div>
 
+            {/* Preview Modal */}
+            <PDFPreviewModal 
+                isOpen={showPreview} 
+                onClose={() => setShowPreview(false)} 
+                propostaData={data}
+                cliente={{
+                    nomeRazaoSocial: data.clienteNome,
+                    enderecoObra: data.enderecoObra
+                }}
+                empresa={{
+                    razaoSocial: profile?.nomeEmpresa || 'Estemco Engenharia',
+                    cnpj: profile?.cnpjEmpresa || '57.486.102/0001-86'
+                }}
+            />
+
             {/* Actions */}
             <div className="flex gap-4 p-4 bg-slate-50 border rounded-lg justify-end">
-                <Button onClick={() => onSave('rascunho')} disabled={isSaving || !percentualOk} variant="outline" className="gap-2 bg-white">
+                <Button onClick={() => setShowPreview(true)} variant="outline" className="gap-2 bg-white">
+                    <Eye size={18} /> Visualizar Proposta
+                </Button>
+                <Button onClick={() => onSave('RASCUNHO')} disabled={isSaving || !percentualOk} variant="outline" className="gap-2 bg-white">
                     <Save size={18} /> Salvar Rascunho
                 </Button>
-                <Button onClick={() => onSave('aprovada')} disabled={isSaving || !percentualOk} className="gap-2 bg-indigo-600 text-white hover:bg-indigo-700 shadow-md">
+                <Button onClick={() => onSave('ACEITA')} disabled={isSaving || !percentualOk} className="gap-2 bg-indigo-600 text-white hover:bg-indigo-700 shadow-md">
                     {isSaving ? 'Salvando...' : <><FileDown size={18} /> Salvar e Gerar PDF</>}
                 </Button>
             </div>

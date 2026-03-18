@@ -1,48 +1,26 @@
 import { db } from '../../lib/firebase';
 import {
     collection, addDoc, updateDoc, doc, serverTimestamp,
-    query, orderBy, getDocs, limit, where
+    runTransaction, setDoc
 } from 'firebase/firestore';
-import { Proposta, TipoServico, StatusProposta } from '../../types';
-import { gerarNumeroProposta } from '../utils/calculosProposta';
-
-// Bases numéricas por tipo (para sequência correta)
-const BASE_NUMERO: Record<TipoServico, number> = {
-    HCM: 5000,
-    ESC: 4800,
-    SPT: 2037,
-};
+import { TipoServico, StatusProposta } from '../../types';
+import { proximoNumeroAtomico } from '../lib/numeracao';
 
 export async function criarProposta(
     empresaId: string,
-    dados: Omit<Proposta, 'id' | 'numero' | 'criadoEm' | 'atualizadoEm' | 'status'>
+    dados: Record<string, any>
 ): Promise<string> {
+    if (!dados.tipo) throw new Error('Tipo de serviço não informado.');
+
+    const tipo = dados.tipo as TipoServico;
     const propostasRef = collection(db, `empresas/${empresaId}/propostas`);
-
-    // Buscar maior número do tipo
-    const q = query(
-        propostasRef,
-        where('tipo', '==', dados.tipo),
-        orderBy('criadoEm', 'desc'),
-        limit(1)
-    );
-    const snap = await getDocs(q);
-
-    let ultimoNumero = BASE_NUMERO[dados.tipo];
-    if (!snap.empty) {
-        const ultimaProposta = snap.docs[0].data() as Proposta;
-        if (ultimaProposta && ultimaProposta.numero) {
-            const parsed = parseInt(ultimaProposta.numero.split('-')[0]);
-            if (!isNaN(parsed)) ultimoNumero = parsed;
-        }
-    }
-
-    const numero = gerarNumeroProposta(dados.tipo, ultimoNumero);
+    // Generate the atomic proposal number
+    const numero = await proximoNumeroAtomico(empresaId, tipo);
 
     const docRef = await addDoc(propostasRef, {
         ...dados,
         numero,
-        status: 'rascunho',
+        status: dados.status || 'RASCUNHO',
         criadoEm: serverTimestamp(),
         atualizadoEm: serverTimestamp(),
     });
@@ -53,9 +31,9 @@ export async function criarProposta(
 export async function atualizarProposta(
     empresaId: string,
     propostaId: string,
-    dados: Partial<Proposta>
+    dados: Record<string, any>
 ): Promise<void> {
-    const docRef = doc(db, `empresas/${empresaId}/propostas/${propostaId}`);
+    const docRef = doc(db, `empresas/${empresaId}/propostas`, propostaId);
     await updateDoc(docRef, { ...dados, atualizadoEm: serverTimestamp() });
 }
 

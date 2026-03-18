@@ -9,9 +9,11 @@ export function useCollection<T>(collectionName: string, queryConstraints: Query
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // Usar ref/key string para evitar re-renders desnecessários
+  // Stabilize constraints to avoid unnecessary re-subscribes
+  // We use a string key. Note: QueryConstraint objects don't stringify well, 
+  // so this is a heart-beat check. Better to pass stable constraints.
   const constraintsKey = queryConstraints.length > 0
-    ? queryConstraints.map(c => JSON.stringify(c)).join('|')
+    ? queryConstraints.length.toString()
     : 'none';
 
   useEffect(() => {
