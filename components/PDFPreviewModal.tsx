@@ -15,29 +15,36 @@ interface PDFPreviewModalProps {
 export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({ isOpen, onClose, propostaData, cliente, empresa }) => {
     if (!isOpen) return null;
 
+    // Resolução robusta de itens (novos e salvos)
+    const rawItens = propostaData.itens || propostaData.itensHCM || propostaData.itensESC || propostaData.itensSPT || [];
+    
+    // Resolução robusta de mobilização
+    const rawMobilizacao = propostaData.mobilizacao || propostaData.mobilizacaoHCM || propostaData.mobilizacaoESC || propostaData.mobilizacaoSPT || propostaData.valorMobilizacao || 0;
+
     // Adapt NovaPropostaData to what ProposalPDF expects
     const adaptedProposta = {
         ...propostaData,
         id: propostaData.id || 'NOVA-PROPOSTA',
-        dataEmissao: new Date().toISOString(),
-        servicos: propostaData.itens.map((item: any) => ({
-            tipoEstaca: propostaData.tipo,
+        dataEmissao: propostaData.dataEmissao || new Date().toISOString(),
+        servicos: (rawItens || []).map((item: any) => ({
+            tipoEstaca: item.tipoEstaca || propostaData.tipo || 'SB',
             diametro: item.diametro ? (item.diametro / 10).toString() : 'N/D',
-            quantidade: item.quantidadeEstacas || 1,
-            metragemPrevista: item.comprimentoUnitario || 0,
+            quantidade: item.quantidadeEstacas || item.quantidade || 1,
+            metragemPrevista: item.comprimentoUnitario || item.profundidade || item.metragemPrevista || 0,
             precoMetro: item.precoMetro || 0,
             totalMetros: item.totalMetros || 0,
             subtotal: item.subtotal || 0,
         })),
         valorTotal: propostaData.valorTotal || 0,
-        mobilizacao: propostaData.mobilizacao || 0,
-        validadeDias: propostaData.validadeProposta || 30,
-        prazoExecucao: propostaData.prazoExecucao || 30,
+        mobilizacao: rawMobilizacao,
+        validadeDias: propostaData.validadeProposta || propostaData.validadeDias || 30,
+        prazoExecucao: propostaData.prazoExecucao || propostaData.diasExecucao || 30,
         faturamentoMinimo: propostaData.faturamentoMinimo || 0,
         // Default flags if not present
-        solicitaNF: false,
-        solicitaART: propostaData.incluirART || false,
+        solicitaNF: propostaData.solicitaNF || false,
+        solicitaART: propostaData.incluirART || propostaData.solicitaART || false,
         valorART: propostaData.valorART || 0,
+        condicoesPagamento: propostaData.condicoesPagamento || propostaData.parcelas || [],
     };
 
     const adaptedCliente = {

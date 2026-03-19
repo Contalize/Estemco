@@ -11,7 +11,7 @@ export async function logAudit(
     if (!userId || !tenantId) return;
 
     try {
-        const auditRef = collection(db, 'audit_log');
+        const auditRef = collection(db, 'empresas', tenantId, 'audit_log');
         await addDoc(auditRef, {
             userId,
             acao,
