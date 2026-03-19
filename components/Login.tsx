@@ -32,7 +32,7 @@ async function ensureUserProfile(uid: string, email: string, nome: string) {
   const q = query(collection(db, 'invitations'), where('email', '==', email));
   const snap = await getDocs(q);
 
-  let role = 'Administrador';
+  let role = 'Engenheiro';
   let tenantId = `tenant_${uid}`;
 
   if (!snap.empty) {

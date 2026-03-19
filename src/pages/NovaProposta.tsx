@@ -5,12 +5,13 @@ import { TipoServico } from '../../types';
 import { criarProposta, atualizarProposta } from '../services/propostaService';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { MINIMO_DIARIO_HCM_DEFAULT, MINIMO_OBRA_ESC_DEFAULT } from '../utils/calculosProposta';
 
 import { Step1TipoServico } from '../components/steps/Step1TipoServico';
 import { Step2ClienteObra } from '../components/steps/Step2ClienteObra';
 import { Step3ItensServico } from '../components/steps/Step3ItensServico';
 import { Step4Revisao } from '../components/steps/Step4Revisao';
-import { Button, Toast } from '../../components/ui';
+import { Button, Toast, Input, Label } from '../../components/ui';
 import { ChevronRight, ChevronLeft, Building2, Save } from 'lucide-react';
 
 interface NovaPropostaProps {
@@ -36,10 +37,10 @@ const INITIAL_DATA: NovaPropostaData = {
         { id: '1', descricao: 'Sinal / Entrada', percentual: 50, prazo: '3 dias após assinatura do contrato', formaPagamento: 'pix' },
         { id: '2', descricao: 'Saldo Final', percentual: 50, prazo: '7 dias após entrega da medição', formaPagamento: 'pix' },
     ],
-    faturamentoMinimo: 8000,
+    faturamentoMinimo: 0,
     prazoExecucao: 30,
     dataPrevistaInicio: '',
-    diasExecucao: 0
+    diasExecucao: 1
 };
 
 export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editPropostaId }) => {
@@ -71,7 +72,7 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
                         observacoes: obj.observacoes || '',
                         validadeProposta: obj.validadeProposta || 30,
                         mobilizacao: obj.valorMobilizacao || 0,
-                        faturamentoMinimo: obj.faturamentoMinimo || (obj.tipo === 'HCM' ? 8000 : obj.tipo === 'ESC' ? 3000 : 0),
+                        faturamentoMinimo: obj.faturamentoMinimo || (obj.tipo === 'HCM' ? MINIMO_DIARIO_HCM_DEFAULT : obj.tipo === 'ESC' ? MINIMO_OBRA_ESC_DEFAULT : 0),
                         prazoExecucao: obj.prazoExecucao || 30,
                         dataPrevistaInicio: obj.dataPrevistaInicio || '',
                         diasExecucao: obj.diasExecucao || 0,
@@ -228,6 +229,50 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
                         <span className={`text-xs mt-2 font-medium ${step >= s.num ? 'text-indigo-800' : 'text-slate-400'} `}>{s.label}</span>
                     </div>
                 ))}
+            </div>
+            
+            {/* INFORMAÇÕES GERAIS DE EXECUÇÃO */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                <div>
+                    <Label className="text-slate-700 font-bold">Dias para Execução</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                        <Input 
+                            type="number" 
+                            min="1" 
+                            value={data.diasExecucao} 
+                            onChange={e => updateData({ diasExecucao: Number(e.target.value) })}
+                            className="bg-white font-bold"
+                        />
+                        <span className="text-sm text-slate-500 font-medium">dias</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1">Tempo estimado de máquina em obra.</p>
+                </div>
+                <div>
+                    <Label className="text-slate-700 font-bold">Validade da Proposta</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                        <Input 
+                            type="number" 
+                            min="1" 
+                            value={data.validadeProposta} 
+                            onChange={e => updateData({ validadeProposta: Number(e.target.value) })}
+                            className="bg-white font-bold"
+                        />
+                        <span className="text-sm text-slate-500 font-medium">dias</span>
+                    </div>
+                </div>
+                <div>
+                    <Label className="text-slate-700 font-bold">Prazo p/ Início (após mob.)</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                        <Input 
+                            type="number" 
+                            min="0" 
+                            value={data.prazoExecucao} 
+                            onChange={e => updateData({ prazoExecucao: Number(e.target.value) })}
+                            className="bg-white font-bold"
+                        />
+                        <span className="text-sm text-slate-500 font-medium">dias</span>
+                    </div>
+                </div>
             </div>
 
             {/* STEPS CONTENT */}

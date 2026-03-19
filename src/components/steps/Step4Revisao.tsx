@@ -174,11 +174,6 @@ export const Step4Revisao: React.FC<Step4Props> = ({ data, updateData, onSave, i
                     <span>{percentualOk ? '✅ Correto (100%)' : '⚠️ Deve somar 100%'}</span>
                 </div>
 
-                {/* Validade */}
-                <div className="flex items-center gap-4 pt-3 border-t border-slate-100">
-                    <Label className="font-medium text-slate-700 whitespace-nowrap">Validade da Proposta (dias úteis)</Label>
-                    <Input type="number" min="1" value={data.validadeProposta || 30} onChange={e => updateData({ validadeProposta: Number(e.target.value) })} className="w-24" />
-                </div>
             </div>
 
             {/* Actions */}

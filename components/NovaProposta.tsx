@@ -454,7 +454,7 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
 
       const blob = await pdf(
         <ProposalPDF
-          proposta={prop}
+          proposta={prop as any}
           cliente={clienteSnap.data() as any}
           empresa={empresaSnap.exists() ? empresaSnap.data() as any : {}}
         />

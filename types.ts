@@ -260,6 +260,7 @@ export interface Boletim {
   estacasExecutadas: number;
   metrosExecutados: number;
   faturamentoMinimoAplicado?: number;
+  servicos?: { tipoEstaca: string, quantidade: number, metrosPerfurados: number }[];
 
   // Horários Globais do Dia
   horaInicioObra?: string;

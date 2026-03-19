@@ -21,8 +21,8 @@ export const CONFIG_SPT = {
 
 export const MOBILIZACAO_HCM = 4000;
 export const MOBILIZACAO_ESC = 500;
-export const MINIMO_DIARIO_HCM = 8000;  // cobrado no BDM, não na proposta
-export const MINIMO_OBRA_ESC = 3000;    // cobrado no fechamento
+export const MINIMO_DIARIO_HCM_DEFAULT = 8000; 
+export const MINIMO_OBRA_ESC_DEFAULT = 3000;   
 
 import { ItemProposta, TipoServico } from '../../types';
 
@@ -42,7 +42,7 @@ export interface ResultadoCalculo {
 export function calcularPropostaHCM(
     itens: ItemProposta[],
     mobilizacao: number = MOBILIZACAO_HCM,
-    faturamentoMinimo: number = MINIMO_DIARIO_HCM,
+    faturamentoMinimo: number = MINIMO_DIARIO_HCM_DEFAULT,
     incluirART: boolean = true,
     valorART: number = 0,
     emiteNF: boolean = false,
@@ -99,7 +99,7 @@ export function calcularPropostaESC(
     precoFechado?: number,
     metrosDiarios?: number,
     precoExcedente?: number,
-    faturamentoMinimo: number = MINIMO_OBRA_ESC,
+    faturamentoMinimo: number = MINIMO_OBRA_ESC_DEFAULT,
     incluirART: boolean = true,
     valorART: number = 0,
     emiteNF: boolean = false,

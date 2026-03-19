@@ -38,6 +38,7 @@ export const Step3ItensServico: React.FC<Step3Props> = ({ data, updateData }) =>
                 const firstDiam = conf.diametros?.[0];
                 updateData({
                     mobilizacao: conf.mobilizacaoPadrao || 4000,
+                    faturamentoMinimo: conf.faturamentoMinimoDiario || 8000,
                     itens: [{ id: Date.now().toString(), diametro: firstDiam?.mm || 300, quantidadeEstacas: 1, comprimentoUnitario: conf.comprimentoMinimo || 10, totalMetros: conf.comprimentoMinimo || 10, precoMetro: firstDiam?.preco || 40, subtotal: (firstDiam?.preco || 40) * (conf.comprimentoMinimo || 10) }]
                 });
             } else if (data.tipo === 'ESC') {

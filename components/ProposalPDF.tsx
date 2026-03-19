@@ -4,15 +4,8 @@ import { numberToWords } from '../src/utils/numberToWords';
 import { formatarData } from '../src/utils/formatDate';
 import { pdfTexts } from '../src/utils/pdfTexts';
 
-// Register fonts
-Font.register({
-  family: 'Helvetica',
-  fonts: [
-    { src: 'https://cdn.jsdelivr.net/npm/@canvas-fonts/helvetica@1.0.4/Helvetica.ttf' },
-    { src: 'https://cdn.jsdelivr.net/npm/@canvas-fonts/helvetica@1.0.4/Helvetica-Bold.ttf', fontWeight: 'bold' },
-    { src: 'https://cdn.jsdelivr.net/npm/@canvas-fonts/helvetica@1.0.4/Helvetica-Oblique.ttf', fontStyle: 'italic' }
-  ]
-});
+// Roboto, Helvetica are native standard fonts in react-pdf
+// Helvetica is used via StyleSheet, no registration needed for standard version.
 
 interface PropostaDataItem {
   tipoEstaca?: string;
@@ -246,7 +239,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({ proposta, cliente, empresa })
     if (proposta.textoObrigacoesContratante && proposta.textoObrigacoesContratante.trim() !== '') {
       return (
         <View style={{ marginBottom: 4 }}>
-          <Text style={styles.textoNormal}>{proposta.textoObrigacoesContratante}</Text>
+          <Text style={styles.textoNormal}>{proposta.textoObrigacoesContratante || ''}</Text>
         </View>
       );
     }
@@ -264,7 +257,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({ proposta, cliente, empresa })
     if (proposta.textoObrigacoesContratada && proposta.textoObrigacoesContratada.trim() !== '') {
       return (
         <View style={{ marginBottom: 4 }}>
-          <Text style={styles.textoNormal}>{proposta.textoObrigacoesContratada}</Text>
+          <Text style={styles.textoNormal}>{proposta.textoObrigacoesContratada || ''}</Text>
         </View>
       );
     }
@@ -368,13 +361,13 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({ proposta, cliente, empresa })
             <Text style={[styles.textoNormal, { flex: 1, textAlign: 'right' }]}>{`${formatCurrency(proposta.mobilizacao || 0)}`}</Text>
           </View>
 
-          {proposta.solicitaART && (
+          {proposta.solicitaART ? (
             <View style={styles.tabelaLinha}>
               <Text style={[styles.textoNormal, { flex: 2 }]}>{`ART - Anotação de Responsabilidade Técnica`}</Text>
               <Text style={[styles.textoNormal, { flex: 1, textAlign: 'center' }]}>{`-`}</Text>
               <Text style={[styles.textoNormal, { flex: 1, textAlign: 'right' }]}>{`${formatCurrency(proposta.valorART || 0)}`}</Text>
             </View>
-          )}
+          ) : null}
 
           <View style={styles.totalLinha}>
             <Text style={[styles.textoBold, { flex: 1 }]}>{`VALOR TOTAL ESTIMADO DA PROPOSTA:`}</Text>
@@ -457,14 +450,14 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({ proposta, cliente, empresa })
         </View>
 
         {/* 7. CLÁUSULA DE RISCO (Shielded) */}
-        {(proposta.tipo === 'HCM' || proposta.tipo === 'ESC') && (
+        {(proposta.tipo === 'HCM' || proposta.tipo === 'ESC') ? (
           <View wrap={false} style={{ marginTop: 15, padding: 8, border: 1, borderColor: '#000000' }}>
             <Text style={[styles.textoBold, { marginBottom: 4 }]}>{`CLÁUSULA DE SEGURANÇA E RISCO:`}</Text>
             <Text style={[styles.textoNormal, { fontSize: 8, textAlign: 'justify' }]}>
-              {`${pdfTexts.proposals.riskClause}`}
+              {`${pdfTexts.proposals.riskClause || ''}`}
             </Text>
           </View>
-        )}
+        ) : null}
 
         {/* 8. TERMO DE ACEITE (Shielded) */}
         <View wrap={false} style={{ marginTop: 25 }}>

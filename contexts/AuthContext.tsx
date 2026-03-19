@@ -44,7 +44,7 @@ export const defaultPermissions = {
     orcamento: { ver: false, criar: false, editar: false, aprovar: false },
     clientes: { ver: false, criar: false, editar: false, excluir: false },
     obras: { ver: true, editar: true, mudarStatus: false },
-    boletim: { ver: true, criar: true, editar: false },
+    boletim: { ver: true, criar: true, editar: true },
     dre: { ver: false },
     financeiro: { ver: false, lancar: false },
     calendario: { ver: true },

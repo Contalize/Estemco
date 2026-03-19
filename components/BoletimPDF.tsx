@@ -4,15 +4,8 @@ import { Boletim } from '../types';
 import { formatarData } from '../src/utils/formatDate';
 import { pdfTexts } from '../src/utils/pdfTexts';
 
-// Register fonts
-Font.register({
-  family: 'Helvetica',
-  fonts: [
-    { src: 'https://cdn.jsdelivr.net/npm/@canvas-fonts/helvetica@1.0.4/Helvetica.ttf' },
-    { src: 'https://cdn.jsdelivr.net/npm/@canvas-fonts/helvetica@1.0.4/Helvetica-Bold.ttf', fontWeight: 'bold' },
-    { src: 'https://cdn.jsdelivr.net/npm/@canvas-fonts/helvetica@1.0.4/Helvetica-Oblique.ttf', fontStyle: 'italic' }
-  ]
-});
+// Standard PDF fonts like Helvetica do not require external registration in @react-pdf/renderer.
+// External registration can cause intermittent crashes especially with network-dependent URLs.
 
 interface BoletimPDFProps {
   bdo: Boletim;
