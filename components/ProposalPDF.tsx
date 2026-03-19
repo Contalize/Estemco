@@ -24,7 +24,7 @@ interface PropostaDataItem {
 }
 
 interface ParcelaProposta {
-  id: string;
+  id?: string;
   descricao?: string;
   percentual?: number;
   prazo?: string;

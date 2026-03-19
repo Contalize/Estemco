@@ -8,6 +8,7 @@ import { db } from '../lib/firebase';
 import { Card, Label, Input, Select, Button, Textarea, Toast } from './ui';
 import { Plus, Trash2, Save, X, Search, Calendar as CalendarIcon, Drill, DollarSign, Users, Fuel, Activity, MapPin, Loader2, CloudRain, Sun, Cloud, Image as ImageIcon, FileText, Printer, Edit2 } from 'lucide-react';
 import { GlobalConfig, ConstructionSite, Boletim, DREObra } from '../types';
+import { BoletimPDFPreviewModal } from './BoletimPDFPreviewModal';
 import { formatarData } from '../src/utils/formatDate';
 
 interface BoletimDiarioProps {
