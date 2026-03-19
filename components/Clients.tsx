@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Users, Plus, Search, Loader2, Building2, User, X, CheckCircle2, ChevronLeft, ChevronRight, Edit2, Trash2, MoreVertical, MoreHorizontal } from 'lucide-react';
+import { Users, Plus, Search, Building2, User, X, CheckCircle2, ChevronLeft, ChevronRight, Edit2, Trash2, MoreHorizontal } from 'lucide-react';
 import { collection, addDoc, updateDoc, doc, deleteDoc, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useCollection } from '../src/firebase/firestore/use-collection';
@@ -12,8 +12,6 @@ export const Clients: React.FC = () => {
   const { data: clientes, isLoading } = useCollection<any>('clientes', profile?.tenantId ? [where('tenantId', '==', profile.tenantId)] : []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isSearchingCnpj, setIsSearchingCnpj] = useState(false);
-  const [isSearchingCep, setIsSearchingCep] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');

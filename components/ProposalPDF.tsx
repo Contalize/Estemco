@@ -88,6 +88,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
     borderBottomWidth: 1,
+    borderBottomStyle: 'solid',
     borderBottomColor: '#cccccc',
     paddingBottom: 10
   },
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Helvetica-Bold',
     textAlign: 'center',
-    marginBottom: 15,
+    marginBottom: 4,
     textTransform: 'uppercase'
   },
   secaoTitulo: {
@@ -121,7 +122,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#f1f5f9',
     borderTopWidth: 1,
+    borderTopStyle: 'solid',
     borderBottomWidth: 1,
+    borderBottomStyle: 'solid',
     borderColor: '#cbd5e1',
     paddingVertical: 5,
     paddingHorizontal: 4
@@ -129,7 +132,8 @@ const styles = StyleSheet.create({
   tabelaLinha: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderColor: '#e2e8f0',
+    borderBottomStyle: 'solid',
+    borderBottomColor: '#e2e8f0',
     paddingVertical: 4,
     paddingHorizontal: 4
   },
@@ -137,19 +141,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#f8fafc',
     borderTopWidth: 2,
-    borderColor: '#0f172a',
+    borderTopStyle: 'solid',
+    borderTopColor: '#0f172a',
     paddingVertical: 6,
     paddingHorizontal: 4,
     marginTop: 2
   },
   separador: {
     borderBottomWidth: 1,
-    borderColor: '#e2e8f0',
+    borderBottomStyle: 'solid',
+    borderBottomColor: '#e2e8f0',
     marginVertical: 10
   },
   assinaturaLinha: {
     borderBottomWidth: 1,
-    borderColor: '#374151',
+    borderBottomStyle: 'solid',
+    borderBottomColor: '#374151',
     marginTop: 30,
     marginBottom: 4,
     width: '60%'
@@ -163,6 +170,7 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderWidth: 1,
+    borderStyle: 'solid',
     borderColor: '#374151',
     marginRight: 6,
     alignItems: 'center',
@@ -214,15 +222,25 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({ proposta, cliente, empresa })
       return '---';
     }
   };
-  const dataEmissaoExtenso = formatDateString(proposta.dataEmissao || new Date().toISOString());
-  const inicioPrevistoFormatado = formatDateSimple(proposta.inicioPrevisto || proposta.dataPrevistaInicio || null);
+  // --- ADAPTER LAYER (Data Normalization) ---
+  const listaServicos = proposta?.servicos || (proposta as any)?.itens || (proposta as any)?.itensHCM || (proposta as any)?.itensESC || (proposta as any)?.itensSPT || [];
+  const valorMobilizacao = proposta?.mobilizacao || (proposta as any)?.valorMobilizacao || (proposta as any)?.mobilizacaoHCM || (proposta as any)?.mobilizacaoESC || (proposta as any)?.mobilizacaoSPT || 0;
+  const taxaArt = proposta?.valorART || (proposta as any)?.taxaArt || 0;
+  const nDiasExecucao = proposta?.diasExecucao || (proposta as any)?.prazoExecucao || 0;
+  const dataInicioPrevisto = proposta?.inicioPrevisto || (proposta as any)?.dataPrevistaInicio || null;
+  const listaParcelas = proposta?.parcelas || (proposta as any)?.condicoesPagamento || [];
 
-  const totalMetros = (proposta.servicos || []).reduce((acc, s) => acc + ((s.quantidade || 0) * (s.metragemPrevista || s.comprimentoUnitario || 0)), 0);
+  const dataEmissaoExtenso = formatDateString(proposta.dataEmissao || new Date().toISOString());
+  const inicioPrevistoFormatado = formatDateSimple(dataInicioPrevisto);
+
+  const totalMetros = listaServicos.reduce((acc: number, s: any) => {
+    const qtd = s.quantidade || s.quantidadeEstacas || (proposta.tipo === 'SPT' ? 1 : 0);
+    const metros = s.metragemPrevista || s.comprimentoUnitario || (s as any).totalMetros || 0;
+    return acc + (qtd * metros);
+  }, 0);
 
   const valorTotalExtenso = numberToWords(proposta.valorTotal || 0);
   const horaParadaExtenso = numberToWords(proposta.horaParada || 0);
-
-  const diasExecucao = proposta.diasExecucao || proposta.prazoExecucao || 0;
 
   // Texts from Dictionary (Shielded with template literals)
   const getTitle = () => {
@@ -312,23 +330,27 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({ proposta, cliente, empresa })
 
         {/* 2. ESPECIFICAÇÕES TÉCNICAS (Shielded) */}
         <Text style={styles.secaoTitulo}>{`1. DAS ESPECIFICAÇÕES TÉCNICAS.`}</Text>
-        {(proposta.servicos || []).map((s, i) => (
-          <View key={i} style={{ marginBottom: 4 }}>
-            <Text style={styles.textoBold}>{`• ESTACAS ${s.tipoEstaca || 'SB'}:`}</Text>
-            <Text style={styles.textoNormal}>
-              {`Estacas d= ${s.diametro ? `Ø${s.diametro}` : 'N/D'}, comprimento previsto: ${s.quantidade || 0} estacas x ${s.metragemPrevista || s.comprimentoUnitario || 0}m = ${formatMeters((s.quantidade || 0) * (s.metragemPrevista || s.comprimentoUnitario || 0))}`}
-            </Text>
-          </View>
-        ))}
+        {listaServicos.map((s, i) => {
+          const qtd = s.quantidade || s.quantidadeEstacas || (proposta.tipo === 'SPT' ? 1 : 0);
+          const metros = s.metragemPrevista || s.comprimentoUnitario || s.totalMetros || 0;
+          return (
+            <View key={i} style={{ marginBottom: 4 }}>
+              <Text style={styles.textoBold}>{`• ESTACAS ${s.tipoEstaca || 'SB'}:`}</Text>
+              <Text style={styles.textoNormal}>
+                {`Estacas d= ${s.diametro ? `Ø${s.diametro}` : 'N/D'}, comprimento previsto: ${qtd} estacas x ${metros}m = ${formatMeters(qtd * metros)}`}
+              </Text>
+            </View>
+          );
+        })}
         <Text style={[styles.textoBold, { marginTop: 4 }]}>{`TOTAL PREVISTO = ${formatMeters(totalMetros || 0)}`}</Text>
 
         {/* 3. PRAZO E INÍCIO (Shielded) */}
         <Text style={styles.secaoTitulo}>{`2. PRAZO DE EXECUÇÃO e INÍCIO DA OBRA.`}</Text>
         {proposta.tipo === 'HCM' ? (
-          <Text style={styles.textoNormal}>{`${pdfTexts.proposals.hcm.timing(Number(diasExecucao))}`}</Text>
+          <Text style={styles.textoNormal}>{`${pdfTexts.proposals.hcm.timing(Number(nDiasExecucao))}`}</Text>
         ) : (
           <>
-            <Text style={styles.textoNormal}>{`Gostaríamos de informar que o prazo de execução para esta referida obra será de ${diasExecucao} dias trabalhados.`}</Text>
+            <Text style={styles.textoNormal}>{`Gostaríamos de informar que o prazo de execução para esta referida obra será de ${nDiasExecucao} dias trabalhados.`}</Text>
             <Text style={[styles.textoNormal, { marginTop: 4 }]}>{`Início da prestação de serviço: ${inicioPrevistoFormatado || 'A combinar'}`}</Text>
           </>
         )}
@@ -344,12 +366,15 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({ proposta, cliente, empresa })
             <Text style={[styles.textoBold, { flex: 1, textAlign: 'right' }]}>{`Total`}</Text>
           </View>
 
-          {(proposta.servicos || []).map((s, i) => {
-            const rowTotal = (s.quantidade || 0) * (s.metragemPrevista || s.comprimentoUnitario || 0) * (s.precoMetro || 0);
+          {listaServicos.map((s, i) => {
+            const qtd = s.quantidade || s.quantidadeEstacas || (proposta.tipo === 'SPT' ? 1 : 0);
+            const metros = s.metragemPrevista || s.comprimentoUnitario || (s as any).totalMetros || 0;
+            const preco = s.precoMetro || 0;
+            const rowTotal = qtd * metros * preco;
             return (
               <View key={i} style={styles.tabelaLinha}>
-                <Text style={[styles.textoNormal, { flex: 2 }]}>{`Execução de Estaca Ø${s.diametro || 'N/D'} (${s.quantidade || 0}x${s.metragemPrevista || s.comprimentoUnitario || 0}m)`}</Text>
-                <Text style={[styles.textoNormal, { flex: 1, textAlign: 'center' }]}>{`${formatCurrency(s.precoMetro || 0)}`}</Text>
+                <Text style={[styles.textoNormal, { flex: 2 }]}>{`Execução de Estaca Ø${s.diametro || 'N/D'} (${qtd}x${metros}m)`}</Text>
+                <Text style={[styles.textoNormal, { flex: 1, textAlign: 'center' }]}>{`${formatCurrency(preco)}`}</Text>
                 <Text style={[styles.textoNormal, { flex: 1, textAlign: 'right' }]}>{`${formatCurrency(rowTotal)}`}</Text>
               </View>
             );
@@ -358,14 +383,14 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({ proposta, cliente, empresa })
           <View style={styles.tabelaLinha}>
             <Text style={[styles.textoNormal, { flex: 2 }]}>{`Mobilização e desmobilização de equipamentos`}</Text>
             <Text style={[styles.textoNormal, { flex: 1, textAlign: 'center' }]}>{`-`}</Text>
-            <Text style={[styles.textoNormal, { flex: 1, textAlign: 'right' }]}>{`${formatCurrency(proposta.mobilizacao || 0)}`}</Text>
+            <Text style={[styles.textoNormal, { flex: 1, textAlign: 'right' }]}>{`${formatCurrency(valorMobilizacao)}`}</Text>
           </View>
 
           {proposta.solicitaART ? (
             <View style={styles.tabelaLinha}>
               <Text style={[styles.textoNormal, { flex: 2 }]}>{`ART - Anotação de Responsabilidade Técnica`}</Text>
               <Text style={[styles.textoNormal, { flex: 1, textAlign: 'center' }]}>{`-`}</Text>
-              <Text style={[styles.textoNormal, { flex: 1, textAlign: 'right' }]}>{`${formatCurrency(proposta.valorART || 0)}`}</Text>
+              <Text style={[styles.textoNormal, { flex: 1, textAlign: 'right' }]}>{`${formatCurrency(taxaArt)}`}</Text>
             </View>
           ) : null}
 
@@ -411,8 +436,8 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({ proposta, cliente, empresa })
 
         <View wrap={false} style={{ marginTop: 10 }}>
           <Text style={[styles.textoBold, { marginBottom: 4 }]}>{`CONDIÇÕES DE PAGAMENTO:`}</Text>
-          {(proposta.parcelas && proposta.parcelas.length > 0) ? (
-            proposta.parcelas.map((p, i) => (
+          {(listaParcelas && listaParcelas.length > 0) ? (
+            listaParcelas.map((p: any, i: number) => (
               <Text key={i} style={styles.textoNormal}>{`• ${p.percentual}% (${p.descricao || 'Sinal'}): ${p.prazo || 'A combinar'}.`}</Text>
             ))
           ) : (
@@ -427,7 +452,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({ proposta, cliente, empresa })
               <View style={styles.checkbox}>
                 <Text style={{ fontSize: 8 }}>{proposta.solicitaNF ? 'X' : ' '}</Text>
               </View>
-              <Text style={styles.textoNormal}>{`Solicito emissão de Nota Fiscal ${proposta.solicitaNF && proposta.impostoNF ? `(acrescentar ${proposta.impostoNF}% no valor)` : ''}`}</Text>
+              <Text style={styles.textoNormal}>{`Solicito emissão de Nota Fiscal ${proposta.solicitaNF ? (proposta.impostoNF ? `(acrescentar ${proposta.impostoNF}% no valor)` : '') : ''}`}</Text>
             </View>
             <View style={styles.checkboxLinha}>
               <View style={styles.checkbox}>

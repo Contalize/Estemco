@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ConstructionSite } from '../types';
-import { CalendarDays, ChevronLeft, ChevronRight, Check, Truck, Building2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Truck, Building2 } from 'lucide-react';
 import CalendarioFrota from './CalendarioFrota';
 
 interface ConstructionCalendarProps {

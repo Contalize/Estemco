@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ConstructionSite, GlobalConfig, Tab, DREObra } from '../types';
-import { Loader2, TrendingUp, DollarSign, FileText, Users, Plus, GitPullRequestArrow, AlertTriangle, Calendar as CalendarIcon, ArrowUp, ArrowDown, CheckCircle2, XCircle, Clock, Building2, BarChart3, Filter, X, Eye } from 'lucide-react';
+import { Loader2, TrendingUp, AlertTriangle, ArrowUp, ArrowDown, CheckCircle2, Clock, Building2, BarChart3, Filter, X, Eye } from 'lucide-react';
 import { useCollection } from '../src/firebase/firestore/use-collection';
 import { useAuth } from '../contexts/AuthContext';
-import { where, orderBy } from 'firebase/firestore';
+import { where } from 'firebase/firestore';
 import { PropostaData } from '../services/propostasService';
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell, PieChart, Pie } from 'recharts';
 import { Card, Select, Button, Input } from './ui';
@@ -116,7 +116,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ sites, config, onNavigate 
   const formatCurrency = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
   // ---- SEÇÃO 1: FUNIL DE VENDAS (Filtrado pelo Range Atual de Emissão) ----
-  const currentPropostas = propostas.filter(p => isWithinRange(p.dataEmissao || p.createdAt, rangeStart, rangeEnd));
+  const currentPropostas = propostas.filter(p => isWithinRange(p.dataEmissao || (p as any).createdAt, rangeStart, rangeEnd));
 
   const funnelOrcadas = currentPropostas.length;
   const valOrcadas = currentPropostas.reduce((a, b) => a + (b.valorTotal || 0), 0);
@@ -190,7 +190,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ sites, config, onNavigate 
       // Nota: DRE guarda os valores totais empilhados. Num sistema avançado bateríamos timestamps de cada item. 
       // Por enquanto, somamos o total das obras que foram INICIADAS/ATIVAS no periodo. 
       const obraRef = obrasData.find(o => o.id === d.obraId);
-      if (!isWithinRange(obraRef?.dataInicio || obraRef?.createdAt || now, start, end) && obraRef?.statusObra !== 'Em Andamento') return acc;
+      if (!isWithinRange(obraRef?.dataInicio || (obraRef as any)?.createdAt || now, start, end) && obraRef?.statusObra !== 'Em Andamento') return acc;
 
       const custoObra = d.totalDieselGasto + d.totalCustoConcreto + d.totalCustoMaoDeObra + d.totalCustoHorasParadas + d.custoMobilizacao + d.custoART;
 
@@ -209,7 +209,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ sites, config, onNavigate 
   const margemAtual = currKpis.receitaContratada > 0 ? ((currKpis.receitaContratada - currKpis.custoTotal) / currKpis.receitaContratada) * 100 : 0;
   const margemPrev = prevKpis.receitaContratada > 0 ? ((prevKpis.receitaContratada - prevKpis.custoTotal) / prevKpis.receitaContratada) * 100 : 0;
 
-  const prevPropostas = propostas.filter(p => isWithinRange(p.dataEmissao || p.createdAt, prevStart, prevEnd)).length;
+  const prevPropostas = propostas.filter(p => isWithinRange(p.dataEmissao || (p as any).createdAt, prevStart, prevEnd)).length;
   const valorAberto = currentPropostas.filter(p => p.status === 'Pendente' || p.status === 'Rascunho' || p.status === 'Enviada').reduce((a, b) => a + (b.valorTotal || 0), 0);
   const vlrAbertoPrev = propostas.filter(p => (p.status === 'Pendente' || p.status === 'Enviada') && isWithinRange(p.dataEmissao, prevStart, prevEnd)).reduce((a, b) => a + (b.valorTotal || 0), 0);
 
@@ -259,7 +259,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ sites, config, onNavigate 
     return months.map(m => {
       // Buscar Obras aprovadas nesse mes para R.Contratada
       const propsMes = propostas.filter(p => {
-        const t = new Date(p.dataAprovacao || p.dataEmissao || p.createdAt);
+        const t = new Date(p.dataAprovacao || p.dataEmissao || (p as any).createdAt);
         return p.status === 'Aprovada' && t.getMonth() === m.month && t.getFullYear() === m.year;
       });
       const recBase = propsMes.reduce((a, b) => a + (b.valorTotal || 0), 0);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Users, Plus, Loader2, ShieldAlert, X, Mail, Shield, Check, Activity, Settings2, Copy } from 'lucide-react';
+import { Plus, Loader2, ShieldAlert, X, Mail, Shield, Check, Activity, Settings2, Copy } from 'lucide-react';
 import { collection, addDoc, query, where, deleteDoc, doc, Timestamp, updateDoc, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useCollection } from '../src/firebase/firestore/use-collection';

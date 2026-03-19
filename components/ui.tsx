@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Check, ChevronsUpDown, MoreVertical, X, CheckCircle2, ShieldAlert, Mail } from 'lucide-react';
+import { Check, ChevronsUpDown, X, CheckCircle2, ShieldAlert, Mail } from 'lucide-react';
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"

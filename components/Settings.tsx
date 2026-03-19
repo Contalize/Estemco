@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { Building2, Settings as SettingsIcon, Save, Loader2, CheckCircle2, FileText, Drill, Plus, Trash2, X } from 'lucide-react';
+import { Building2, Save, Loader2, CheckCircle2, FileText, Drill, Plus, Trash2, X } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Card, Label, Input, Button, Skeleton, Textarea, Select } from './ui';

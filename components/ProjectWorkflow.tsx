@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { ConstructionSite, Tab } from '../types';
-import { Building2, FileText, MapPin, Hash, Activity, Search, Plus, X, AlertTriangle, LayoutGrid, List, ChevronRight, CheckCircle2, DollarSign, Calendar as CalendarIcon, Clock, MoreVertical, MessageSquare, Briefcase, Ruler, Receipt, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { ConstructionSite } from '../types';
+import { FileText, MapPin, Activity, Search, Plus, X, AlertTriangle, LayoutGrid, List, ChevronRight, DollarSign, Calendar as CalendarIcon, MessageSquare, Receipt, Trash2 } from 'lucide-react';
 import { useCollection } from '../src/firebase/firestore/use-collection';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../lib/firebase';
@@ -33,7 +33,7 @@ export const ProjectWorkflow: React.FC<ProjectWorkflowProps> = ({ onNavigate }) 
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Collections
-  const { data: obras, isLoading, error } = useCollection<ConstructionSite>('obras', profile?.tenantId ? [where('tenantId', '==', profile.tenantId)] : []);
+  const { data: obras } = useCollection<ConstructionSite>('obras', profile?.tenantId ? [where('tenantId', '==', profile.tenantId)] : []);
   const { data: dres } = useCollection<any>('dre_obras', profile?.tenantId ? [where('tenantId', '==', profile.tenantId)] : []);
 
   // Derived state

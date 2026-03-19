@@ -132,17 +132,18 @@ const styles = StyleSheet.create({
     }
 });
 const PropostaDocument: React.FC<{ data: NovaPropostaData }> = ({ data }) => {
-    // Resolução robusta de itens (novos e salvos)
-    const rawItens = data.itens || (data as any).itensHCM || (data as any).itensESC || (data as any).itensSPT || (data as any).furosSPT || [];
-    
-    // Resolução robusta de mobilização
-    const rawMobilizacao = data.mobilizacao || (data as any).mobilizacaoHCM || (data as any).mobilizacaoESC || (data as any).mobilizacaoSPT || (data as any).valorMobilizacao || 0;
+    // --- ADAPTER LAYER (Data Normalization) ---
+    const listaServicos = (data as any)?.servicos || (data as any)?.itens || (data as any)?.itensHCM || (data as any)?.itensESC || (data as any)?.itensSPT || (data as any)?.furosSPT || [];
+    const valorMobilizacao = (data as any)?.mobilizacao || (data as any)?.valorMobilizacao || (data as any)?.mobilizacaoHCM || (data as any)?.mobilizacaoESC || (data as any)?.mobilizacaoSPT || 0;
+    const taxaArt = (data as any)?.valorART || (data as any)?.taxaArt || 0;
+    const nDiasExecucao = (data as any)?.diasExecucao || (data as any)?.prazoExecucao || 0;
+    const dataInicioPrevisto = (data as any)?.inicioPrevisto || (data as any)?.dataPrevistaInicio || null;
 
     let calc: any = { linhasDetalhadas: [], valorTotal: 0, valorART: 0, valorMobilizacao: 0 };
     try {
-        if (data.tipo === 'HCM') calc = calcularPropostaHCM(rawItens as ItemProposta[], rawMobilizacao, data.faturamentoMinimo, data.incluirART, data.valorART || 0, data.emiteNotaFiscal, data.percentualImposto || 0);
-        if (data.tipo === 'ESC') calc = calcularPropostaESC(rawItens as ItemProposta[], rawMobilizacao, (data as any).modalidadeESC || 'por_metro', (data as any).precoFechadoESC, (data as any).metrosDiariosESC, (data as any).precoExcedenteESC, data.faturamentoMinimo, data.incluirART, data.valorART || 0, data.emiteNotaFiscal, data.percentualImposto || 0);
-        if (data.tipo === 'SPT') calc = calcularPropostaSPT(rawItens as any, rawMobilizacao, data.incluirART, data.valorART || 0, data.emiteNotaFiscal, data.percentualImposto || 0);
+        if (data.tipo === 'HCM') calc = calcularPropostaHCM(listaServicos as ItemProposta[], valorMobilizacao, data.faturamentoMinimo, data.incluirART, taxaArt, data.emiteNotaFiscal, data.percentualImposto || 0);
+        if (data.tipo === 'ESC') calc = calcularPropostaESC(listaServicos as ItemProposta[], valorMobilizacao, (data as any).modalidadeESC || 'por_metro', (data as any).precoFechadoESC, (data as any).metrosDiariosESC, (data as any).precoExcedenteESC, data.faturamentoMinimo, data.incluirART, taxaArt, data.emiteNotaFiscal, data.percentualImposto || 0);
+        if (data.tipo === 'SPT') calc = calcularPropostaSPT(listaServicos as any, valorMobilizacao, data.incluirART, taxaArt, data.emiteNotaFiscal, data.percentualImposto || 0);
     } catch (e) {
         console.error("Erro nos cálculos do documento:", e);
     }
@@ -150,7 +151,7 @@ const PropostaDocument: React.FC<{ data: NovaPropostaData }> = ({ data }) => {
     const title = pdfTexts.proposals.titles[data.tipo as keyof typeof pdfTexts.proposals.titles] || pdfTexts.proposals.titles.GENERIC;
     const dataEmissao = safeFormatDate((data as any).dataEmissao || new Date(), "dd 'de' MMMM 'de' yyyy");
     const valorTotalExtenso = numberToWords(calc.valorTotal || 0);
-    const diasExecucao = data.diasExecucao || data.prazoExecucao || 0;
+    const diasExecucao = nDiasExecucao || 0;
 
     return (
         <Document>
@@ -190,18 +191,22 @@ const PropostaDocument: React.FC<{ data: NovaPropostaData }> = ({ data }) => {
 
                 {/* SPECIFICATIONS (Shielded) */}
                 <Text style={styles.sectionTitle}>{`1. DAS ESPECIFICAÇÕES TÉCNICAS.`}</Text>
-                {(rawItens || []).map((s: any, i: number) => (
-                    <View key={i} style={{ marginBottom: 4 }}>
-                        <Text style={styles.textBold}>{`• ${(data.tipo === 'SPT' ? 'SONDAGEM SPT' : 'ESTACAS ' + (s.tipoEstaca || data.tipo))}:`}</Text>
-                        <Text style={styles.textNormal}>
-                            {data.tipo !== 'SPT' ? (
-                                `Estacas d= Ø${s.diametro || 'N/D'}, quant: ${s.quantidadeEstacas || s.quantidade || 0} x ${s.comprimentoUnitario || s.metragemPrevista || 0}m = ${formatMeters((s.quantidadeEstacas || s.quantidade || 0) * (s.comprimentoUnitario || s.metragemPrevista || 0))}`
-                            ) : (
-                                `Quantidade de furos: ${s.numeroFuro || i+1}, profundidade prevista: ${s.profundidade || 0}m`
-                            )}
-                        </Text>
-                    </View>
-                ))}
+                {listaServicos.map((s: any, i: number) => {
+                    const qtd = s.quantidadeEstacas || s.quantidade || (data.tipo === 'SPT' ? 1 : 0);
+                    const metros = s.comprimentoUnitario || s.metragemPrevista || (s as any).totalMetros || 0;
+                    return (
+                        <View key={i} style={{ marginBottom: 4 }}>
+                            <Text style={styles.textBold}>{`• ${(data.tipo === 'SPT' ? 'SONDAGEM SPT' : 'ESTACAS ' + (s.tipoEstaca || data.tipo || 'SB'))}:`}</Text>
+                            <Text style={styles.textNormal}>
+                                {data.tipo !== 'SPT' ? (
+                                    `Estacas d= Ø${s.diametro || 'N/D'}, quant: ${qtd} x ${metros}m = ${formatMeters(qtd * metros)}`
+                                ) : (
+                                    `Quantidade de furos: ${s.numeroFuro || i+1}, profundidade prevista: ${s.profundidade || 0}m`
+                                )}
+                            </Text>
+                        </View>
+                    );
+                })}
 
                 {/* TIMING (Shielded) */}
                 <Text style={styles.sectionTitle}>{`2. PRAZO DE EXECUÇÃO e INÍCIO DA OBRA.`}</Text>
@@ -230,11 +235,11 @@ const PropostaDocument: React.FC<{ data: NovaPropostaData }> = ({ data }) => {
                     </View>
                 ))}
                 
-                {rawMobilizacao ? (
+                {valorMobilizacao ? (
                     <View style={styles.tableRow}>
                         <Text style={[styles.textNormal, { flex: 2 }]}>{`Mobilização e desmobilização de equipamentos`}</Text>
                         <Text style={[styles.textNormal, { flex: 1, textAlign: 'center' }]}>{`-`}</Text>
-                        <Text style={[styles.textNormal, { flex: 1, textAlign: 'right' }]}>{`${formatCurrency(rawMobilizacao)}`}</Text>
+                        <Text style={[styles.textNormal, { flex: 1, textAlign: 'right' }]}>{`${formatCurrency(valorMobilizacao)}`}</Text>
                     </View>
                 ) : null}
 
@@ -242,7 +247,7 @@ const PropostaDocument: React.FC<{ data: NovaPropostaData }> = ({ data }) => {
                     <View style={styles.tableRow}>
                         <Text style={[styles.textNormal, { flex: 2 }]}>{`ART - Anotação de Responsabilidade Técnica`}</Text>
                         <Text style={[styles.textNormal, { flex: 1, textAlign: 'center' }]}>{`-`}</Text>
-                        <Text style={[styles.textNormal, { flex: 1, textAlign: 'right' }]}>{`${formatCurrency(data.valorART)}`}</Text>
+                        <Text style={[styles.textNormal, { flex: 1, textAlign: 'right' }]}>{`${formatCurrency(taxaArt)}`}</Text>
                     </View>
                 ) : null}
 
@@ -336,12 +341,19 @@ export const generatePropostaBlob = async (data: NovaPropostaData) => {
     return await pdf(<PropostaDocument data={data} />).toBlob();
 };
 
-export const DownloadPropostaPDF: React.FC<{ data: NovaPropostaData }> = ({ data }) => (
-    <PDFDownloadLink
-        document={<PropostaDocument data={data} />}
-        fileName={`Proposta_${data.clienteNome || 'Cliente'}.pdf`}
-        className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium shadow-sm"
-    >
-        {({ loading }) => (loading ? 'Gerando...' : <><FileDown size={16} /> Baixar PDF</>)}
-    </PDFDownloadLink>
-);
+export const DownloadPropostaPDF: React.FC<{ data: NovaPropostaData }> = ({ data }) => {
+    // Render button only if we have minimum valid data to prevent direct blob generation errors
+    const hasData = (data as any)?.id && (data?.tipo === 'SPT' || ((data as any)?.itens?.length > 0) || ((data as any)?.servicos?.length > 0));
+    
+    if (!hasData) return null;
+
+    return (
+        <PDFDownloadLink
+            document={<PropostaDocument data={data} />}
+            fileName={`Proposta_${data.clienteNome || 'Cliente'}.pdf`}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium shadow-sm"
+        >
+            {({ loading }) => (loading ? 'Gerando...' : <><FileDown size={16} /> Baixar PDF</>)}
+        </PDFDownloadLink>
+    );
+};

@@ -269,7 +269,7 @@ export interface Boletim {
   // Consumo
   dieselConsumidoLitros: number;
   precoLitroDieselReferencia?: number; // Snapshot do preço no momento do registro
-
+  
   horasProducao: number;
   horasParada: number;
   motivoParada: string;
@@ -475,6 +475,8 @@ export interface ItemEstacaESC {
   subtotal: number;
 }
 
+export type ModalidadeESC = 'por_metro' | 'preco_fechado' | 'saida_diaria';
+export type TipoEquipamento = 'HCM' | 'ESC' | 'SPT';
 export interface ItemFuroSPT {
   id: string;
   numeroFuro: number;
@@ -484,7 +486,7 @@ export interface ItemFuroSPT {
 export interface Orcamento {
   id?: string;
   numero: string; // Ex: "5016-HCM", "4917-ESC", "2040-26"
-  tipoEquipamento: 'HCM' | 'ESC' | 'SPT';
+  tipoEquipamento: TipoEquipamento;
   clienteId: string;
   clienteNome: string;
   enderecoObra: string;
@@ -525,6 +527,3 @@ export interface Orcamento {
   atualizadoEm: any;
   empresaId: string;
 }
-
-export type ModalidadeESC = 'por_metro' | 'preco_fechado' | 'saida_diaria';
-export type TipoEquipamento = 'HCM' | 'ESC' | 'SPT';

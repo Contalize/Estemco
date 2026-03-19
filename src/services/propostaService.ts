@@ -1,54 +1,84 @@
-import { db } from '../../lib/firebase';
+// src/services/propostaService.ts
 import {
-    collection, addDoc, updateDoc, doc, serverTimestamp,
-    runTransaction, setDoc, deleteDoc
+    collection, doc, addDoc, updateDoc, deleteDoc,
+    serverTimestamp, getDoc
 } from 'firebase/firestore';
-import { TipoServico, StatusProposta } from '../../types';
+import { db } from '../../lib/firebase';
+import { Proposta, TipoServico, StatusProposta } from '../types/types';
 import { proximoNumeroAtomico } from '../lib/numeracao';
 
+// Dados para criação (sem id e campos automáticos)
+export type PropostaCriar = Omit<Proposta, 'id' | 'numero' | 'status' | 'criadoEm' | 'atualizadoEm'>;
+
+/**
+ * Cria uma nova proposta com número sequencial automático.
+ */
 export async function criarProposta(
-    empresaId: string,
-    dados: Record<string, any>
+    tenantId: string,
+    dados: PropostaCriar
 ): Promise<string> {
-    if (!dados.tipo) throw new Error('Tipo de serviço não informado.');
+    const numero = await proximoNumeroAtomico(tenantId, dados.tipo);
 
-    const tipo = dados.tipo as TipoServico;
-    const propostasRef = collection(db, `empresas/${empresaId}/propostas`);
-    // Generate the atomic proposal number
-    const numero = await proximoNumeroAtomico(empresaId, tipo);
+    const ref = await addDoc(
+        collection(db, 'empresas', tenantId, 'propostas'),
+        {
+            ...dados,
+            numero,
+            status: 'RASCUNHO' as StatusProposta,
+            tenantId,
+            criadoEm: serverTimestamp(),
+            atualizadoEm: serverTimestamp(),
+        }
+    );
 
-    const docRef = await addDoc(propostasRef, {
+    return ref.id;
+}
+
+/**
+ * Atualiza uma proposta existente.
+ */
+export async function atualizarProposta(
+    tenantId: string,
+    propostaId: string,
+    dados: Partial<Proposta>
+): Promise<void> {
+    const ref = doc(db, 'empresas', tenantId, 'propostas', propostaId);
+    await updateDoc(ref, {
         ...dados,
-        numero,
-        status: dados.status || 'RASCUNHO',
-        criadoEm: serverTimestamp(),
         atualizadoEm: serverTimestamp(),
     });
-
-    return docRef.id;
 }
 
-export async function atualizarProposta(
-    empresaId: string,
+/**
+ * Altera o status de uma proposta.
+ */
+export async function alterarStatusProposta(
+    tenantId: string,
     propostaId: string,
-    dados: Record<string, any>
+    novoStatus: StatusProposta
 ): Promise<void> {
-    const docRef = doc(db, `empresas/${empresaId}/propostas`, propostaId);
-    await updateDoc(docRef, { ...dados, atualizadoEm: serverTimestamp() });
+    const ref = doc(db, 'empresas', tenantId, 'propostas', propostaId);
+    await updateDoc(ref, {
+        status: novoStatus,
+        atualizadoEm: serverTimestamp(),
+    });
 }
 
-export async function atualizarStatus(
-    empresaId: string,
-    propostaId: string,
-    status: StatusProposta
-): Promise<void> {
-    await atualizarProposta(empresaId, propostaId, { status });
-}
-
+/**
+ * Exclui uma proposta (só se status for RASCUNHO).
+ */
 export async function excluirProposta(
-    empresaId: string,
+    tenantId: string,
     propostaId: string
 ): Promise<void> {
-    const docRef = doc(db, `empresas/${empresaId}/propostas`, propostaId);
-    await deleteDoc(docRef);
+    const ref = doc(db, 'empresas', tenantId, 'propostas', propostaId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) throw new Error('Proposta não encontrada.');
+
+    const proposta = snap.data() as Proposta;
+    if (proposta.status !== 'RASCUNHO') {
+        throw new Error('Apenas propostas em Rascunho podem ser excluídas.');
+    }
+
+    await deleteDoc(ref);
 }

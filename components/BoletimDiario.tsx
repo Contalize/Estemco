@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { where, collection, Timestamp, doc, runTransaction, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Card, Label, Input, Select, Button, Textarea, Toast } from './ui';
-import { Plus, Trash2, Save, X, Search, Calendar as CalendarIcon, Drill, DollarSign, Users, Fuel, Activity, MapPin, Loader2, CloudRain, Sun, Cloud, Image as ImageIcon, FileText, Printer, Edit2 } from 'lucide-react';
+import { Plus, Trash2, Save, X, Calendar, Drill, DollarSign, Users, Fuel, Activity, Loader2, CloudRain, Image as ImageIcon, FileText, Printer, Edit2 } from 'lucide-react';
 import { BoletimPDFPreviewModal } from './BoletimPDFPreviewModal';
 import { GlobalConfig, ConstructionSite, Boletim, DREObra } from '../types';
 import { formatarData } from '../src/utils/formatDate';
@@ -611,7 +611,7 @@ export const BoletimDiario: React.FC<BoletimDiarioProps> = ({ config, initialObr
 
                     {/* Horários do dia */}
                     <Card className="p-5 border-slate-200 bg-white shadow-sm">
-                      <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-100 pb-2"><CalendarIcon size={18} /> Horários do Dia</h4>
+                      <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-100 pb-2"><Calendar size={18} /> Horários do Dia</h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label>Hora de Início da Obra</Label>

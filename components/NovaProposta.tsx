@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { pdf } from '@react-pdf/renderer';
 import ProposalPDF from './ProposalPDF';
-import { Plus, FileText, X, Check, Search, Calendar as CalendarIcon, Building2, Drill, DollarSign, FileSignature, Loader2, Trash2, Scale, MoreVertical, MoreHorizontal, Edit2, PlayCircle, CheckCircle2, Download, Send, Copy, AlertCircle, Eye, ArrowLeft } from 'lucide-react';
+import { Plus, FileText, X, Check, Search, Building2, Drill, DollarSign, FileSignature, Loader2, Trash2, Scale, MoreHorizontal, Edit2, PlayCircle, CheckCircle2, Download, Send, Copy, AlertCircle, Eye, ArrowLeft } from 'lucide-react';
 import { formatarData } from '../src/utils/formatDate';
 
 
 import { propostasService, PropostaData } from '../services/propostasService';
 import { useAuth } from '../contexts/AuthContext';
-import { doc, getDoc, where, collection, addDoc, setDoc, Timestamp, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, where, collection, addDoc, Timestamp, writeBatch } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useCollection } from '../src/firebase/firestore/use-collection';
 import { Card, Label, Input, Select, Button, Textarea, Combobox, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui';
@@ -542,7 +542,6 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
   const handleAprovarEGerarObra = async (prop: PropostaData) => {
     if (!profile?.tenantId || !prop.id || !user?.uid) return;
 
-    const [isApprovingId, setIsApprovingId] = [null, () => { }]; // placeholder unused
 
     try {
       const batch = writeBatch(db);

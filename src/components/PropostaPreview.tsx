@@ -20,7 +20,15 @@ interface PropostaPreviewProps {
 }
 
 export const PropostaPreview: React.FC<PropostaPreviewProps> = ({ data }) => {
-    const formatDate = (dateStr: string | undefined) => {
+    // --- ADAPTER LAYER (Data Normalization) ---
+    const listaServicos = (data as any)?.servicos || (data as any)?.itens || (data as any)?.itensHCM || (data as any)?.itensESC || (data as any)?.itensSPT || [];
+    const valorMobilizacao = (data as any)?.mobilizacao || (data as any)?.valorMobilizacao || (data as any)?.mobilizacaoHCM || (data as any)?.mobilizacaoESC || (data as any)?.mobilizacaoSPT || 0;
+    const taxaArt = (data as any)?.valorART || (data as any)?.taxaArt || 0;
+    const nDiasExecucao = (data as any)?.diasExecucao || (data as any)?.prazoExecucao || 0;
+    const dataInicioPrevisto = (data as any)?.inicioPrevisto || (data as any)?.dataPrevistaInicio || null;
+    const listaParcelas = (data as any)?.parcelas || (data as any)?.condicoesPagamento || [];
+
+    const formatDate = (dateStr: string | undefined | null) => {
         if (!dateStr) return 'A combinar';
         try {
             return format(new Date(dateStr), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -30,11 +38,11 @@ export const PropostaPreview: React.FC<PropostaPreviewProps> = ({ data }) => {
     };
 
     let calc: any = { linhasDetalhadas: [], valorTotal: 0, valorMobilizacao: 0, valorART: 0, valorImposto: 0 };
-    if (data.tipo === 'HCM') calc = calcularPropostaHCM(data.itens as ItemProposta[], data.mobilizacao, data.faturamentoMinimo, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
-    if (data.tipo === 'ESC') calc = calcularPropostaESC(data.itens as ItemProposta[], data.mobilizacao, data.modalidadeESC, data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC, data.faturamentoMinimo, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
-    if (data.tipo === 'SPT') calc = calcularPropostaSPT(data.itens as ItemFuroSPT[], data.mobilizacao, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
+    if (data.tipo === 'HCM') calc = calcularPropostaHCM(listaServicos as ItemProposta[], valorMobilizacao, data.faturamentoMinimo, data.incluirART, taxaArt, data.emiteNotaFiscal, data.percentualImposto);
+    if (data.tipo === 'ESC') calc = calcularPropostaESC(listaServicos as ItemProposta[], valorMobilizacao, data.modalidadeESC, data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC, data.faturamentoMinimo, data.incluirART, taxaArt, data.emiteNotaFiscal, data.percentualImposto);
+    if (data.tipo === 'SPT') calc = calcularPropostaSPT(listaServicos as ItemFuroSPT[], valorMobilizacao, data.incluirART, taxaArt, data.emiteNotaFiscal, data.percentualImposto);
 
-    const totalMetros = data.itens.reduce((acc, item) => acc + (item.totalMetros || item.profundidade || 0), 0);
+    const totalMetros = listaServicos.reduce((acc: number, item: any) => acc + (item.totalMetros || item.profundidade || (item.quantidadeEstacas * item.comprimentoUnitario) || 0), 0);
     const tipoTexto = data.tipo === 'HCM' ? 'HÉLICE CONTÍNUA' : data.tipo === 'ESC' ? 'ESCAVADA' : 'SPT (SONDAGEM)';
 
     return (
@@ -94,15 +102,19 @@ export const PropostaPreview: React.FC<PropostaPreviewProps> = ({ data }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {data.itens.map((item, idx) => (
-                                <tr key={idx} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
-                                    <td className="py-2.5 px-4 font-medium">{item.descricao || (data.tipo === 'SPT' ? `Furo ${item.numeroFuro}` : 'Peça de fundação')}</td>
-                                    <td className="py-2.5 px-4 text-center text-slate-600">{item.diametro ? `${item.diametro} mm` : '---'}</td>
-                                    <td className="py-2.5 px-4 text-center font-bold text-indigo-600">{item.quantidadeEstacas || item.quantidade || (data.tipo === 'SPT' ? 1 : 0)}</td>
-                                    <td className="py-2.5 px-4 text-right">{formatMetersValue(item.comprimentoUnitario || item.profundidade || 0)}</td>
-                                    <td className="py-2.5 px-4 text-right font-bold text-slate-900">{formatMetersValue(item.totalMetros || item.profundidade || 0)} m</td>
-                                </tr>
-                            ))}
+                            {listaServicos.map((item: any, idx: number) => {
+                                const qtd = item.quantidadeEstacas || item.quantidade || (data.tipo === 'SPT' ? 1 : 0);
+                                const metros = item.comprimentoUnitario || item.profundidade || item.totalMetros || 0;
+                                return (
+                                    <tr key={idx} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
+                                        <td className="py-2.5 px-4 font-medium">{item.descricao || (data.tipo === 'SPT' ? `Furo ${item.numeroFuro}` : 'Peça de fundação')}</td>
+                                        <td className="py-2.5 px-4 text-center text-slate-600">{item.diametro ? `${item.diametro} mm` : '---'}</td>
+                                        <td className="py-2.5 px-4 text-center font-bold text-indigo-600">{qtd}</td>
+                                        <td className="py-2.5 px-4 text-right">{formatMetersValue(metros)}</td>
+                                        <td className="py-2.5 px-4 text-right font-bold text-slate-900">{formatMetersValue(qtd * metros)} m</td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
@@ -119,8 +131,8 @@ export const PropostaPreview: React.FC<PropostaPreviewProps> = ({ data }) => {
                     III. PRAZO DE EXECUÇÃO
                 </h3>
                 <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 text-sm leading-relaxed text-indigo-950">
-                    Levando em conta o quantitativo apresentado, o prazo de execução para esta referida obra será de <span className="font-black">{data.diasExecucao || 0} dias úteis</span>. 
-                    O início das atividades está previsto para o dia: <span className="font-black">{formatDate(data.dataPrevistaInicio)}</span>.
+                    Levando em conta o quantitativo apresentado, o prazo de execução para esta referida obra será de <span className="font-black">{nDiasExecucao} dias úteis</span>. 
+                    O início das atividades está previsto para o dia: <span className="font-black">{formatDate(dataInicioPrevisto)}</span>.
                 </div>
             </div>
 
@@ -157,12 +169,12 @@ export const PropostaPreview: React.FC<PropostaPreviewProps> = ({ data }) => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="p-4 border border-slate-200 rounded-xl text-center bg-slate-50/30">
                         <p className="text-[10px] text-slate-400 uppercase font-black mb-1">Mobilização</p>
-                        <p className="text-lg font-bold text-slate-700">{formatCurrency(data.mobilizacao)}</p>
+                        <p className="text-lg font-bold text-slate-700">{formatCurrency(valorMobilizacao)}</p>
                     </div>
                     {data.incluirART && (
                         <div className="p-4 border border-slate-200 rounded-xl text-center bg-slate-50/30">
                             <p className="text-[10px] text-slate-400 uppercase font-black mb-1">Taxa ART</p>
-                            <p className="text-lg font-bold text-slate-700">{formatCurrency(data.valorART)}</p>
+                            <p className="text-lg font-bold text-slate-700">{formatCurrency(taxaArt)}</p>
                         </div>
                     )}
                     {data.emiteNotaFiscal && (
@@ -186,11 +198,11 @@ export const PropostaPreview: React.FC<PropostaPreviewProps> = ({ data }) => {
                     </div>
                     <div className="flex flex-col gap-2 pt-2 border-t border-slate-200">
                         <p className="font-black text-slate-400 text-[9px] uppercase tracking-widest">Formas de Pagamento</p>
-                        {data.condicoesPagamento.map((cp, idx) => (
+                        {listaParcelas.map((cp: any, idx: number) => (
                             <div key={idx} className="flex justify-between items-center bg-white p-2 rounded border border-slate-100 shadow-sm">
                                 <span className="font-bold text-indigo-950">{cp.descricao} ({cp.percentual}%)</span>
                                 <span className="font-black text-slate-900">{formatCurrency((cp.percentual/100) * calc.valorTotal)}</span>
-                                <span className="text-slate-400 font-medium">{cp.prazo} - {cp.formaPagamento.toUpperCase()}</span>
+                                <span className="text-slate-400 font-medium">{cp.prazo} - {(cp.formaPagamento || '').toUpperCase()}</span>
                             </div>
                         ))}
                     </div>

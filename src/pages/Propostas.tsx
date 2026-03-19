@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../lib/firebase';
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, getDoc } from 'firebase/firestore';
-import { Proposta, StatusProposta } from '../../types';
+import { Proposta, StatusProposta, TipoServico } from '../../types';
 
 import { Button, Input, Select, Toast, ConfirmDialog } from '../../components/ui';
 import { FileText, Plus, Search, Eye, FileDown, Trash2, Edit, CheckCircle2 } from 'lucide-react';
