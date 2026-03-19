@@ -9,6 +9,7 @@ import { Card, Label, Input, Select, Button, Textarea, Toast } from './ui';
 import { Plus, Trash2, Save, X, Calendar, Drill, DollarSign, Users, Fuel, Activity, Loader2, CloudRain, Image as ImageIcon, FileText, Printer, Edit2 } from 'lucide-react';
 import { BoletimPDFPreviewModal } from './BoletimPDFPreviewModal';
 import { GlobalConfig, ConstructionSite, Boletim, DREObra } from '../types';
+import { BoletimPDFPreviewModal } from './BoletimPDFPreviewModal';
 import { formatarData } from '../src/utils/formatDate';
 
 interface BoletimDiarioProps {
