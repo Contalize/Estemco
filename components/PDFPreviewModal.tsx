@@ -6,6 +6,7 @@ import { BlobProvider, PDFDownloadLink } from '@react-pdf/renderer';
 import ProposalPDF from './ProposalPDF';
 import { X, Download, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from './ui';
+import { montarTituloProposta, montarNomeArquivoProposta } from '../src/utils/formatters';
 
 interface PDFPreviewModalProps {
     isOpen: boolean;
@@ -98,7 +99,8 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
         endereco: 'Rodovia Capitão Barduino, Km 131,5 - Socorro SP',
     };
 
-    const nomeArquivo = `ORC_${tipo}_${(adaptedCliente.nomeRazaoSocial).replace(/\s+/g, '_').substring(0, 30)}.pdf`;
+    const nomeArquivo = montarNomeArquivoProposta(adaptedProposta, adaptedCliente);
+    const tituloExibicao = montarTituloProposta(adaptedProposta, adaptedCliente);
 
     const documentoJSX = (
         <ProposalPDF
@@ -117,7 +119,7 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
                     <div>
                         <h3 className="text-xl font-bold text-slate-800">Visualização da Proposta</h3>
                         <p className="text-sm text-slate-500">
-                            {adaptedProposta.id} — {adaptedCliente.nomeRazaoSocial}
+                            {tituloExibicao}
                         </p>
                     </div>
                     <Button

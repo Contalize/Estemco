@@ -55,7 +55,8 @@ export interface PropostaData {
   taxaAgua?: number;
   textoObrigacoesContratante?: string;
   textoObrigacoesContratada?: string;
-  textoCondicoesRisco?: string;
+  textoCondicoesCobranca?: string;
+  textoDireitosRisco?: string;
   textoTermoAceite?: string;
   servicos?: PropostaDataItem[];
   parcelas?: ParcelaProposta[];
@@ -304,6 +305,12 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({ proposta, cliente, empresa })
             AO SENHOR(A):{' '}
             <Text style={styles.textoNormal}>{cliente?.nomeRazaoSocial || 'Não informado'}</Text>
           </Text>
+          {cliente?.documento && (
+            <Text style={[styles.textoBold, { marginTop: 2 }]}>
+              CPF/CNPJ:{' '}
+              <Text style={styles.textoNormal}>{cliente.documento}</Text>
+            </Text>
+          )}
           <Text style={styles.textoBold}>
             ENDEREÇO:{' '}
             <Text style={styles.textoNormal}>{cliente?.enderecoFaturamento || 'Não informado'}</Text>
@@ -428,19 +435,29 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({ proposta, cliente, empresa })
               <Text style={[styles.textoBold, { flex: 1, textAlign: 'center' }]}>Prazo</Text>
               <Text style={[styles.textoBold, { flex: 1, textAlign: 'right' }]}>Valor</Text>
             </View>
-            {proposta.parcelas.map((p, i) => (
-              <View key={i} style={styles.tabelaLinha}>
-                <Text style={[styles.textoNormal, { flex: 2 }]}>
-                  {p?.descricao || `${i + 1}ª Parcela`}
-                </Text>
-                <Text style={[styles.textoNormal, { flex: 1, textAlign: 'center' }]}>
-                  {p?.dias || p?.prazo || '—'} {p?.dias ? 'dias' : ''}
-                </Text>
-                <Text style={[styles.textoNormal, { flex: 1, textAlign: 'right' }]}>
-                  {formatCurrency(p?.valor || 0)}
-                </Text>
-              </View>
-            ))}
+            {proposta.parcelas
+              .filter(p => p?.descricao && p.descricao !== 'Nova Parcela') // remove parcelas em branco
+              .map((p, i) => {
+                // Calcula o valor em reais a partir do percentual (campo que o wizard sempre salva)
+                const valorParcela = p?.valor && p.valor > 0
+                  ? p.valor
+                  : ((p?.percentual || 0) / 100) * (proposta?.valorTotal || 0);
+                
+                return (
+                  <View key={i} style={styles.tabelaLinha}>
+                    <Text style={[styles.textoNormal, { flex: 2 }]}>
+                      {p?.descricao || `${i + 1}ª Parcela`}
+                    </Text>
+                    <Text style={[styles.textoNormal, { flex: 1, textAlign: 'center' }]}>
+                      {p?.prazo || p?.dias ? `${p.prazo || p.dias} dias` : '—'}
+                    </Text>
+                    <Text style={[styles.textoNormal, { flex: 1, textAlign: 'right' }]}>
+                      {formatCurrency(valorParcela)}
+                    </Text>
+                  </View>
+                );
+              })
+            }
           </View>
         )}
 
@@ -482,24 +499,30 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({ proposta, cliente, empresa })
 
         {/* 6. DAS COBRANÇAS E FATURAMENTO MÍNIMO */}
         <Text style={[styles.secaoTitulo, { marginTop: 15 }]}>DAS COBRANÇAS E FATURAMENTO MÍNIMO</Text>
-        <Text style={styles.textoNormal}>
-          ESTA PRESTAÇÃO DE SERVIÇOS CONTEMPLA O FATURAMENTO MÍNIMO DA DIÁRIA DE{' '}
-          {formatCurrency(proposta?.faturamentoMinimo || 0)}, QUE SERÁ APLICADO NAS SEGUINTES CONDIÇÕES:
-        </Text>
-        <Text style={styles.textoNormal}>1. O faturamento mínimo será cobrado em todos os eventos que não decorram de responsabilidade da contratada, incluindo ineficiência no fornecimento de concreto, quebra de bomba, entupimento, atraso por falta de locação, horários restritos em condomínios e fábricas, dificuldades de perfuração advindas do terreno (entulho, matacões, estruturas de construções anteriores), entre outros.</Text>
-        <Text style={styles.textoNormal}>2. Ficará isento do pagamento do faturamento mínimo por questões climáticas.</Text>
-        <Text style={styles.textoNormal}>3. Ficará isento do pagamento do faturamento mínimo caso haja problemas com o equipamento de perfuração.</Text>
-        {(proposta?.taxaAgua || 0) > 0 && (
-          <Text style={styles.textoNormal}>
-            4. Se atingido o nível d'água, será cobrado um adicional de{' '}
-            {formatCurrency(proposta?.taxaAgua || 0)} por estaca.
-          </Text>
-        )}
-        {(proposta?.horaParada || 0) > 0 && (
-          <Text style={styles.textoNormal}>
-            5. Pelo equipamento ficar parado por responsabilidade da CONTRATANTE, será cobrado{' '}
-            {formatCurrency(proposta?.horaParada || 0)} ({horaParadaExtenso}) por hora de perfuratriz inoperante.
-          </Text>
+        {proposta?.textoCondicoesCobranca?.trim() ? (
+            <Text style={styles.textoNormal}>{proposta.textoCondicoesCobranca}</Text>
+        ) : (
+          <View>
+            <Text style={styles.textoNormal}>
+              ESTA PRESTAÇÃO DE SERVIÇOS CONTEMPLA O FATURAMENTO MÍNIMO DA DIÁRIA DE{' '}
+              {formatCurrency(proposta?.faturamentoMinimo || 0)}, QUE SERÁ APLICADO NAS SEGUINTES CONDIÇÕES:
+            </Text>
+            <Text style={styles.textoNormal}>1. O faturamento mínimo será cobrado em todos os eventos que não decorram de responsabilidade da contratada, incluindo ineficiência no fornecimento de concreto, quebra de bomba, entupimento, atraso por falta de locação, horários restritos em condomínios e fábricas, dificuldades de perfuração advindas do terreno (entulho, matacões, estruturas de construções anteriores), entre outros.</Text>
+            <Text style={styles.textoNormal}>2. Ficará isento do pagamento do faturamento mínimo por questões climáticas.</Text>
+            <Text style={styles.textoNormal}>3. Ficará isento do pagamento do faturamento mínimo caso haja problemas com o equipamento de perfuração.</Text>
+            {(proposta?.taxaAgua || 0) > 0 && (
+              <Text style={styles.textoNormal}>
+                4. Se atingido o nível d'água, será cobrado um adicional de{' '}
+                {formatCurrency(proposta?.taxaAgua || 0)} por estaca.
+              </Text>
+            )}
+            {(proposta?.horaParada || 0) > 0 && (
+              <Text style={styles.textoNormal}>
+                5. Pelo equipamento ficar parado por responsabilidade da CONTRATANTE, será cobrado{' '}
+                {formatCurrency(proposta?.horaParada || 0)} ({horaParadaExtenso}) por hora de perfuratriz inoperante.
+              </Text>
+            )}
+          </View>
         )}
 
         {/* 7. OBRIGAÇÕES DA CONTRATANTE */}
@@ -512,11 +535,17 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({ proposta, cliente, empresa })
 
         {/* 9. DOS DIREITOS */}
         <Text style={[styles.secaoTitulo, { marginTop: 15 }]}>DOS DIREITOS</Text>
-        <Text style={styles.textoNormal}>1. Reservamo-nos o direito de rescisão deste contrato se na execução dos trabalhos for encontrado matacão ou rochas que impeçam a perfuração normal.</Text>
-        <Text style={styles.textoNormal}>2. As propostas aprovadas estão sujeitas à programação de disponibilidade de perfuratriz e equipe.</Text>
-        <Text style={styles.textoNormal}>3. O comprimento mínimo cobrado por estaca é de 5,00 m.</Text>
-        <Text style={styles.textoNormal}>4. O dia trabalhado será considerado das 7h às 17h, com pausa de 1h para almoço (segunda a sexta-feira). Produção fora deste horário ou aos sábados terá acréscimo de 30% sobre o valor contratado.</Text>
-        <Text style={styles.textoNormal}>5. A mobilização será cobrada cada vez que houver mobilização e desmobilização do equipamento.</Text>
+        {proposta?.textoDireitosRisco?.trim() ? (
+            <Text style={styles.textoNormal}>{proposta.textoDireitosRisco}</Text>
+        ) : (
+          <View>
+            <Text style={styles.textoNormal}>1. Reservamo-nos o direito de rescisão deste contrato se na execução dos trabalhos for encontrado matacão ou rochas que impeçam a perfuração normal.</Text>
+            <Text style={styles.textoNormal}>2. As propostas aprovadas estão sujeitas à programação de disponibilidade de perfuratriz e equipe.</Text>
+            <Text style={styles.textoNormal}>3. O comprimento mínimo cobrado por estaca é de 5,00 m.</Text>
+            <Text style={styles.textoNormal}>4. O dia trabalhado será considerado das 7h às 17h, com pausa de 1h para almoço (segunda a sexta-feira). Produção fora deste horário ou aos sábados terá acréscimo de 30% sobre o valor contratado.</Text>
+            <Text style={styles.textoNormal}>5. A mobilização será cobrada cada vez que houver mobilização e desmobilização do equipamento.</Text>
+          </View>
+        )}
 
       </Page>
 

@@ -25,7 +25,7 @@ const INITIAL_DATA: NovaPropostaData = {
     clienteNome: '',
     enderecoObra: { logradouro: '', numero: '', bairro: '', cidade: '', estado: '', cep: '' },
     observacoes: '',
-    validadeProposta: 30,
+    validadeProposta: 15,
     itens: [],
     mobilizacao: 0,
     modalidadeESC: 'por_metro',
@@ -38,9 +38,10 @@ const INITIAL_DATA: NovaPropostaData = {
         { id: '2', descricao: 'Saldo Final', percentual: 50, prazo: '7 dias após entrega da medição', formaPagamento: 'pix' },
     ],
     faturamentoMinimo: 0,
-    prazoExecucao: 30,
+    prazoExecucao: 2,
     dataPrevistaInicio: '',
-    diasExecucao: 1
+    diasExecucao: 1,
+    valorTotal: 0
 };
 
 export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editPropostaId }) => {
@@ -70,10 +71,10 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
                         clienteNome: obj.clienteNome,
                         enderecoObra: obj.enderecoObra || INITIAL_DATA.enderecoObra,
                         observacoes: obj.observacoes || '',
-                        validadeProposta: obj.validadeProposta || 30,
+                        validadeProposta: obj.validadeProposta || 15,
                         mobilizacao: obj.valorMobilizacao || 0,
                         faturamentoMinimo: obj.faturamentoMinimo || (obj.tipo === 'HCM' ? MINIMO_DIARIO_HCM_DEFAULT : obj.tipo === 'ESC' ? MINIMO_OBRA_ESC_DEFAULT : 0),
-                        prazoExecucao: obj.prazoExecucao || 30,
+                        prazoExecucao: obj.prazoExecucao || 2,
                         dataPrevistaInicio: obj.dataPrevistaInicio || '',
                         diasExecucao: obj.diasExecucao || 0,
                         incluirART: obj.incluirART !== undefined ? obj.incluirART : true,
@@ -109,6 +110,34 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
         fetchProposta();
     }, [editPropostaId, profile?.tenantId]);
 
+    // Busca os textos do modelo sempre que o TIPO de serviço mudar
+    useEffect(() => {
+        if (!data.tipo || !profile?.tenantId || editPropostaId) return; // Nao sobescreve se for edição
+
+        const fetchModelos = async () => {
+            try {
+                const docRef = doc(db, 'empresas', profile.tenantId, 'configuracoes', 'modelosProposta');
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const todosModelos = docSnap.data();
+                    const modeloCorreto = todosModelos[data.tipo];
+                    if (modeloCorreto) {
+                        updateData({
+                            textoObrigacoesContratante: modeloCorreto.obrigacoesContratante || '',
+                            textoObrigacoesContratada: modeloCorreto.obrigacoesContratada || '',
+                            textoCondicoesCobranca: modeloCorreto.condicoesCobranca || '',
+                            textoDireitosRisco: modeloCorreto.direitosRisco || '',
+                            textoTermoAceite: modeloCorreto.termoAceite || '',
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error("Erro ao puxar modelos de contrato", error);
+            }
+        };
+        fetchModelos();
+    }, [data.tipo, profile?.tenantId, editPropostaId]);
+
     const updateData = (partial: Partial<NovaPropostaData>) => setData(d => ({ ...d, ...partial }));
 
     const handleNext = () => {
@@ -140,6 +169,11 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
                 valorART: data.incluirART ? data.valorART : 0,
                 emiteNotaFiscal: data.emiteNotaFiscal,
                 percentualImposto: data.percentualImposto,
+                textoObrigacoesContratante: data.textoObrigacoesContratante || '',
+                textoObrigacoesContratada: data.textoObrigacoesContratada || '',
+                textoCondicoesCobranca: data.textoCondicoesCobranca || '',
+                textoDireitosRisco: data.textoDireitosRisco || '',
+                textoTermoAceite: data.textoTermoAceite || '',
                 tenantId: profile.tenantId,
                 criadoPor: profile.nome || 'Sistema'
             };

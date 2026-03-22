@@ -24,7 +24,7 @@ export const MOBILIZACAO_ESC = 500;
 export const MINIMO_DIARIO_HCM_DEFAULT = 8000; 
 export const MINIMO_OBRA_ESC_DEFAULT = 3000;   
 
-import { ItemProposta, TipoServico } from '../../types';
+import { TipoServico, ItemProposta, ItemFuroSPT } from '../../types';
 
 export interface ResultadoCalculo {
     subtotalExecucao: number;

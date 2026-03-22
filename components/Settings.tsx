@@ -5,6 +5,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Card, Label, Input, Button, Skeleton, Textarea, Select } from './ui';
 import { useAuth } from '../contexts/AuthContext';
+import { ModelosPropostaSettings } from './ModelosPropostaSettings';
 
 type Equipment = {
   id: string;
@@ -210,7 +211,8 @@ export const Settings: React.FC<{ onNavigate?: (tab: any) => void }> = ({ onNavi
               <div className="space-y-2"><Skeleton className="h-4 w-32" /><Skeleton className="h-10 w-full" /></div>
             </div>
           ) : (
-            <form id="settings-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <>
+              <form id="settings-form" onSubmit={handleSubmit(onSubmit)} className={activeTab === 'textos' ? 'hidden' : 'space-y-6'}>
 
               {/* TAB: DADOS DA EMPRESA */}
               <div className={activeTab === 'dados' ? 'block space-y-6' : 'hidden'}>
@@ -304,60 +306,25 @@ export const Settings: React.FC<{ onNavigate?: (tab: any) => void }> = ({ onNavi
                 </div>
               </div>
 
-              {/* TAB: TEXTOS DA PROPOSTA */}
-              <div className={activeTab === 'textos' ? 'block space-y-6' : 'hidden'}>
-                <div>
-                  <h3 className="text-lg font-medium text-slate-900 mb-1">Personalização Jurídica</h3>
-                  <p className="text-sm text-slate-500 mb-4">Defina os textos padrão que serão impressos no PDF das propostas.</p>
-                </div>
+              </form>
 
-                <div className="space-y-6">
-                  <div>
-                    <Label>Obrigações da Contratante</Label>
-                    <Textarea
-                      className="min-h-[120px]"
-                      placeholder="1. Fornecer água e energia elétrica...&#10;2. Garantir acesso livre..."
-                      {...register('textoObrigacoesContratante')}
-                    />
-                  </div>
-                  <div>
-                    <Label>Obrigações da Contratada</Label>
-                    <Textarea
-                      className="min-h-[120px]"
-                      placeholder="1. Executar os serviços de acordo com as normas (NBR 6122)..."
-                      {...register('textoObrigacoesContratada')}
-                    />
-                  </div>
-                  <div>
-                    <Label>Condições de Risco Geotécnico</Label>
-                    <Textarea
-                      className="min-h-[100px]"
-                      placeholder="Em caso de encontrar matacões, rochas ou interferências não previstas..."
-                      {...register('textoRiscoGeotecnico')}
-                    />
-                  </div>
-                  <div>
-                    <Label>Termo de Aceite</Label>
-                    <Textarea
-                      className="min-h-[80px]"
-                      placeholder="De acordo com os termos e condições descritos nesta proposta comercial."
-                      {...register('textoTermoAceite')}
-                    />
-                  </div>
-                </div>
+              {/* TAB: TEXTOS DA PROPOSTA (Separado do formulário principal) */}
+              <div className={activeTab === 'textos' ? 'block' : 'hidden'}>
+                <ModelosPropostaSettings />
               </div>
-
-            </form>
+            </>
           )}
         </div>
 
         {/* FOOTER */}
-        <div className="border-t border-slate-200 p-4 bg-slate-50 flex justify-end">
-          <Button type="submit" form="settings-form" disabled={isLoading || isSaving} className="gap-2">
-            {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
-            {isSaving ? 'Guardando...' : 'Guardar Configurações'}
-          </Button>
-        </div>
+        {activeTab !== 'textos' && (
+          <div className="border-t border-slate-200 p-4 bg-slate-50 flex justify-end">
+            <Button type="submit" form="settings-form" disabled={isLoading || isSaving} className="gap-2">
+              {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+              {isSaving ? 'Guardando...' : 'Guardar Configurações'}
+            </Button>
+          </div>
+        )}
       </Card>
 
       {/* TOAST NOTIFICATION */}

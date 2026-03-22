@@ -1,84 +1,68 @@
 // src/services/propostaService.ts
+// Caminhos corretos para estrutura do projeto Estemco
 import {
-    collection, doc, addDoc, updateDoc, deleteDoc,
-    serverTimestamp, getDoc
+    collection, addDoc, updateDoc, doc,
+    serverTimestamp, deleteDoc
 } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
-import { Proposta, TipoServico, StatusProposta } from '../types/types';
-import { proximoNumeroAtomico } from '../lib/numeracao';
+import { db } from '../../lib/firebase';          // lib/ está na RAIZ do projeto
+import { proximoNumeroAtomico } from '../lib/numeracao'; // src/lib/numeracao.ts
 
-// Dados para criação (sem id e campos automáticos)
-export type PropostaCriar = Omit<Proposta, 'id' | 'numero' | 'status' | 'criadoEm' | 'atualizadoEm'>;
+// ── Tipos inline (não dependem de types.ts) ─────────────────────────────────
+type TipoServico = 'HCM' | 'ESC' | 'SPT';
+type StatusProposta = 'RASCUNHO' | 'ENVIADA' | 'ACEITA' | 'RECUSADA' | 'EXPIRADA';
 
-/**
- * Cria uma nova proposta com número sequencial automático.
- */
+// ── Criar proposta (salva em empresas/{tenantId}/propostas) ─────────────────
 export async function criarProposta(
-    tenantId: string,
-    dados: PropostaCriar
+    empresaId: string,
+    dados: Record<string, any>
 ): Promise<string> {
-    const numero = await proximoNumeroAtomico(tenantId, dados.tipo);
+    if (!dados.tipo) throw new Error('Tipo de serviço não informado (HCM, ESC ou SPT).');
 
-    const ref = await addDoc(
-        collection(db, 'empresas', tenantId, 'propostas'),
-        {
-            ...dados,
-            numero,
-            status: 'RASCUNHO' as StatusProposta,
-            tenantId,
-            criadoEm: serverTimestamp(),
-            atualizadoEm: serverTimestamp(),
-        }
-    );
+    const tipo = dados.tipo as TipoServico;
+    const propostasRef = collection(db, 'empresas', empresaId, 'propostas');
 
-    return ref.id;
+    // Número sequencial atômico (ex: "5014-HCM")
+    const numero = await proximoNumeroAtomico(empresaId, tipo);
+
+    const docRef = await addDoc(propostasRef, {
+        ...dados,
+        numero,
+        status: (dados.status || 'RASCUNHO') as StatusProposta,
+        tenantId: empresaId,
+        criadoEm: serverTimestamp(),
+        atualizadoEm: serverTimestamp(),
+    });
+
+    return docRef.id;
 }
 
-/**
- * Atualiza uma proposta existente.
- */
+// ── Atualizar proposta ──────────────────────────────────────────────────────
 export async function atualizarProposta(
-    tenantId: string,
+    empresaId: string,
     propostaId: string,
-    dados: Partial<Proposta>
+    dados: Record<string, any>
 ): Promise<void> {
-    const ref = doc(db, 'empresas', tenantId, 'propostas', propostaId);
-    await updateDoc(ref, {
+    const docRef = doc(db, 'empresas', empresaId, 'propostas', propostaId);
+    await updateDoc(docRef, {
         ...dados,
         atualizadoEm: serverTimestamp(),
     });
 }
 
-/**
- * Altera o status de uma proposta.
- */
-export async function alterarStatusProposta(
-    tenantId: string,
+// ── Alterar status ──────────────────────────────────────────────────────────
+export async function atualizarStatus(
+    empresaId: string,
     propostaId: string,
-    novoStatus: StatusProposta
+    status: StatusProposta
 ): Promise<void> {
-    const ref = doc(db, 'empresas', tenantId, 'propostas', propostaId);
-    await updateDoc(ref, {
-        status: novoStatus,
-        atualizadoEm: serverTimestamp(),
-    });
+    await atualizarProposta(empresaId, propostaId, { status });
 }
 
-/**
- * Exclui uma proposta (só se status for RASCUNHO).
- */
+// ── Excluir proposta ────────────────────────────────────────────────────────
 export async function excluirProposta(
-    tenantId: string,
+    empresaId: string,
     propostaId: string
 ): Promise<void> {
-    const ref = doc(db, 'empresas', tenantId, 'propostas', propostaId);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) throw new Error('Proposta não encontrada.');
-
-    const proposta = snap.data() as Proposta;
-    if (proposta.status !== 'RASCUNHO') {
-        throw new Error('Apenas propostas em Rascunho podem ser excluídas.');
-    }
-
-    await deleteDoc(ref);
+    const docRef = doc(db, 'empresas', empresaId, 'propostas', propostaId);
+    await deleteDoc(docRef);
 }

@@ -3,70 +3,70 @@
 
 export type TipoServico = 'HCM' | 'ESC' | 'SPT';
 
-// Item de furo SPT
-export interface ItemFuroSPT {
+export interface ParcelaProposta {
     id: string;
-    numero: number;           // Nº do furo (F1, F2...)
-    profundidade: number;     // metros
-    valorPorMetro: number;    // R$/m
-    total: number;            // calculado
+    descricao: string;
+    percentual: number;
+    prazo: string;
+    formaPagamento: 'pix' | 'boleto' | 'transferencia' | 'dinheiro' | 'cartao' | 'cheque';
 }
 
-// Item de estaca HCM ou ESC
-export interface ItemEstaca {
-    id: string;
-    diametro: number;         // mm (ex: 400)
-    quantidade: number;
-    profundidade: number;     // metros médios
-    metrosTotais: number;     // calculado
-    valorPorMetro?: number;   // ESC = R$/m
-    valorDiaria?: number;     // HCM = R$/diária
-    quantidadeDiarias?: number;
-    subtotal: number;
-}
-
-// Estado completo do formulário de proposta
-export interface PropostaFormData {
-    // Etapa 1 — Tipo de serviço
+// Interface unificada para refletir o uso no Wizard e Services
+export interface NovaPropostaData {
     tipo: TipoServico;
-
-    // Etapa 2 — Cliente e obra
+    
+    // Cliente e Obra
+    clienteId?: string;
     clienteNome: string;
-    clienteCpfCnpj?: string;
-    clienteEmail?: string;
-    clienteTelefone?: string;
     enderecoObra: {
         logradouro: string;
-        bairro?: string;
         cidade: string;
         estado: string;
+        bairro?: string;
         cep?: string;
+        numero?: string;
     };
 
-    // Etapa 3 — Itens de serviço
-    // HCM / ESC
-    estacas?: ItemEstaca[];
-    valorMobilizacao?: number;
-    valorDesmobilizacao?: number;
-    // SPT
-    furosSPT?: ItemFuroSPT[];
-    // Campos de faturamento mínimo HCM
-    possuiFaturamentoMinimo?: boolean;
-    valorFaturamentoMinimo?: number;
+    // Itens e Valores (Genéricos para o formulário)
+    itens: any[]; 
+    mobilizacao: number;
+    faturamentoMinimo: number;
+    
+    // Configurações e Prazos
+    validadeProposta: number;
+    prazoExecucao: number;
+    dataPrevistaInicio?: string;
+    diasExecucao?: number;
+    
+    // Impostos e ART
+    incluirART: boolean;
+    valorART: number;
+    emiteNotaFiscal: boolean;
+    percentualImposto: number;
+    
+    // Condições de Pagamento (Nova estrutura com parcelas)
+    condicoesPagamento: ParcelaProposta[];
+    
+    // Campos específicos de ESC (opcionais no objeto geral)
+    modalidadeESC?: 'por_metro' | 'preco_fechado' | 'saida_diaria';
+    precoFechadoESC?: number;
+    metrosDiariosESC?: number;
+    precoExcedenteESC?: number;
 
-    // Etapa 4 — Revisão e condições
-    validadeDias: number;           // padrão: 15
-    prazoExecucaoDias: number;
-    condicoesPagamento: string;     // ex: "50% sinal + 50% medição"
-    percentualSinal: number;        // ex: 50
     observacoes?: string;
 
-    // Calculados
+    // Textos do Modelo de Contrato (Enterprise ECM)
+    textoObrigacoesContratante?: string;
+    textoObrigacoesContratada?: string;
+    textoCondicoesCobranca?: string;
+    textoDireitosRisco?: string;
+    textoTermoAceite?: string;
+
+    // Totais calculados
     valorTotal: number;
 }
 
-// Valor padrão para inicializar o formulário
-export const propostaFormDefault: PropostaFormData = {
+export const propostaFormDefault: NovaPropostaData = {
     tipo: 'HCM',
     clienteNome: '',
     enderecoObra: {
@@ -74,9 +74,18 @@ export const propostaFormDefault: PropostaFormData = {
         cidade: '',
         estado: 'SP',
     },
-    validadeDias: 15,
-    prazoExecucaoDias: 2,
-    condicoesPagamento: '50% do sinal 3 dias após assinatura do contrato e 50% do saldo 7 dias após entrega da medição.',
-    percentualSinal: 50,
+    itens: [],
+    mobilizacao: 4000,
+    faturamentoMinimo: 8000,
+    validadeProposta: 15,
+    prazoExecucao: 2,
+    incluirART: true,
+    valorART: 108.39,
+    emiteNotaFiscal: true,
+    percentualImposto: 16.5,
+    condicoesPagamento: [
+        { id: '1', descricao: 'Sinal / Entrada', percentual: 50, prazo: '3 dias após assinatura', formaPagamento: 'pix' },
+        { id: '2', descricao: 'Saldo Final', percentual: 50, prazo: '7 dias após medição', formaPagamento: 'pix' }
+    ],
     valorTotal: 0,
 };
