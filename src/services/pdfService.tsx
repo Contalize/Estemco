@@ -17,6 +17,7 @@ import { calcularPropostaHCM, calcularPropostaESC, calcularPropostaSPT } from '.
 import { ItemProposta, ItemFuroSPT } from '../../types';
 import { buildPropostaText, buildTemplateVars } from './templateService';
 import { montarNomeArquivoProposta } from '../utils/formatters';
+import { DadosEmpresa } from '../hooks/useEmpresa';
 
 // ── Formatadores ────────────────────────────────────────────────────────────
 const formatCurrency = (valor: number | undefined | null) => {
@@ -194,23 +195,42 @@ const styles = StyleSheet.create({
 });
 
 // ── Componente Principal ────────────────────────────────────────────────────
-interface PDFProps { data: NovaPropostaData; templateText?: string; tenantId?: string; }
+interface PDFProps { data: NovaPropostaData; templateText?: string; tenantId?: string; empresa?: DadosEmpresa; }
 
-const PropostaDocument: React.FC<PDFProps> = ({ data, templateText, tenantId }) => {
+const PropostaDocument: React.FC<PDFProps> = ({ data, templateText, tenantId, empresa }) => {
     let calc: any = { linhasDetalhadas: [], valorTotal: 0, valorMobilizacao: 0, valorART: 0, valorImposto: 0, subtotalExecucao: 0 };
 
+    const itensNormalizados = (data.itens && data.itens.length > 0)
+        ? data.itens
+        : (data as any).itensHCM
+            || (data as any).itensESC
+            || (data as any).itensSPT
+            || [];
+
+    const mobilizacaoNorm = data.mobilizacao
+        || (data as any).mobilizacaoHCM
+        || (data as any).mobilizacaoESC
+        || (data as any).mobilizacaoSPT
+        || 0;
+
     try {
-        if (data?.tipo === 'HCM') calc = calcularPropostaHCM(data.itens as ItemProposta[], data.mobilizacao || 0, data.faturamentoMinimo, data.incluirART, data.valorART || 0, data.emiteNotaFiscal, data.percentualImposto || 0);
-        if (data?.tipo === 'ESC') calc = calcularPropostaESC(data.itens as ItemProposta[], data.mobilizacao || 0, data.modalidadeESC || 'por_metro', data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC, data.faturamentoMinimo, data.incluirART, data.valorART || 0, data.emiteNotaFiscal, data.percentualImposto || 0);
-        if (data?.tipo === 'SPT') calc = calcularPropostaSPT(data.itens as ItemFuroSPT[], data.mobilizacao || 0, data.incluirART, data.valorART || 0, data.emiteNotaFiscal, data.percentualImposto || 0);
+        if (data?.tipo === 'HCM') calc = calcularPropostaHCM(itensNormalizados as ItemProposta[], mobilizacaoNorm, data.faturamentoMinimo, data.incluirART, data.valorART || 0, data.emiteNotaFiscal, data.percentualImposto || 0);
+        if (data?.tipo === 'ESC') calc = calcularPropostaESC(itensNormalizados as ItemProposta[], mobilizacaoNorm, data.modalidadeESC || 'por_metro', data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC, data.faturamentoMinimo, data.incluirART, data.valorART || 0, data.emiteNotaFiscal, data.percentualImposto || 0);
+        if (data?.tipo === 'SPT') calc = calcularPropostaSPT(itensNormalizados as ItemFuroSPT[], mobilizacaoNorm, data.incluirART, data.valorART || 0, data.emiteNotaFiscal, data.percentualImposto || 0);
     } catch (e) { console.error('Erro no cálculo do PDF:', e); }
 
-    const totalMetros = (data?.itens || []).reduce((acc, item: any) => acc + (item?.totalMetros || item?.profundidade || 0), 0);
+    const totalMetros = (itensNormalizados || []).reduce((acc: number, item: any) => acc + (item?.totalMetros || item?.profundidade || 0), 0);
     const tipoTexto = data?.tipo === 'HCM' ? 'HÉLICE CONTÍNUA MONITORADA' : data?.tipo === 'ESC' ? 'ESTACA ESCAVADA' : 'SPT (SONDAGEM)';
     const dataEmissao = safeFormatDate(new Date(), 'dd/MM/yyyy');
 
     // Número da proposta — usa o campo gerado, nunca a data
     const numeroDoc = (data as any)?.numero || `${data?.tipo || 'ORÇ'}-RASCUNHO`;
+
+    const tituloProposta = {
+        HCM: 'PROPOSTA DE PRESTAÇÃO DE SERVIÇOS DE HÉLICE CONTÍNUA MONITORADA',
+        ESC: 'PROPOSTA DE PRESTAÇÃO DE SERVIÇO DE ESTACAS TIPO ESCAVADA MECANICAMENTE',
+        SPT: 'PROPOSTA PARA EXECUÇÃO DO SERVIÇO DE SONDAGEM DE SIMPLES RECONHECIMENTO DE SOLO SPT',
+    }[data?.tipo || 'HCM'];
 
     // Endereço sem vírgula inicial
     const enderecoPartes = [
@@ -235,15 +255,15 @@ const PropostaDocument: React.FC<PDFProps> = ({ data, templateText, tenantId }) 
                 {/* CABEÇALHO */}
                 <View style={styles.header} fixed>
                     <View>
-                        <Text style={styles.companyTitle}>ESTEMCO - ENGENHARIA EM FUNDAÇÕES</Text>
+                        <Text style={styles.companyTitle}>{empresa?.razaoSocial || 'ESTEMCO - ENGENHARIA EM FUNDAÇÕES'}</Text>
                         <Text style={styles.companyContact}>
-                            Rod. Capitão Barduíno, Km 131 - Margem da SP 008 - Socorro/SP{"\n"}
-                            Tel: (19) 3895-2630 / WhatsApp: (19) 9.9703.8028 | contato@estemco.com.br{"\n"}
-                            CNPJ: 57.486.102/0001-86
+                            {empresa?.endereco || 'Rod. Capitão Barduíno, Km 131 - Margem da SP 008 - Socorro/SP'}{"\n"}
+                            Tel: {empresa?.telefone || '(19) 3895-2630'}{empresa?.whatsapp ? ` / WhatsApp: ${empresa.whatsapp}` : ''} | {empresa?.email || 'contato@estemco.com.br'}{"\n"}
+                            CNPJ: {empresa?.cnpj || '57.486.102/0001-86'}
                         </Text>
                     </View>
                     <View style={styles.docInfo}>
-                        <Text style={styles.docTitle}>PROPOSTA DE PRESTAÇÃO DE SERVIÇO</Text>
+                        <Text style={styles.docTitle}>{tituloProposta}</Text>
                         <Text style={styles.metaText}>Nº {numeroDoc}</Text>
                         <Text style={styles.metaText}>Emitida em: {dataEmissao}</Text>
                         <Text style={styles.metaText}>Validade: {data?.validadeProposta || 15} dias</Text>
@@ -251,82 +271,110 @@ const PropostaDocument: React.FC<PDFProps> = ({ data, templateText, tenantId }) 
                 </View>
 
                 {/* IDENTIFICAÇÃO */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionHeader}>
-                        I. Proposta de Prestação de Serviço de {tipoTexto}
+                {data?.tipo === 'SPT' ? (
+                  <View style={styles.section}>
+                    <Text style={{ fontSize: 9, marginBottom: 12, color: '#64748b' }}>
+                      Socorro/SP, {dataEmissao}.
                     </Text>
-                    <View style={styles.row}>
-                        <Text style={styles.label}>CLIENTE:</Text>
-                        <Text style={styles.value}>
-                            {data?.clienteNome || '—'}
-                            {docFormatado ? `   CPF/CNPJ: ${docFormatado}` : ''}
-                        </Text>
-                    </View>
-                    <View style={styles.row}>
-                        <Text style={styles.label}>LOCAL:</Text>
-                        <Text style={styles.value}>
-                            {enderecoLinha1}{enderecoLinha2 ? `\n${enderecoLinha2}` : ''}
-                            {data?.enderecoObra?.cep ? `   CEP: ${data.enderecoObra.cep}` : ''}
-                        </Text>
-                    </View>
-                </View>
+                    <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', marginBottom: 4 }}>À</Text>
+                    <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold' }}>{data?.clienteNome?.toUpperCase()}</Text>
+                    <Text style={{ fontSize: 9, marginBottom: 12 }}>
+                      {[data?.enderecoObra?.logradouro, data?.enderecoObra?.bairro, `${data?.enderecoObra?.cidade}-${data?.enderecoObra?.estado}`].filter(Boolean).join(' – ')}
+                    </Text>
+                    <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', fontStyle: 'italic', marginBottom: 8 }}>
+                      REF. PROPOSTA PARA EXECUÇÃO DO SERVIÇO DE SONDAGEM DE SIMPLES RECONHECIMENTO DE SOLO SPT (Nº{numeroDoc}).
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.section}>
+                      <Text style={styles.sectionHeader}>
+                          I. Proposta de Prestação de Serviço de {tipoTexto}
+                      </Text>
+                      <View style={styles.row}>
+                          <Text style={styles.label}>CLIENTE:</Text>
+                          <Text style={styles.value}>
+                              {data?.clienteNome || '—'}
+                              {docFormatado ? `   CPF/CNPJ: ${docFormatado}` : ''}
+                          </Text>
+                      </View>
+                      <View style={styles.row}>
+                          <Text style={styles.label}>LOCAL:</Text>
+                          <Text style={styles.value}>
+                              {enderecoLinha1}{enderecoLinha2 ? `\n${enderecoLinha2}` : ''}
+                              {data?.enderecoObra?.cep ? `   CEP: ${data.enderecoObra.cep}` : ''}
+                          </Text>
+                      </View>
+                  </View>
+                )}
 
                 {/* ESPECIFICAÇÕES TÉCNICAS */}
-                <View style={styles.section} wrap={false}>
-                    <Text style={styles.sectionHeader}>II. Especificações Técnicas</Text>
-                    <View style={styles.table}>
-                        <View style={[styles.tableRow, styles.tableHeader]}>
-                            <View style={[styles.tableCol, { width: '40%' }]}>
-                                <Text style={styles.tableCellHeader}>DESCRIÇÃO</Text>
-                            </View>
-                            <View style={[styles.tableCol, { width: '15%' }]}>
-                                <Text style={[styles.tableCellHeader, styles.textCenter]}>DIÂM.</Text>
-                            </View>
-                            <View style={[styles.tableCol, { width: '10%' }]}>
-                                <Text style={[styles.tableCellHeader, styles.textCenter]}>QTD</Text>
-                            </View>
-                            <View style={[styles.tableCol, { width: '17%' }]}>
-                                <Text style={[styles.tableCellHeader, styles.textRight]}>COMP. (m)</Text>
-                            </View>
-                            <View style={[styles.tableCol, { width: '18%' }]}>
-                                <Text style={[styles.tableCellHeader, styles.textRight]}>TOTAL (m)</Text>
-                            </View>
-                        </View>
-
-                        {(data?.itens || []).map((item: any, i: number) => (
-                            <View key={i} style={styles.tableRow}>
-                                <View style={[styles.tableCol, { width: '40%' }]}>
-                                    <Text style={styles.tableCell}>
-                                        {descricaoItem(item, data?.tipo || '')}
-                                    </Text>
-                                </View>
-                                <View style={[styles.tableCol, { width: '15%' }]}>
-                                    <Text style={[styles.tableCell, styles.textCenter]}>
-                                        {item?.diametro ? `${item.diametro / 10} cm` : (item?.numeroFuro ? `Furo ${item.numeroFuro}` : '—')}
-                                    </Text>
-                                </View>
-                                <View style={[styles.tableCol, { width: '10%' }]}>
-                                    <Text style={[styles.tableCell, styles.textCenter]}>
-                                        {item?.quantidadeEstacas || 1}
-                                    </Text>
-                                </View>
-                                <View style={[styles.tableCol, { width: '17%' }]}>
-                                    <Text style={[styles.tableCell, styles.textRight]}>
-                                        {(item?.comprimentoUnitario || item?.profundidade || 0).toFixed(2)}
-                                    </Text>
-                                </View>
-                                <View style={[styles.tableCol, { width: '18%' }]}>
-                                    <Text style={[styles.tableCell, styles.textRight]}>
-                                        {formatMeters(item?.totalMetros || item?.profundidade || 0)}
-                                    </Text>
-                                </View>
-                            </View>
-                        ))}
-                    </View>
-                    <Text style={{ marginTop: 6, fontSize: 9, fontFamily: 'Helvetica-Bold', textAlign: 'right' }}>
-                        METRAGEM TOTAL ESTIMADA: {formatMeters(totalMetros)}
+                {/* ESPECIFICAÇÕES TÉCNICAS */}
+                {data?.tipo === 'SPT' ? (
+                  <View style={styles.section}>
+                    <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', textAlign: 'center', marginBottom: 8 }}>
+                      Quantidade de furos – {itensNormalizados.length} unidades
                     </Text>
-                </View>
+                    <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', textAlign: 'center' }}>
+                      Sendo estimados aproximadamente {(totalMetros / Math.max(itensNormalizados.length, 1)).toFixed(2)} metros para cada furo = {totalMetros.toFixed(2)} metros
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.section} wrap={false}>
+                      <Text style={styles.sectionHeader}>II. Especificações Técnicas</Text>
+                      <View style={styles.table}>
+                          <View style={[styles.tableRow, styles.tableHeader]}>
+                              <View style={[styles.tableCol, { width: '40%' }]}>
+                                  <Text style={styles.tableCellHeader}>DESCRIÇÃO</Text>
+                              </View>
+                              <View style={[styles.tableCol, { width: '15%' }]}>
+                                  <Text style={[styles.tableCellHeader, styles.textCenter]}>DIÂM.</Text>
+                              </View>
+                              <View style={[styles.tableCol, { width: '10%' }]}>
+                                  <Text style={[styles.tableCellHeader, styles.textCenter]}>QTD</Text>
+                              </View>
+                              <View style={[styles.tableCol, { width: '17%' }]}>
+                                  <Text style={[styles.tableCellHeader, styles.textRight]}>COMP. (m)</Text>
+                              </View>
+                              <View style={[styles.tableCol, { width: '18%' }]}>
+                                  <Text style={[styles.tableCellHeader, styles.textRight]}>TOTAL (m)</Text>
+                              </View>
+                          </View>
+
+                          {itensNormalizados.map((item: any, i: number) => (
+                              <View key={i} style={styles.tableRow}>
+                                  <View style={[styles.tableCol, { width: '40%' }]}>
+                                      <Text style={styles.tableCell}>
+                                          {descricaoItem(item, data?.tipo || '')}
+                                      </Text>
+                                  </View>
+                                  <View style={[styles.tableCol, { width: '15%' }]}>
+                                      <Text style={[styles.tableCell, styles.textCenter]}>
+                                          {item?.diametro ? `${item.diametro / 10} cm` : (item?.numeroFuro ? `Furo ${item.numeroFuro}` : '—')}
+                                      </Text>
+                                  </View>
+                                  <View style={[styles.tableCol, { width: '10%' }]}>
+                                      <Text style={[styles.tableCell, styles.textCenter]}>
+                                          {item?.quantidadeEstacas || 1}
+                                      </Text>
+                                  </View>
+                                  <View style={[styles.tableCol, { width: '17%' }]}>
+                                      <Text style={[styles.tableCell, styles.textRight]}>
+                                          {(item?.comprimentoUnitario || item?.profundidade || 0).toFixed(2)}
+                                      </Text>
+                                  </View>
+                                  <View style={[styles.tableCol, { width: '18%' }]}>
+                                      <Text style={[styles.tableCell, styles.textRight]}>
+                                          {formatMeters(item?.totalMetros || item?.profundidade || 0)}
+                                      </Text>
+                                  </View>
+                              </View>
+                          ))}
+                      </View>
+                      <Text style={{ marginTop: 6, fontSize: 9, fontFamily: 'Helvetica-Bold', textAlign: 'right' }}>
+                          METRAGEM TOTAL ESTIMADA: {formatMeters(totalMetros)}
+                      </Text>
+                  </View>
+                )}
 
                 {/* PRAZO */}
                 <View style={styles.section}>
@@ -347,10 +395,10 @@ const PropostaDocument: React.FC<PDFProps> = ({ data, templateText, tenantId }) 
                 <View style={[styles.section, { flexDirection: 'row', flexWrap: 'wrap', gap: 6 }]} wrap={false}>
                     <Text style={[styles.sectionHeader, { width: '100%' }]}>V. Investimento e Condições</Text>
 
-                    {(data?.mobilizacao || 0) > 0 && (
+                    {mobilizacaoNorm > 0 && (
                         <View style={[styles.investmentCard, { width: '47%' }]}>
                             <Text style={styles.investmentLabel}>MOBILIZAÇÃO</Text>
-                            <Text style={styles.investmentValue}>{formatCurrency(data.mobilizacao)}</Text>
+                            <Text style={styles.investmentValue}>{formatCurrency(mobilizacaoNorm)}</Text>
                         </View>
                     )}
                     {data?.incluirART && (data?.valorART || 0) > 0 && (
@@ -417,34 +465,49 @@ const PropostaDocument: React.FC<PDFProps> = ({ data, templateText, tenantId }) 
 
                 {/* TERMO DE ACEITAÇÃO */}
                 <View style={[styles.termContainer, { marginTop: 20 }]} wrap={false}>
-                    <Text style={styles.acceptanceTitle}>Termo de Aceitação da Proposta</Text>
-                    <Text style={styles.acceptanceText}>
-                        Ao assinar, o cliente declara concordância com as especificações, prazos e responsabilidades
-                        aqui descritas. Esta proposta serve como contrato de prestação de serviços após formalização do aceite.
-                    </Text>
-                    <View style={styles.signatureContainer}>
-                        <View style={styles.signatureBox}>
-                            <View style={styles.signatureLine} />
-                            <Text style={styles.signatureLabel}>ESTEMCO ENGENHARIA</Text>
-                            <Text style={styles.signatureSub}>Socorro - SP</Text>
-                        </View>
-                        <View style={styles.signatureBox}>
-                            <View style={styles.signatureLine} />
-                            <Text style={styles.signatureLabel}>{data?.clienteNome || 'RESPONSÁVEL DO CLIENTE'}</Text>
-                            {docFormatado && <Text style={styles.signatureSub}>CPF/CNPJ: {docFormatado}</Text>}
-                            <Text style={styles.signatureSub}>Data: ____/____/________</Text>
-                        </View>
+                  <Text style={styles.acceptanceTitle}>TERMO DE ACEITAÇÃO DA PROPOSTA</Text>
+                  <Text style={styles.acceptanceText}>
+                    Pelo presente, declaramos estar cientes e de acordo com as exigências dos itens desta Proposta
+                    (Nº {numeroDoc}), para os serviços referidos. Por esta razão, autorizamos a execução dos serviços
+                    a partir do dia ____ de _____________ de ______.
+                  </Text>
+
+                  {/* Campos de faturamento */}
+                  <View style={{ marginTop: 16, gap: 8 }}>
+                    {[
+                      'RAZÃO SOCIAL',
+                      'CNPJ / CPF',
+                      'INSCRIÇÃO ESTADUAL',
+                      'ENDEREÇO DA OBRA',
+                      'ENDEREÇO DE COBRANÇA',
+                      'NOME DO RESPONSÁVEL',
+                    ].map((label) => (
+                      <View key={label} style={{ flexDirection: 'row', borderBottomWidth: 0.5, borderBottomStyle: 'solid', borderBottomColor: '#cbd5e1', paddingBottom: 4, marginBottom: 4 }}>
+                        <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', width: 120, color: '#475569' }}>{label}:</Text>
+                        <Text style={{ fontSize: 8, flex: 1 }}> </Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  <View style={styles.signatureContainer}>
+                    <View style={styles.signatureBox}>
+                      <View style={styles.signatureLine} />
+                      <Text style={styles.signatureLabel}>{empresa?.razaoSocial || 'ESTEMCO ENGENHARIA EM FUNDAÇÕES S/S LTDA'}</Text>
+                      <Text style={styles.signatureSub}>CNPJ: {empresa?.cnpj || '57.486.102/0001-86'}</Text>
                     </View>
-                    <Text style={{ fontSize: 7, color: '#94a3b8', textAlign: 'center', marginTop: 20 }}>
-                        Gerado eletronicamente em {safeFormatDate(new Date(), "dd/MM/yyyy HH:mm")}
-                    </Text>
+                    <View style={styles.signatureBox}>
+                      <View style={styles.signatureLine} />
+                      <Text style={styles.signatureLabel}>ASSINATURA DO RESPONSÁVEL</Text>
+                      <Text style={styles.signatureSub}>DATA: ____/____/________</Text>
+                    </View>
+                  </View>
                 </View>
 
                 {/* RODAPÉ */}
                 <Text
                     style={{ position: 'absolute', bottom: 30, left: 0, right: 0, textAlign: 'center', fontSize: 7, color: '#94a3b8' }}
                     render={({ pageNumber, totalPages }) =>
-                        `Página ${pageNumber} de ${totalPages} | Estemco Engenharia em Fundações S/S Ltda. | CNPJ 57.486.102/0001-86`
+                        `Página ${pageNumber} de ${totalPages} | ${empresa?.razaoSocial || 'Estemco Engenharia em Fundações S/S Ltda.'} | CNPJ ${empresa?.cnpj || '57.486.102/0001-86'}`
                     }
                     fixed
                 />
@@ -454,17 +517,28 @@ const PropostaDocument: React.FC<PDFProps> = ({ data, templateText, tenantId }) 
 };
 
 // ── Exportações ─────────────────────────────────────────────────────────────
-export const generatePropostaBlob = async (data: NovaPropostaData, tenantId?: string): Promise<Blob> => {
+export const generatePropostaBlob = async (data: NovaPropostaData, tenantId?: string, empresa?: DadosEmpresa): Promise<Blob> => {
     let templateText: string | undefined;
     try {
-        const listaServicos = data.itens || [];
-        const valorMobilizacao = data.mobilizacao || 0;
+        const itensNormalizados = (data.itens && data.itens.length > 0)
+            ? data.itens
+            : (data as any).itensHCM
+                || (data as any).itensESC
+                || (data as any).itensSPT
+                || [];
+
+        const mobilizacaoNorm = data.mobilizacao
+            || (data as any).mobilizacaoHCM
+            || (data as any).mobilizacaoESC
+            || (data as any).mobilizacaoSPT
+            || 0;
+
         const taxaArt = data.valorART || 0;
         
         let calc: any = { subtotalExecucao: 0, valorTotal: 0 };
-        if (data.tipo === 'HCM') calc = calcularPropostaHCM(listaServicos as ItemProposta[], valorMobilizacao, data.faturamentoMinimo, data.incluirART, taxaArt, data.emiteNotaFiscal, data.percentualImposto);
-        if (data.tipo === 'ESC') calc = calcularPropostaESC(listaServicos as ItemProposta[], valorMobilizacao, data.modalidadeESC || 'por_metro', data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC, data.faturamentoMinimo, data.incluirART, taxaArt, data.emiteNotaFiscal, data.percentualImposto);
-        if (data.tipo === 'SPT') calc = calcularPropostaSPT(listaServicos as any, valorMobilizacao, data.incluirART, taxaArt, data.emiteNotaFiscal, data.percentualImposto);
+        if (data.tipo === 'HCM') calc = calcularPropostaHCM(itensNormalizados as ItemProposta[], mobilizacaoNorm, data.faturamentoMinimo, data.incluirART, taxaArt, data.emiteNotaFiscal, data.percentualImposto);
+        if (data.tipo === 'ESC') calc = calcularPropostaESC(itensNormalizados as ItemProposta[], mobilizacaoNorm, data.modalidadeESC || 'por_metro', data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC, data.faturamentoMinimo, data.incluirART, taxaArt, data.emiteNotaFiscal, data.percentualImposto);
+        if (data.tipo === 'SPT') calc = calcularPropostaSPT(itensNormalizados as any, mobilizacaoNorm, data.incluirART, taxaArt, data.emiteNotaFiscal, data.percentualImposto);
 
         const vars = buildTemplateVars(data, calc, (data as any).numero || 'PREVIEW');
         templateText = await buildPropostaText(data.tipo as any, vars, tenantId || '');
@@ -472,7 +546,7 @@ export const generatePropostaBlob = async (data: NovaPropostaData, tenantId?: st
         console.warn("Utilizando fallback de texto fixo (erro ao gerar PDF):", e);
     }
 
-    return await pdf(<PropostaDocument data={data} templateText={templateText} tenantId={tenantId} />).toBlob();
+    return await pdf(<PropostaDocument data={data} templateText={templateText} tenantId={tenantId} empresa={empresa} />).toBlob();
 };
 
 export const downloadBlob = (blob: Blob, filename: string) => {
@@ -486,12 +560,12 @@ export const downloadBlob = (blob: Blob, filename: string) => {
     URL.revokeObjectURL(url);
 };
 
-export const DownloadPropostaPDF: React.FC<PDFProps> = ({ data, tenantId }) => {
+export const DownloadPropostaPDF: React.FC<PDFProps> = ({ data, tenantId, empresa }) => {
     const filename = montarNomeArquivoProposta(data, data);
 
     const handleDownload = async () => {
         try {
-            const blob = await generatePropostaBlob(data, tenantId);
+            const blob = await generatePropostaBlob(data, tenantId, empresa);
             downloadBlob(blob, filename);
         } catch (error) {
             console.error('Erro ao gerar PDF:', error);

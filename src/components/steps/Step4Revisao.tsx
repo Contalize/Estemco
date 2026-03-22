@@ -10,6 +10,7 @@ import { Save, Eye, FileText } from 'lucide-react';
 import { Button, Label, Textarea } from '../../../components/ui';
 import { toast } from 'sonner';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useEmpresa } from '../../hooks/useEmpresa';
 import { PropostaPreview } from '../PropostaPreview';
 import { DownloadPropostaPDF, generatePropostaBlob } from '../../services/pdfService';
 import { CondicioesPagamento } from './CondicioesPagamento';
@@ -30,6 +31,7 @@ export const Step4Revisao: React.FC<Step4Props> = ({
     data, updateData, onSave, isSaving, onNavigate
 }) => {
     const { profile } = useAuth();
+    const { empresa } = useEmpresa();
 
     // Cálculo de totais
     let calc: any = {
@@ -58,7 +60,7 @@ export const Step4Revisao: React.FC<Step4Props> = ({
             if (propostaId) {
                 if (status === 'ACEITA') {
                     try {
-                        const blob = await generatePropostaBlob(data, profile?.tenantId);
+                        const blob = await generatePropostaBlob(data, profile?.tenantId, empresa || undefined);
                         const filename = `propostas/${propostaId}_${(data.clienteNome || 'Cliente').replace(/\s+/g, '_')}.pdf`;
                         const storageRef = ref(storage, filename);
                         await uploadBytes(storageRef, blob);
@@ -167,7 +169,7 @@ export const Step4Revisao: React.FC<Step4Props> = ({
                         <Eye size={18} className="text-indigo-600" />
                         Pré-visualização do PDF
                     </h3>
-                    <DownloadPropostaPDF data={data} tenantId={profile?.tenantId} />
+                    <DownloadPropostaPDF data={data} tenantId={profile?.tenantId} empresa={empresa || undefined} />
                 </div>
                 <div className="border border-slate-100 rounded-lg overflow-hidden">
                     <PropostaPreview data={data} />

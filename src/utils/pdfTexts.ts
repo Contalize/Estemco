@@ -26,7 +26,7 @@ export const pdfTexts = {
         title: 'ESTA PRESTAÇÃO DE PRESTAÇÃO SERVIÇOS CONTEMPLA O FATURAMENTO MÍNIMO DA DIÁRIA, DE R$ 8.000,00 QUE SERÁ APLICADO NAS SEGUINTE CONDIÇÕES:',
         items: [
           'O faturamento mínimo será cobrado em todos os demais eventos que não demandem responsabilidade da contratada, incluindo, a título de exemplo, a ineficiência no fornecimento de concreto, quebra de bomba de concreto, entupimento dos mangotes da bomba e do equipamento, atraso por falta de locação correta, horários restritos em condomínios e ou fabricas, dificuldades de perfuração advindas ao terreno, tais como entulho, matacões, estruturas de construções anteriores, que venham a atrasar ou impedir a produção, entre outras.',
-          'Caso as estacas serem em blocos os quais não possam ser executadas no mesmo dia conforme norma NBR 6122:2019, Anexo N.7 (não se devem executar estacas com espaçamento inferior a cinco diâmetros em intervalo inferior a 12 h), deverá ser pago à proponente o faturamento mínimo diário de R$ 8.000,00 APLICASSE FATURAMENTO MIMIMO DIÁRIO, EM QUALQUER OCORRIDO QUE COMPROMETE O RENDIMENTO OU INVIABILIZA EXECUÇÃO DO SERVIÇO CONTRATADO.'
+          'Caso as estacas serem em blocos os quais não possam ser executadas no mesmo dia conforme norma NBR 6122:2019, Anexo N.7 (não se devem executar estacas com espaçamento inferior a cinco diâmetros em intervalo inferior a 12 h), deverá ser pago à proponente o faturamento mínimo diário de R$ 8.000,00. APLICASSE FATURAMENTO MÍNIMO DIÁRIO, EM QUALQUER OCORRIDO QUE COMPROMETE O RENDIMENTO OU INVIABILIZA EXECUÇÃO DO SERVIÇO CONTRATADO.'
         ]
       },
       exemption: {
@@ -52,18 +52,13 @@ export const pdfTexts = {
           'Cabe a CONTRATANTE informar de antemão qualquer regra e ou documentação necessária para a entrada, permanência e execução dos trabalhos, sob óbice de, não informando, nos eximirmos de culpa pela falta que venha a gerar ônus ao CONTRATANTE.',
           'A CONTRATANTE se responsabilizará pela limpeza de todo o material escavado decorrente da execução das estacas, e das vias por onde o equipamento venha a manobrar para entrada no canteiro de obra (quando necessário ou exigido por condomínio, fabricas e etc.);',
           'Fornecimento e controle tecnológico do concreto usinado para HÉLICE CONTINUA (FCK 30 Mpa (NBR 6122/19), Slump 230 +- 20mm, brita zero e consumo mínimo de 350 kg cimento/m3);',
-          'Fornecimento de bomba para concreto com rendimento teórico de 34m³/h (Sugestão: Schwing SPL 1000 ou similar), sendo imprescindível que o equipamento contratado alcance o rendimento requisitado, com tolerância de 10% para mais ou para menos, para evitar embuchamento do trado no solo e ou comprometer a qualidade da estaca, sendo vedado fornecimento de equipamento fora destas especificações;',
-          'O terreno deverá estar preparado de modo a estar nivelado, seco e 1,5 metro acima do nível do lençol freático e ou de trecho que não permita sustentação do equipamento, assim como desobstruído de qualquer obstáculo, aparente ou não, que possa dificultar e ou impedir a realização dos serviços, tais como árvores, redes elétricas, tubulações subterrâneas e excesso de barro e afins;',
-          'As estacas deverão estar marcadas cerca de 20cm de distância a contar de sua face, de qualquer objeto, beiral, muro, telhado, baldrames e blocos de fundações de obras vizinhas, etc., que impeçam a sua execução, e 55cm dos cantos de muros e construções;',
-          'Fornecimento de um ponto de água (potável) no local para lavagem do equipamento e para o uso da equipe.;',
+          'Fornecimento de bomba para concreto com rendimento teórico de 34m³/h (Sugestão: Schwing SPL 1000 ou similar), sendo imprescindível que o equipamento contratado alcance o rendimento requisitado, com tolerância de 10% para mais ou para menos;',
+          'O terreno deverá estar preparado de modo a estar nivelado, seco e 1,5 metro acima do nível do lençol freático e desobstruído de qualquer obstáculo, aparente ou não;',
+          'Fornecimento de um ponto de água (potável) no local para lavagem do equipamento e para o uso da equipe;',
           'Fornecimento de instalações sanitárias;',
           'A locação e determinação da profundidade das estacas, de acordo com o projeto de fundações e ou previsão baseada em Sondagem;',
           'Fornecimento da Sondagem e Projeto de Fundações ou estrutural na falta deste;',
-          'E responsabilidade do CONTRATANTE qualquer dano a rede subterrâneas e ou instalações e construções vizinhas advindas do serviço de execução de estacas, bem como contratação de eventual Seguro da Obra..',
-          'Fornecimento de dois sacos de cimento por dia para lubrificação da bomba para o começo dos trabalhos.',
-          'Contratação de retroescavadeira ou similar para retirada do material escavado durante a perfuração, quando necessário, inclusive para desobstrução e localização das estacas demarcadas que estejam soterradas ou de difícil localização devido a escavação e/ou passagem de máquinas;',
-          'Fornecimento de escoras e/ou nova terraplanagem com colocação ou não de cascalho ou rachão quando necessário e requisitado;',
-          'Contratação de pessoal ou maquinário para colocação das armaduras nas estacas, sendo que, a CONTRATADA poderá por mera liberalidade ajudar ou colocá-las, sem que isso se torne obrigação contratual ou gere qualquer responsabilidade caso não seja possível sua colocação de acordo com projeto.'
+          'Fornecimento de dois sacos de cimento por dia para lubrificação da bomba para o começo dos trabalhos.'
         ],
         proponente: [
           'Fornecimento de toda mão-de-obra, ferramentas e equipamentos especializados para execução dos serviços;',
@@ -71,10 +66,41 @@ export const pdfTexts = {
           'Encargos sobre mão-de-obra e faturamento;',
           'Fornecimento dos relatórios, gráficos e laudos da prestação de serviço;',
           'Realizar o controle dos acontecimentos em obras através de relatório diário;',
-          'Manter o CONTRATANTE Informado, sobre o andamento e ocorridos da obra.',
-          'A ESTEMCO se responsabiliza por eventuais perdas de concreto e diária de bomba caso ocorra a quebra do equipamento da mesma;'
+          'Manter o CONTRATANTE informado sobre o andamento e ocorridos da obra.',
+          'A ESTEMCO se responsabiliza por eventuais perdas de concreto e diária de bomba caso ocorra a quebra do equipamento da mesma.'
         ]
       }
+    },
+    esc: {
+      minBilling: {
+        title: 'DAS COBRANÇAS & FATURAMENTO MÍNIMO',
+        items: [
+          'Mínimo de faturamento da obra R$ {{FAT_MINIMO_OBRA_INPUT}}.',
+          'Caso o solo apresente nível de água na hora da execução será cobrado a saída mínima do equipamento R$ {{FAT_MINIMO_OBRA_INPUT}}.',
+          'Caso o solo apresente a presença de pedras, entulhos ou qualquer interferência no subsolo que não permita atingir a metragem estimada, será cobrado o faturamento mínimo da obra.',
+          'Caso o equipamento fique parado em obra, em razão da liberação de fretes, modificação de projeto, modificações no terreno para viabilizar acesso do equipamento deverá ser pago à ESTEMCO o total de {{TAXA_HORA_PARADA_INPUT}} por cada hora parada.',
+          'Em virtude da situação do solo encontrado no momento da execução das estacas, poderá haver um acréscimo no valor final dos serviços prestados.'
+        ]
+      },
+      responsibilities: {
+        contratante: [
+          'Será responsabilidade do CONTRATANTE manter um responsável em obra para acompanhamento da execução das Estacas, aferição de profundidade e aferição do quantitativo executado.',
+          'Será responsabilidade do CONTRATANTE qualquer dano a rede subterrâneas e ou instalações e construções vizinhas advindas do serviço de execução de estacas, bem como contratação de eventual Seguro da Obra.',
+          'Terreno deverá estar preparado de modo a estar nivelado ou em condições seguras para o equipamento, assim como desobstruído de qualquer obstáculo, aparente ou não.',
+          'Fornecimento de um ponto de água (potável) no local para lavagem do equipamento e uso da equipe.',
+          'A locação e determinação da profundidade das estacas, de acordo com o projeto de fundações e ou previsão baseada em Sondagem.'
+        ],
+        proponente: [
+          'Fornecimento de toda mão-de-obra, ferramentas e equipamentos especializados para execução dos serviços;',
+          'Fornecimento de EPIs para os funcionários da ESTEMCO;',
+          'Encargos sobre mão-de-obra;',
+          'Manter o responsável que está em obra informado sobre o andamento e ocorridos na obra;',
+          'A emissão da nota fiscal de prestação de serviço se solicitado na proposta;',
+          'Emissão da ART da obra se solicitado na proposta;',
+          'Entrega do relatório de execução da obra.'
+        ]
+      },
+      rights: 'A ESTEMCO se reserva ao direito de suspender a execução dos serviços quando o excesso de solo e ou material advindo ou não da escavação, impedir, dificultar, atrapalhar ou não favorecer a segurança dos trabalhos, sem prejuízo para si na incidência de diária mínima de produção.'
     },
 
     responsibilities: {

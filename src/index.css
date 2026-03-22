@@ -1,12 +1,9 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
-
-@tailwind base;
+@import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
-@tailwind components;
-@tailwind utilities;
 
 @theme inline {
     --font-heading: 'DM Sans', sans-serif;
@@ -139,7 +136,7 @@
 
   /* Google Autocomplete Styles adjustment */
   .pac-container {
-    @apply rounded-lg mt-1 shadow-lg border border-slate-200 !important;
+    @apply !rounded-lg !mt-1 !shadow-lg !border !border-slate-200;
     font-family: 'Inter', sans-serif;
   }
 

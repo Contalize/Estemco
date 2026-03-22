@@ -15,7 +15,7 @@ type StatusProposta = 'RASCUNHO' | 'ENVIADA' | 'ACEITA' | 'RECUSADA' | 'EXPIRADA
 export async function criarProposta(
     empresaId: string,
     dados: Record<string, any>
-): Promise<string> {
+): Promise<{ id: string; numero: string }> {
     if (!dados.tipo) throw new Error('Tipo de serviço não informado (HCM, ESC ou SPT).');
 
     const tipo = dados.tipo as TipoServico;
@@ -33,7 +33,7 @@ export async function criarProposta(
         atualizadoEm: serverTimestamp(),
     });
 
-    return docRef.id;
+    return { id: docRef.id, numero };
 }
 
 // ── Atualizar proposta ──────────────────────────────────────────────────────

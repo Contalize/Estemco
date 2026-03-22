@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useEmpresa } from '../hooks/useEmpresa';
 import { db } from '../../lib/firebase';
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { Proposta, StatusProposta, TipoServico } from '../../types';
@@ -19,6 +20,7 @@ interface PropostasListProps {
 
 export const Propostas: React.FC<PropostasListProps> = ({ onNavigate }) => {
     const { profile } = useAuth();
+    const { empresa } = useEmpresa();
     const [propostas, setPropostas] = useState<Proposta[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedProposta, setSelectedProposta] = useState<any>(null);
@@ -238,7 +240,7 @@ export const Propostas: React.FC<PropostasListProps> = ({ onNavigate }) => {
                                                     if (!o?.id) return;
                                                     const toastId = toast.loading('Gerando PDF...');
                                                     try {
-                                                        const blob = await generatePropostaBlob(o as any);
+                                                        const blob = await generatePropostaBlob(o as any, profile?.tenantId || '', empresa || undefined);
                                                         downloadBlob(blob, montarNomeArquivoProposta(o as any, o as any));
                                                         toast.success('PDF gerado!', { id: toastId });
                                                     } catch {
@@ -297,10 +299,8 @@ export const Propostas: React.FC<PropostasListProps> = ({ onNavigate }) => {
                         nomeRazaoSocial: selectedProposta.clienteNome,
                         enderecoObra: selectedProposta.enderecoObra
                     }}
-                    empresa={{
-                        razaoSocial: profile?.nomeEmpresa || 'Estemco Engenharia',
-                        cnpj: profile?.cnpjEmpresa || '57.486.102/0001-86'
-                    }}
+                    empresa={empresa || undefined}
+                    tenantId={profile?.tenantId}
                 />
             )}
         </div>

@@ -46,6 +46,7 @@ export const Step3ItensServico: React.FC<Step3Props> = ({ data, updateData }) =>
                 const firstDiam = conf.diametros?.[0];
                 updateData({
                     mobilizacao: conf.mobilizacaoPadrao || 500,
+                    modalidadeESC: data.modalidadeESC || 'por_metro',
                     metrosDiariosESC: conf.contratoSaidaDiariaPadrao?.metrosContratadosPorDia || 0,
                     precoExcedenteESC: conf.contratoSaidaDiariaPadrao?.precoExcedentePorMetro || 0,
                     itens: [{ id: Date.now().toString(), diametro: firstDiam?.mm || 250, quantidadeEstacas: 1, comprimentoUnitario: 10, totalMetros: 10, precoMetro: firstDiam?.preco || 12.5, subtotal: (firstDiam?.preco || 12.5) * 10 }]
@@ -58,7 +59,7 @@ export const Step3ItensServico: React.FC<Step3Props> = ({ data, updateData }) =>
                 });
             }
         }
-    }, [loading, config, data.tipo, updateData]);
+    }, [loading, config, data.tipo]);
 
     if (loading) return <div className="p-12 text-center text-slate-500">Carregando parâmetros comerciais...</div>;
     if (!config) return <div className="p-12 text-center text-red-500">Erro ao carregar configurações de preço para {data.tipo}. Verifique se você parametrizou os custos em Configurações.</div>;
