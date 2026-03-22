@@ -9,6 +9,9 @@ import { FileText, Plus, Search, Eye, FileDown, Trash2, Edit, CheckCircle2 } fro
 import { formatarData } from '../utils/formatDate';
 import { PDFPreviewModal } from '../../components/PDFPreviewModal';
 import { excluirProposta } from '../services/propostaService';
+import { generatePropostaBlob, downloadBlob } from '../services/pdfService';
+import { montarNomeArquivoProposta } from '../utils/formatters';
+import { toast } from 'sonner';
 
 interface PropostasListProps {
     onNavigate: (tab: any) => void;
@@ -231,7 +234,17 @@ export const Propostas: React.FC<PropostasListProps> = ({ onNavigate }) => {
                                                 size="sm" 
                                                 className="h-8 w-8 p-0 text-slate-500 hover:text-amber-600" 
                                                 title="Gerar PDF" 
-                                                onClick={() => o?.id && handlePreview(o)}
+                                                onClick={async () => {
+                                                    if (!o?.id) return;
+                                                    const toastId = toast.loading('Gerando PDF...');
+                                                    try {
+                                                        const blob = await generatePropostaBlob(o as any);
+                                                        downloadBlob(blob, montarNomeArquivoProposta(o as any, o as any));
+                                                        toast.success('PDF gerado!', { id: toastId });
+                                                    } catch {
+                                                        toast.error('Erro ao gerar PDF.', { id: toastId });
+                                                    }
+                                                }}
                                             >
                                                 <FileDown size={16} />
                                             </Button>

@@ -2,13 +2,11 @@
 // Busca o template de proposta do Google Drive e injeta variáveis.
 // O texto fica no Drive — edita lá, reflete imediatamente no PDF gerado.
 
-// ── IDs dos templates no Google Drive ────────────────────────────────────────
-// Cada tipo de proposta pode ter seu próprio template
-export const TEMPLATE_IDS = {
-    HCM: '1Bq2xJqwYPniMGXFWSyyhg-SGArIbeN48z6FAT-wVA1w', // << seu doc atual
-    ESC: '1Bq2xJqwYPniMGXFWSyyhg-SGArIbeN48z6FAT-wVA1w', // Mude para o ESC quando criar
-    SPT: '1Bq2xJqwYPniMGXFWSyyhg-SGArIbeN48z6FAT-wVA1w', // Mude para o SPT quando criar
-};
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
+import { pdfTexts } from '../utils/pdfTexts';
+import { NovaPropostaData } from '../types/propostaForm';
+import { numberToWords } from '../utils/numberToWords'; // Corrected path
 
 // ── Variáveis usadas no template ─────────────────────────────────────────────
 export interface TemplateVars {
@@ -36,23 +34,112 @@ export interface TemplateVars {
     HELPER_TAXA_HORA_PARADA_EXT: string; // Por extenso
 }
 
+// ── Estrutura do Documento ────────────────────────────────────────────────────
+export interface ConfiguracaoTemplate {
+    clausulas_ativo: boolean;
+    fat_minimo_titulo: string;
+    fat_minimo_items: string[];
+    isencao_titulo: string;
+    isencao_items: string[];
+    cobrancas_titulo: string;
+    cobrancas_items: string[];
+    obrig_contratante: string[];
+    obrig_proponente: string[];
+    clausula_risco: string;
+    termo_aceite: string;
+    versao: number;
+    updatedAt?: any;
+    updatedBy?: string;
+}
+
+// ── Funções Auxiliares ────────────────────────────────────────────────────────
+function formatTemplateToString(data: Partial<ConfiguracaoTemplate>): string {
+    let parts: string[] = [];
+
+    if (data.fat_minimo_titulo || data.fat_minimo_items?.length) {
+        if (data.fat_minimo_titulo) parts.push(data.fat_minimo_titulo.toUpperCase());
+        (data.fat_minimo_items || []).forEach((item, i) => parts.push(`${i + 1}. ${item}`));
+    }
+    
+    if (data.isencao_titulo || data.isencao_items?.length) {
+        if (data.isencao_titulo) parts.push('\n' + data.isencao_titulo.toUpperCase());
+        (data.isencao_items || []).forEach((item, i) => parts.push(`${i + 1}. ${item}`));
+    }
+
+    if (data.cobrancas_titulo || data.cobrancas_items?.length) {
+        if (data.cobrancas_titulo) parts.push('\n' + data.cobrancas_titulo.toUpperCase());
+        (data.cobrancas_items || []).forEach((item, i) => parts.push(`${i + 1}. ${item}`));
+    }
+    
+    if (data.obrig_contratante?.length) {
+        parts.push('\nOBRIGAÇÕES DO CONTRATANTE');
+        data.obrig_contratante.forEach((item, i) => parts.push(`${i + 1}. ${item}`));
+    }
+
+    if (data.obrig_proponente?.length) {
+        parts.push('\nOBRIGAÇÕES DA CONTRATADA');
+        data.obrig_proponente.forEach((item, i) => parts.push(`${i + 1}. ${item}`));
+    }
+
+    if (data.clausula_risco) {
+        parts.push('\nDIREITOS E RISCO GEOTÉCNICO');
+        parts.push(data.clausula_risco);
+    }
+    
+    return parts.join('\n');
+}
+
+function getFallbackTemplateText(tipo: 'HCM' | 'ESC' | 'SPT'): string {
+    // Retorna fallback do pdfTexts baseado no tipo
+    const hcm = pdfTexts.proposals.hcm;
+    const fallbackData: Partial<ConfiguracaoTemplate> = {
+        fat_minimo_titulo: hcm.minBilling.title,
+        fat_minimo_items: hcm.minBilling.items,
+        isencao_titulo: hcm.exemption.title,
+        isencao_items: hcm.exemption.items,
+        cobrancas_titulo: hcm.generalBilling.title,
+        cobrancas_items: hcm.generalBilling.items,
+        // Fallback default
+        obrig_contratante: hcm.responsibilities.contratante,
+        obrig_proponente: hcm.responsibilities.proponente,
+        clausula_risco: pdfTexts.proposals.riskClause,
+        termo_aceite: pdfTexts.proposals.acceptanceTerm,
+    };
+    return formatTemplateToString(fallbackData);
+}
+
 // ── Cache simples em memória (evita rebuscar a cada geração) ─────────────────
 const _cache: Record<string, { text: string; expiresAt: number }> = {};
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
 
-// ── Busca o conteúdo do Doc como texto puro ───────────────────────────────────
-async function fetchDocText(docId: string): Promise<string> {
-    const cached = _cache[docId];
+// ── Busca o conteúdo do Template no Firestore ─────────────────────────────────
+async function fetchTemplateText(tenantId: string, tipo: 'HCM' | 'ESC' | 'SPT'): Promise<string> {
+    if (!tenantId) return getFallbackTemplateText(tipo);
+
+    const cacheKey = `${tenantId}_${tipo}`;
+    const cached = _cache[cacheKey];
     if (cached && cached.expiresAt > Date.now()) return cached.text;
 
-    // URL pública de exportação como texto (funciona para docs compartilhados)
-    const url = `https://docs.google.com/document/d/${docId}/export?format=txt`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Falha ao buscar template (${res.status}). Verifique se o doc está público.`);
+    try {
+        const ref = doc(db, 'empresas', tenantId, 'templates', tipo);
+        const snap = await getDoc(ref);
+        
+        if (snap.exists()) {
+            const data = snap.data() as ConfiguracaoTemplate;
+            if (data.clausulas_ativo) {
+                const text = formatTemplateToString(data);
+                _cache[cacheKey] = { text, expiresAt: Date.now() + CACHE_TTL_MS };
+                return text;
+            }
+        }
+    } catch (e) {
+        console.warn(`Erro ao buscar template ${tipo} no Firestore`, e);
+    }
 
-    const text = await res.text();
-    _cache[docId] = { text, expiresAt: Date.now() + CACHE_TTL_MS };
-    return text;
+    // Fallback if not found, inactive, or error
+    const fallbackText = getFallbackTemplateText(tipo);
+    _cache[cacheKey] = { text: fallbackText, expiresAt: Date.now() + CACHE_TTL_MS };
+    return fallbackText;
 }
 
 // ── Injeta variáveis no template ──────────────────────────────────────────────
@@ -68,17 +155,14 @@ function injectVars(template: string, vars: TemplateVars): string {
 // ── Função principal ──────────────────────────────────────────────────────────
 export async function buildPropostaText(
     tipo: 'HCM' | 'ESC' | 'SPT',
-    vars: TemplateVars
+    vars: TemplateVars,
+    tenantId: string
 ): Promise<string> {
-    const docId = TEMPLATE_IDS[tipo];
-    const template = await fetchDocText(docId);
+    const template = await fetchTemplateText(tenantId, tipo);
     return injectVars(template, vars);
 }
 
 // ── Helper: monta as vars a partir dos dados do formulário ───────────────────
-import { NovaPropostaData } from '../types/propostaForm';
-import { numberToWords } from '../utils/numberToWords'; // Corrected path
-
 const fmt = (v: number) =>
     v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 

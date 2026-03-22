@@ -96,7 +96,8 @@ export enum Tab {
   BOLETIM = 'boletim',
   DRE = 'dre',
   FINANCES = 'finances',
-  MACHINES = 'machines'
+  MACHINES = 'machines',
+  TEMPLATES = 'TEMPLATES'
 }
 
 export interface Medicao {

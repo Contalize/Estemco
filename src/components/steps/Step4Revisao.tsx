@@ -8,6 +8,7 @@ import { calcularPropostaHCM, calcularPropostaESC, calcularPropostaSPT } from '.
 import { ItemProposta, ItemFuroSPT } from '../../../types';
 import { Save, Eye, FileText } from 'lucide-react';
 import { Button, Label, Textarea } from '../../../components/ui';
+import { toast } from 'sonner';
 import { useAuth } from '../../../contexts/AuthContext';
 import { PropostaPreview } from '../PropostaPreview';
 import { DownloadPropostaPDF, generatePropostaBlob } from '../../services/pdfService';
@@ -57,7 +58,7 @@ export const Step4Revisao: React.FC<Step4Props> = ({
             if (propostaId) {
                 if (status === 'ACEITA') {
                     try {
-                        const blob = await generatePropostaBlob(data);
+                        const blob = await generatePropostaBlob(data, profile?.tenantId);
                         const filename = `propostas/${propostaId}_${(data.clienteNome || 'Cliente').replace(/\s+/g, '_')}.pdf`;
                         const storageRef = ref(storage, filename);
                         await uploadBytes(storageRef, blob);
@@ -68,12 +69,11 @@ export const Step4Revisao: React.FC<Step4Props> = ({
                         console.warn('PDF não salvo no Storage (não crítico):', pdfErr);
                     }
                 }
-                window.alert(`Proposta salva com sucesso! Redirecionando...`);
-                onNavigate('PROPOSALS');
+                // Redirection is now handled in NovaProposta.tsx's handleSave
             }
         } catch (error) {
             console.error('Erro ao salvar/gerar PDF:', error);
-            alert('Erro ao processar a proposta. Verifique os dados e tente novamente.');
+            toast.error('Erro ao processar a proposta. Verifique os dados e tente novamente.');
         }
     };
 
@@ -167,7 +167,7 @@ export const Step4Revisao: React.FC<Step4Props> = ({
                         <Eye size={18} className="text-indigo-600" />
                         Pré-visualização do PDF
                     </h3>
-                    <DownloadPropostaPDF data={data} />
+                    <DownloadPropostaPDF data={data} tenantId={profile?.tenantId} />
                 </div>
                 <div className="border border-slate-100 rounded-lg overflow-hidden">
                     <PropostaPreview data={data} />

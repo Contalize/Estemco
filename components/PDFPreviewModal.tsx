@@ -2,11 +2,10 @@
 // CORREÇÃO: substitui PDFViewer (instável no React 19) por BlobProvider + iframe nativo
 
 import React, { useState, useEffect } from 'react';
-import { BlobProvider, PDFDownloadLink } from '@react-pdf/renderer';
-import ProposalPDF from './ProposalPDF';
 import { X, Download, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from './ui';
 import { montarTituloProposta, montarNomeArquivoProposta } from '../src/utils/formatters';
+import { generatePropostaBlob, DownloadPropostaPDF } from '../src/services/pdfService';
 
 interface PDFPreviewModalProps {
     isOpen: boolean;
@@ -14,6 +13,7 @@ interface PDFPreviewModalProps {
     propostaData: any;
     cliente: any;
     empresa: any;
+    tenantId?: string;
 }
 
 export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
@@ -22,17 +22,46 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
     propostaData,
     cliente,
     empresa,
+    tenantId,
 }) => {
     const [blobUrl, setBlobUrl] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    // Limpa o blob URL ao fechar para liberar memória
+    const generatePreview = async () => {
+        if (!isOpen || !propostaData) return;
+        
+        setLoading(true);
+        setError(null);
+        
+        try {
+            // Re-adapt data here as it did before or rely on generatePropostaBlob internally adapting
+            const blob = await generatePropostaBlob(propostaData, tenantId);
+            const url = URL.createObjectURL(blob);
+            setBlobUrl(url);
+        } catch (err: any) {
+            console.error('Erro ao gerar preview do PDF', err);
+            setError(err.message || 'Erro inesperado.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        if (!isOpen) {
+        if (isOpen) {
+            generatePreview();
+        } else {
             if (blobUrl) {
                 URL.revokeObjectURL(blobUrl);
                 setBlobUrl(null);
             }
         }
+        
+        return () => {
+            if (blobUrl) {
+                 URL.revokeObjectURL(blobUrl);
+            }
+        };
     }, [isOpen]);
 
     if (!isOpen) return null;
@@ -102,14 +131,6 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
     const nomeArquivo = montarNomeArquivoProposta(adaptedProposta, adaptedCliente);
     const tituloExibicao = montarTituloProposta(adaptedProposta, adaptedCliente);
 
-    const documentoJSX = (
-        <ProposalPDF
-            proposta={adaptedProposta}
-            cliente={adaptedCliente}
-            empresa={adaptedEmpresa}
-        />
-    );
-
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[92vh] flex flex-col overflow-hidden border border-slate-200">
@@ -133,59 +154,41 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
                 </div>
 
                 {/* PDF via BlobProvider → iframe nativo (estável no React 19) */}
-                <div className="flex-1 bg-slate-200 overflow-hidden">
-                    <BlobProvider document={documentoJSX}>
-                        {({ blob, url, loading, error }) => {
-                            if (loading) {
-                                return (
-                                    <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-slate-500">
-                                        <Loader2 size={36} className="animate-spin text-indigo-600" />
-                                        <p className="text-sm font-medium">Gerando PDF da proposta...</p>
-                                    </div>
-                                );
-                            }
+                <div className="flex-1 bg-slate-200 overflow-hidden relative">
+                    {loading && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-500 bg-white/80">
+                            <Loader2 size={36} className="animate-spin text-indigo-600" />
+                            <p className="text-sm font-medium">Gerando visualização...</p>
+                        </div>
+                    )}
 
-                            if (error || !url) {
-                                return (
-                                    <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-red-500">
-                                        <AlertCircle size={36} />
-                                        <p className="text-sm font-medium">Erro ao gerar o PDF.</p>
-                                        <p className="text-xs text-slate-400">
-                                            {error?.message || 'Verifique os dados da proposta e tente novamente.'}
-                                        </p>
-                                    </div>
-                                );
-                            }
+                    {!loading && error && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-red-500 bg-white">
+                            <AlertCircle size={36} />
+                            <p className="text-sm font-medium">Erro ao gerar o PDF.</p>
+                            <p className="text-xs text-slate-400 mb-4">
+                                {error}
+                            </p>
+                            <Button onClick={generatePreview} variant="outline" className="border-red-200 text-red-600 hover:bg-red-50">
+                                Tentar Novamente
+                            </Button>
+                        </div>
+                    )}
 
-                            return (
-                                <iframe
-                                    src={url}
-                                    title="Visualização da Proposta"
-                                    width="100%"
-                                    height="100%"
-                                    style={{ border: 'none', display: 'block' }}
-                                />
-                            );
-                        }}
-                    </BlobProvider>
+                    {!loading && !error && blobUrl && (
+                        <iframe
+                            src={blobUrl}
+                            title="Visualização da Proposta"
+                            width="100%"
+                            height="100%"
+                            style={{ border: 'none', display: 'block', minHeight: '600px' }}
+                        />
+                    )}
                 </div>
 
                 {/* Footer com download */}
                 <div className="p-4 border-t bg-slate-50 flex justify-between items-center px-6">
-                    <PDFDownloadLink document={documentoJSX} fileName={nomeArquivo}>
-                        {({ loading: dlLoading }) => (
-                            <Button
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2"
-                                disabled={dlLoading}
-                            >
-                                {dlLoading
-                                    ? <Loader2 size={16} className="animate-spin" />
-                                    : <Download size={16} />
-                                }
-                                {dlLoading ? 'Preparando...' : 'Baixar PDF'}
-                            </Button>
-                        )}
-                    </PDFDownloadLink>
+                    <DownloadPropostaPDF data={propostaData} tenantId={tenantId} />
 
                     <Button onClick={onClose} variant="outline" className="px-8">
                         Fechar

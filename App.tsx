@@ -11,6 +11,7 @@ import { NovaProposta } from './src/pages/NovaProposta';
 import { BoletimDiario } from './components/BoletimDiario';
 import { DRE } from './components/DRE';
 import { Settings as SettingsPage } from './components/Settings';
+import { Templates } from './src/pages/configuracoes/Templates';
 import { Clients } from './components/Clients';
 import { Equipamentos } from './components/Equipamentos';
 import { Team } from './components/Team';
@@ -21,6 +22,7 @@ import { useCollection } from './src/firebase/firestore/use-collection';
 import { where, orderBy } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { auth } from './lib/firebase';
+import { Toaster } from 'sonner';
 
 const INITIAL_CONFIG: GlobalConfig = {
   dieselPrice: 6.59,
@@ -88,6 +90,7 @@ export const AppContent: React.FC = () => {
       case Tab.CONFIG:
       case Tab.SETTINGS:
       case Tab.TEAM:
+      case Tab.TEMPLATES:
         return false; // Restricted to Admin
       default:
         return false;
@@ -153,6 +156,8 @@ export const AppContent: React.FC = () => {
         return <CostConfig config={config} onUpdate={setConfig} />;
       case Tab.SETTINGS:
         return <SettingsPage onNavigate={handleNavigate} />;
+      case Tab.TEMPLATES:
+        return <Templates />;
       case Tab.CLIENTS:
         return <Clients />;
       case Tab.TEAM:
@@ -307,6 +312,16 @@ export const AppContent: React.FC = () => {
               </button>
             )}
 
+            {checkAccess(profile?.role, Tab.TEMPLATES) && (
+              <button
+                onClick={() => handleNavigate(Tab.TEMPLATES)}
+                className={navItemClass(Tab.TEMPLATES)}
+              >
+                <FileText size={18} />
+                <span className="text-sm font-medium">Modelos & Textos</span>
+              </button>
+            )}
+
             {checkAccess(profile?.role, Tab.CONFIG) && (
               <button
                 onClick={() => handleNavigate(Tab.CONFIG)}
@@ -333,6 +348,7 @@ export const AppContent: React.FC = () => {
       <main className="flex-1 w-full md:ml-64 p-0 md:p-8 overflow-y-auto pb-20 md:pb-0">
         {renderContent()}
       </main>
+      <Toaster position="top-right" richColors />
     </div >
   );
 };

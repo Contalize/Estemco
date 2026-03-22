@@ -194,9 +194,9 @@ const styles = StyleSheet.create({
 });
 
 // ── Componente Principal ────────────────────────────────────────────────────
-interface PDFProps { data: NovaPropostaData; templateText?: string; }
+interface PDFProps { data: NovaPropostaData; templateText?: string; tenantId?: string; }
 
-const PropostaDocument: React.FC<PDFProps> = ({ data, templateText }) => {
+const PropostaDocument: React.FC<PDFProps> = ({ data, templateText, tenantId }) => {
     let calc: any = { linhasDetalhadas: [], valorTotal: 0, valorMobilizacao: 0, valorART: 0, valorImposto: 0, subtotalExecucao: 0 };
 
     try {
@@ -454,7 +454,7 @@ const PropostaDocument: React.FC<PDFProps> = ({ data, templateText }) => {
 };
 
 // ── Exportações ─────────────────────────────────────────────────────────────
-export const generatePropostaBlob = async (data: NovaPropostaData): Promise<Blob> => {
+export const generatePropostaBlob = async (data: NovaPropostaData, tenantId?: string): Promise<Blob> => {
     let templateText: string | undefined;
     try {
         const listaServicos = data.itens || [];
@@ -467,12 +467,12 @@ export const generatePropostaBlob = async (data: NovaPropostaData): Promise<Blob
         if (data.tipo === 'SPT') calc = calcularPropostaSPT(listaServicos as any, valorMobilizacao, data.incluirART, taxaArt, data.emiteNotaFiscal, data.percentualImposto);
 
         const vars = buildTemplateVars(data, calc, (data as any).numero || 'PREVIEW');
-        templateText = await buildPropostaText(data.tipo as any, vars);
+        templateText = await buildPropostaText(data.tipo as any, vars, tenantId || '');
     } catch (e) {
-        console.warn("Utilizando fallback de texto fixo (erro no Google Drive):", e);
+        console.warn("Utilizando fallback de texto fixo (erro ao gerar PDF):", e);
     }
 
-    return await pdf(<PropostaDocument data={data} templateText={templateText} />).toBlob();
+    return await pdf(<PropostaDocument data={data} templateText={templateText} tenantId={tenantId} />).toBlob();
 };
 
 export const downloadBlob = (blob: Blob, filename: string) => {
@@ -486,12 +486,12 @@ export const downloadBlob = (blob: Blob, filename: string) => {
     URL.revokeObjectURL(url);
 };
 
-export const DownloadPropostaPDF: React.FC<PDFProps> = ({ data }) => {
+export const DownloadPropostaPDF: React.FC<PDFProps> = ({ data, tenantId }) => {
     const filename = montarNomeArquivoProposta(data, data);
 
     const handleDownload = async () => {
         try {
-            const blob = await generatePropostaBlob(data);
+            const blob = await generatePropostaBlob(data, tenantId);
             downloadBlob(blob, filename);
         } catch (error) {
             console.error('Erro ao gerar PDF:', error);
