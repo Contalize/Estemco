@@ -156,20 +156,20 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
         try {
             // Formata os dados pro Firestore de acordo om o tipo de serviço, ignorando o resto
             const payload: any = {
-                tipo: data.tipo,
-                clienteId: data.clienteId,
-                clienteNome: data.clienteNome,
-                enderecoObra: data.enderecoObra,
-                observacoes: data.observacoes,
-                validadeProposta: data.validadeProposta,
-                prazoExecucao: data.prazoExecucao,
-                dataPrevistaInicio: data.dataPrevistaInicio,
-                diasExecucao: data.diasExecucao,
-                faturamentoMinimo: data.faturamentoMinimo,
-                incluirART: data.incluirART,
+                tipo: data.tipo ?? null,
+                clienteId: data.clienteId ?? null,
+                clienteNome: data.clienteNome ?? null,
+                enderecoObra: data.enderecoObra ?? null,
+                observacoes: data.observacoes ?? null,
+                validadeProposta: data.validadeProposta ?? null,
+                prazoExecucao: data.prazoExecucao ?? null,
+                dataPrevistaInicio: data.dataPrevistaInicio ?? null,
+                diasExecucao: data.diasExecucao ?? null,
+                faturamentoMinimo: data.faturamentoMinimo ?? null,
+                incluirART: data.incluirART ?? false,
                 valorART: data.incluirART ? data.valorART : 0,
-                emiteNotaFiscal: data.emiteNotaFiscal,
-                percentualImposto: data.percentualImposto,
+                emiteNotaFiscal: data.emiteNotaFiscal ?? false,
+                percentualImposto: data.percentualImposto ?? null,
                 textoObrigacoesContratante: data.textoObrigacoesContratante || '',
                 textoObrigacoesContratada: data.textoObrigacoesContratada || '',
                 textoCondicoesCobranca: data.textoCondicoesCobranca || '',
@@ -188,12 +188,12 @@ export const NovaProposta: React.FC<NovaPropostaProps> = ({ onNavigate, editProp
                 payload.mobilizacaoHCM = data.mobilizacao;
                 calc = calcularPropostaHCM(data.itens, data.mobilizacao, data.faturamentoMinimo, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
             } else if (data.tipo === 'ESC') {
-                payload.itensESC = data.itens;
-                payload.mobilizacaoESC = data.mobilizacao;
-                payload.modalidadeESC = data.modalidadeESC;
-                payload.precoFechado = data.precoFechadoESC;
-                payload.metrosDiarios = data.metrosDiariosESC;
-                payload.precoExcedente = data.precoExcedenteESC;
+                payload.itensESC = data.itens ?? [];
+                payload.mobilizacaoESC = data.mobilizacao ?? null;
+                payload.modalidadeESC = data.modalidadeESC ?? null;
+                payload.precoFechado = data.precoFechadoESC ?? null;
+                payload.metrosDiarios = data.metrosDiariosESC ?? null;
+                payload.precoExcedente = data.precoExcedenteESC ?? null;
                 calc = calcularPropostaESC(data.itens, data.mobilizacao, data.modalidadeESC, data.precoFechadoESC, data.metrosDiariosESC, data.precoExcedenteESC, data.faturamentoMinimo, data.incluirART, data.valorART, data.emiteNotaFiscal, data.percentualImposto);
             } else if (data.tipo === 'SPT') {
                 payload.itensSPT = data.itens;

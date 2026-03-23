@@ -15,7 +15,7 @@ import { ptBR } from 'date-fns/locale';
 import { FileDown } from 'lucide-react';
 import { calcularPropostaHCM, calcularPropostaESC, calcularPropostaSPT } from '../utils/calculosProposta';
 import { ItemProposta, ItemFuroSPT } from '../../types';
-import { buildPropostaText, buildTemplateVars } from './templateService';
+import { buildPropostaText, buildTemplateVars, getFallbackTemplateText } from './templateService';
 import { montarNomeArquivoProposta } from '../utils/formatters';
 import { DadosEmpresa } from '../hooks/useEmpresa';
 
@@ -75,18 +75,12 @@ const styles = StyleSheet.create({
         color: '#1e293b',
     },
     header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        borderBottomWidth: 2,
-        borderBottomStyle: 'solid',
-        borderBottomColor: '#1e1b4b',
-        paddingBottom: 10,
         marginBottom: 20,
     },
     companyTitle: { fontSize: 18, fontFamily: 'Helvetica-Bold', color: '#1e1b4b' },
     companyContact: { fontSize: 7, color: '#64748b', marginTop: 4, lineHeight: 1.4 },
-    docInfo: { textAlign: 'right' },
-    docTitle: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#1e1b4b' },
+    docInfo: { textAlign: 'right', flexWrap: 'wrap' },
+    docTitle: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#1e1b4b' },
     metaText: { fontSize: 8, color: '#64748b', marginTop: 2 },
     section: { marginBottom: 15 },
     sectionHeader: {
@@ -254,6 +248,8 @@ const PropostaDocument: React.FC<PDFProps> = ({ data, templateText, tenantId, em
 
                 {/* CABEÇALHO */}
                 <View style={styles.header} fixed>
+                  {/* Linha 1: empresa (esquerda) + número/data (direita) */}
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
                     <View>
                         <Text style={styles.companyTitle}>{empresa?.razaoSocial || 'ESTEMCO - ENGENHARIA EM FUNDAÇÕES'}</Text>
                         <Text style={styles.companyContact}>
@@ -262,12 +258,16 @@ const PropostaDocument: React.FC<PDFProps> = ({ data, templateText, tenantId, em
                             CNPJ: {empresa?.cnpj || '57.486.102/0001-86'}
                         </Text>
                     </View>
-                    <View style={styles.docInfo}>
-                        <Text style={styles.docTitle}>{tituloProposta}</Text>
+                    <View style={{ textAlign: 'right' }}>
                         <Text style={styles.metaText}>Nº {numeroDoc}</Text>
                         <Text style={styles.metaText}>Emitida em: {dataEmissao}</Text>
                         <Text style={styles.metaText}>Validade: {data?.validadeProposta || 15} dias</Text>
                     </View>
+                  </View>
+                  {/* Linha 2: título centralizado */}
+                  <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#1e1b4b', borderBottomWidth: 2, borderBottomStyle: 'solid', borderBottomColor: '#1e1b4b', paddingBottom: 4 }}>
+                    {tituloProposta}
+                  </Text>
                 </View>
 
                 {/* IDENTIFICAÇÃO */}
@@ -542,6 +542,14 @@ export const generatePropostaBlob = async (data: NovaPropostaData, tenantId?: st
 
         const vars = buildTemplateVars(data, calc, (data as any).numero || 'PREVIEW');
         templateText = await buildPropostaText(data.tipo as any, vars, tenantId || '');
+        console.log('templateText:', JSON.stringify(templateText?.substring(0, 100)));
+        console.log('tipo:', data.tipo, 'tenantId:', tenantId);
+        
+        if (!templateText || templateText.trim().length < 10) {
+            const { getFallbackTemplateText } = await import('./templateService');
+            templateText = getFallbackTemplateText(data.tipo as any);
+            console.log('usando fallback, length:', templateText.length);
+        }
     } catch (e) {
         console.warn("Utilizando fallback de texto fixo (erro ao gerar PDF):", e);
     }

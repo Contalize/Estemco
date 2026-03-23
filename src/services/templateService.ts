@@ -89,7 +89,7 @@ function formatTemplateToString(data: Partial<ConfiguracaoTemplate>): string {
     return parts.join('\n');
 }
 
-function getFallbackTemplateText(tipo: 'HCM' | 'ESC' | 'SPT'): string {
+export function getFallbackTemplateText(tipo: 'HCM' | 'ESC' | 'SPT'): string {
     // Retorna fallback do pdfTexts baseado no tipo
     const hcm = pdfTexts.proposals.hcm;
     const fallbackData: Partial<ConfiguracaoTemplate> = {
@@ -179,13 +179,18 @@ export function buildTemplateVars(
     const hoje = new Date();
     const dataExtenso = `${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
 
+    // Normaliza os itens, pois podem vir vazios na visualização da tabela
+    const itensNormalizados = (data.itens && data.itens.length > 0)
+        ? data.itens
+        : (data as any).itensHCM || (data as any).itensESC || (data as any).itensSPT || [];
+
     // Agrupa itens para a linha de descrição
-    const primeiroItem = (data.itens as any[])?.[0] || {};
+    const primeiroItem = itensNormalizados[0] || {};
     const diametroMm  = primeiroItem.diametro || 0;
     const diametroCm  = diametroMm / 10;
-    const qtd         = (data.itens as any[]).reduce((s, i) => s + (i.quantidadeEstacas || 0), 0);
+    const qtd         = itensNormalizados.reduce((s: number, i: any) => s + (i.quantidadeEstacas || 0), 0);
     const compMedio   = primeiroItem.comprimentoUnitario || 0;
-    const totalMetros = (data.itens as any[]).reduce((s, i) => s + (i.totalMetros || 0), 0);
+    const totalMetros = itensNormalizados.reduce((s: number, i: any) => s + (i.totalMetros || i.profundidade || 0), 0);
 
     const tipoTexto: Record<string, string> = {
         HCM: 'HÉLICE CONTÍNUA MONITORADA',

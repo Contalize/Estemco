@@ -61,12 +61,13 @@ export const Step4Revisao: React.FC<Step4Props> = ({
                 if (status === 'ACEITA') {
                     try {
                         const blob = await generatePropostaBlob(data, profile?.tenantId, empresa || undefined);
-                        const filename = `propostas/${propostaId}_${(data.clienteNome || 'Cliente').replace(/\s+/g, '_')}.pdf`;
-                        const storageRef = ref(storage, filename);
-                        await uploadBytes(storageRef, blob);
-                        const downloadURL = await getDownloadURL(storageRef);
-                        const propostaRef = doc(db, 'empresas', profile?.tenantId || '', 'propostas', propostaId);
-                        await updateDoc(propostaRef, { pdfUrl: downloadURL });
+                        // Comentado para evitar erro de CORS (não fará upload pro Storage agora)
+                        // const filename = `propostas/${propostaId}_${(data.clienteNome || 'Cliente').replace(/\s+/g, '_')}.pdf`;
+                        // const storageRef = ref(storage, filename);
+                        // await uploadBytes(storageRef, blob);
+                        // const downloadURL = await getDownloadURL(storageRef);
+                        // const propostaRef = doc(db, 'empresas', profile?.tenantId || '', 'propostas', propostaId);
+                        // await updateDoc(propostaRef, { pdfUrl: downloadURL });
                     } catch (pdfErr) {
                         console.warn('PDF não salvo no Storage (não crítico):', pdfErr);
                     }
