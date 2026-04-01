@@ -58,6 +58,12 @@ service cloud.firestore {
         (getUserData().tenantId == tenantId || request.auth.uid == tenantId) &&
         isAdmin();
       
+      // Contadores de Propostas
+      match /contadores/{docId} {
+        allow read, write: if isAuthenticated() && 
+          (getUserData().tenantId == tenantId || request.auth.uid == tenantId);
+      }
+      
       // Sub-coleções dentro de empresas
       match /{subcollection}/{docId} {
         allow read: if isAuthenticated() && 

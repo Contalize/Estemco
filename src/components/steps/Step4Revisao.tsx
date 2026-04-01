@@ -14,8 +14,6 @@ import { useEmpresa } from '../../hooks/useEmpresa';
 import { PropostaPreview } from '../PropostaPreview';
 import { DownloadPropostaPDF, generatePropostaBlob } from '../../services/pdfService';
 import { CondicioesPagamento } from './CondicioesPagamento';
-import { storage } from '../../../lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 

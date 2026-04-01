@@ -36,7 +36,7 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
         
         try {
             // Re-adapt data here as it did before or rely on generatePropostaBlob internally adapting
-            const blob = await generatePropostaBlob(propostaData, tenantId);
+            const blob = await generatePropostaBlob(propostaData, tenantId, adaptedEmpresa);
             const url = URL.createObjectURL(blob);
             setBlobUrl(url);
         } catch (err: any) {
@@ -188,7 +188,7 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
 
                 {/* Footer com download */}
                 <div className="p-4 border-t bg-slate-50 flex justify-between items-center px-6">
-                    <DownloadPropostaPDF data={propostaData} tenantId={tenantId} />
+                    <DownloadPropostaPDF data={propostaData} tenantId={tenantId} empresa={adaptedEmpresa} />
 
                     <Button onClick={onClose} variant="outline" className="px-8">
                         Fechar

@@ -194,12 +194,7 @@ interface PDFProps { data: NovaPropostaData; templateText?: string; tenantId?: s
 const PropostaDocument: React.FC<PDFProps> = ({ data, templateText, tenantId, empresa }) => {
     let calc: any = { linhasDetalhadas: [], valorTotal: 0, valorMobilizacao: 0, valorART: 0, valorImposto: 0, subtotalExecucao: 0 };
 
-    const itensNormalizados = (data.itens && data.itens.length > 0)
-        ? data.itens
-        : (data as any).itensHCM
-            || (data as any).itensESC
-            || (data as any).itensSPT
-            || [];
+    const itensNormalizados = data.itens || (data as any).itensHCM || (data as any).itensESC || (data as any).itensSPT || [];
 
     const mobilizacaoNorm = data.mobilizacao
         || (data as any).mobilizacaoHCM
@@ -213,7 +208,13 @@ const PropostaDocument: React.FC<PDFProps> = ({ data, templateText, tenantId, em
         if (data?.tipo === 'SPT') calc = calcularPropostaSPT(itensNormalizados as ItemFuroSPT[], mobilizacaoNorm, data.incluirART, data.valorART || 0, data.emiteNotaFiscal, data.percentualImposto || 0);
     } catch (e) { console.error('Erro no cálculo do PDF:', e); }
 
-    const totalMetros = (itensNormalizados || []).reduce((acc: number, item: any) => acc + (item?.totalMetros || item?.profundidade || 0), 0);
+    const totalMetros = (itensNormalizados ?? []).reduce(
+        (acc: number, item: any) => acc + (
+            item?.totalMetros || 
+            item?.profundidade || 
+            ((item?.quantidadeEstacas || 1) * (item?.comprimentoUnitario || 0))
+        ), 0
+    );
     const tipoTexto = data?.tipo === 'HCM' ? 'HÉLICE CONTÍNUA MONITORADA' : data?.tipo === 'ESC' ? 'ESTACA ESCAVADA' : 'SPT (SONDAGEM)';
     const dataEmissao = safeFormatDate(new Date(), 'dd/MM/yyyy');
 
@@ -520,12 +521,7 @@ const PropostaDocument: React.FC<PDFProps> = ({ data, templateText, tenantId, em
 export const generatePropostaBlob = async (data: NovaPropostaData, tenantId?: string, empresa?: DadosEmpresa): Promise<Blob> => {
     let templateText: string | undefined;
     try {
-        const itensNormalizados = (data.itens && data.itens.length > 0)
-            ? data.itens
-            : (data as any).itensHCM
-                || (data as any).itensESC
-                || (data as any).itensSPT
-                || [];
+        const itensNormalizados = data.itens || (data as any).itensHCM || (data as any).itensESC || (data as any).itensSPT || [];
 
         const mobilizacaoNorm = data.mobilizacao
             || (data as any).mobilizacaoHCM
@@ -544,14 +540,14 @@ export const generatePropostaBlob = async (data: NovaPropostaData, tenantId?: st
         templateText = await buildPropostaText(data.tipo as any, vars, tenantId || '');
         console.log('templateText:', JSON.stringify(templateText?.substring(0, 100)));
         console.log('tipo:', data.tipo, 'tenantId:', tenantId);
-        
-        if (!templateText || templateText.trim().length < 10) {
-            const { getFallbackTemplateText } = await import('./templateService');
-            templateText = getFallbackTemplateText(data.tipo as any);
-            console.log('usando fallback, length:', templateText.length);
-        }
     } catch (e) {
-        console.warn("Utilizando fallback de texto fixo (erro ao gerar PDF):", e);
+        console.warn("Erro ao buscar do Drive/Firestore, forçando fallback:", e);
+    }
+
+    if (!templateText || templateText.trim().length < 10) {
+        const { getFallbackTemplateText } = await import('./templateService');
+        templateText = getFallbackTemplateText(data.tipo as any);
+        console.log('usando fallback, length:', templateText.length);
     }
 
     return await pdf(<PropostaDocument data={data} templateText={templateText} tenantId={tenantId} empresa={empresa} />).toBlob();
