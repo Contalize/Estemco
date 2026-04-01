@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { calcularPropostaHCM, calcularPropostaESC, calcularPropostaSPT } from '../utils/calculosProposta';
 import { ItemProposta, ItemFuroSPT } from '../../types';
+import { DadosEmpresa } from '../hooks/useEmpresa';
 
 // Utilitários de Formatação locais para o Preview (Sincronizados com o PDF)
 const formatCurrency = (valor: number) => {
@@ -17,9 +18,10 @@ const formatMetersValue = (valor: number) => {
 
 interface PropostaPreviewProps {
     data: NovaPropostaData;
+    empresa?: DadosEmpresa;
 }
 
-export const PropostaPreview: React.FC<PropostaPreviewProps> = ({ data }) => {
+export const PropostaPreview: React.FC<PropostaPreviewProps> = ({ data, empresa }) => {
     // --- ADAPTER LAYER (Data Normalization) ---
     const listaServicos = (data as any)?.servicos || (data as any)?.itens || (data as any)?.itensHCM || (data as any)?.itensESC || (data as any)?.itensSPT || [];
     const valorMobilizacao = (data as any)?.mobilizacao || (data as any)?.valorMobilizacao || (data as any)?.mobilizacaoHCM || (data as any)?.mobilizacaoESC || (data as any)?.mobilizacaoSPT || 0;
@@ -50,11 +52,11 @@ export const PropostaPreview: React.FC<PropostaPreviewProps> = ({ data }) => {
             {/* Header Simulation */}
             <div className="flex justify-between items-start border-b-2 border-indigo-950 pb-6">
                 <div>
-                    <h1 className="text-2xl font-black text-indigo-950 leading-tight">ESTEMCO</h1>
+                    <h1 className="text-2xl font-black text-indigo-950 leading-tight">{empresa?.razaoSocial || 'ESTEMCO'}</h1>
                     <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Engenharia de Fundações</p>
                     <p className="text-[9px] text-slate-400 mt-2 leading-tight">
-                        Rod. Capitão Barduíno, Km 131 - Socorro/SP{"\n"}
-                        Tel: (19) 3895-2630 | contato@estemco.com.br
+                        {empresa?.endereco || 'Rod. Capitão Barduíno, Km 131 - Socorro/SP'}{"\n"}
+                        Tel: {empresa?.telefone || '(19) 3895-2630'} | {empresa?.email || 'contato@estemco.com.br'}
                     </p>
                 </div>
                 <div className="text-right text-sm">

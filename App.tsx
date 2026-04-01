@@ -8,6 +8,7 @@ import { ProjectWorkflow } from './components/ProjectWorkflow';
 import { ConstructionCalendar } from './components/ConstructionCalendar';
 import { Propostas } from './src/pages/Propostas';
 import { NovaProposta } from './src/pages/NovaProposta';
+import { Medicoes } from './src/pages/Medicoes';
 import { BoletimDiario } from './components/BoletimDiario';
 import { DRE } from './components/DRE';
 import { Settings as SettingsPage } from './components/Settings';
@@ -17,7 +18,7 @@ import { Equipamentos } from './components/Equipamentos';
 import { Team } from './components/Team';
 import { Financeiro } from './components/Financeiro';
 import { Tab, ConstructionSite, GlobalConfig } from './types';
-import { LayoutDashboard, Settings, Drill, CalendarDays, GitPullRequestArrow, FileText, Users, Shield, ClipboardList, TrendingUp, DollarSign, LogOut } from 'lucide-react';
+import { LayoutDashboard, Settings, Drill, CalendarDays, GitPullRequestArrow, FileText, Users, Shield, ClipboardList, TrendingUp, DollarSign, LogOut, Ruler } from 'lucide-react';
 import { useCollection } from './src/firebase/firestore/use-collection';
 import { where, orderBy } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
@@ -82,6 +83,7 @@ export const AppContent: React.FC = () => {
       case Tab.PROPOSALS:
       case Tab.QUOTE:
       case Tab.CLIENTS:
+      case Tab.MEDICOES:
         return role === 'Comercial';
       case Tab.BOLETIM:
         return role === 'Engenheiro' || role === 'Comercial';
@@ -158,6 +160,8 @@ export const AppContent: React.FC = () => {
         return <SettingsPage onNavigate={handleNavigate} />;
       case Tab.TEMPLATES:
         return <Templates />;
+      case Tab.MEDICOES:
+        return <Medicoes onNavigate={handleNavigate} />;
       case Tab.CLIENTS:
         return <Clients />;
       case Tab.TEAM:
@@ -228,6 +232,16 @@ export const AppContent: React.FC = () => {
             >
               <ClipboardList size={18} />
               <span className="text-sm font-medium">Propostas</span>
+            </button>
+          )}
+
+          {checkAccess(profile?.role, Tab.PROPOSALS) && (
+            <button
+              onClick={() => handleNavigate(Tab.MEDICOES)}
+              className={navItemClass(Tab.MEDICOES)}
+            >
+              <Ruler size={18} />
+              <span className="text-sm font-medium">Medições</span>
             </button>
           )}
 

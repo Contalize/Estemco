@@ -188,6 +188,213 @@ const styles = StyleSheet.create({
     acceptanceText: { fontSize: 8, lineHeight: 1.5, color: '#475569', textAlign: 'center', fontStyle: 'italic' },
 });
 
+// ── Estilos da Capa ──────────────────────────────────────────────────────────
+const capaStyles = StyleSheet.create({
+    capaPage: {
+        backgroundColor: '#1e1b4b',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: 0,
+    },
+    capaTopStripe: {
+        backgroundColor: '#312e81',
+        paddingHorizontal: 50,
+        paddingVertical: 40,
+    },
+    capaLogoArea: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    capaLogoBox: {
+        width: 48,
+        height: 48,
+        backgroundColor: '#ffffff',
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    capaLogoText: {
+        fontSize: 20,
+        fontFamily: 'Helvetica-Bold',
+        color: '#1e1b4b',
+        textAlign: 'center',
+        marginTop: 8,
+    },
+    capaEmpresaNome: {
+        fontSize: 22,
+        fontFamily: 'Helvetica-Bold',
+        color: '#ffffff',
+    },
+    capaEmpresaSub: {
+        fontSize: 10,
+        color: '#a5b4fc',
+        marginTop: 2,
+        textTransform: 'uppercase',
+        letterSpacing: 2,
+    },
+    capaBody: {
+        flex: 1,
+        paddingHorizontal: 50,
+        paddingVertical: 50,
+        justifyContent: 'center',
+    },
+    capaDocType: {
+        fontSize: 11,
+        color: '#818cf8',
+        textTransform: 'uppercase',
+        letterSpacing: 3,
+        marginBottom: 12,
+    },
+    capaTituloServico: {
+        fontSize: 28,
+        fontFamily: 'Helvetica-Bold',
+        color: '#ffffff',
+        lineHeight: 1.3,
+        marginBottom: 30,
+    },
+    capaDivider: {
+        width: 60,
+        height: 4,
+        backgroundColor: '#818cf8',
+        marginBottom: 30,
+    },
+    capaClienteLabel: {
+        fontSize: 9,
+        color: '#818cf8',
+        textTransform: 'uppercase',
+        letterSpacing: 2,
+        marginBottom: 6,
+    },
+    capaClienteNome: {
+        fontSize: 20,
+        fontFamily: 'Helvetica-Bold',
+        color: '#ffffff',
+        marginBottom: 8,
+    },
+    capaObraLinha: {
+        fontSize: 10,
+        color: '#c7d2fe',
+        marginBottom: 4,
+    },
+    capaValorBox: {
+        marginTop: 40,
+        backgroundColor: '#4f46e5',
+        borderRadius: 8,
+        padding: 20,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    capaValorLabel: {
+        fontSize: 10,
+        color: '#c7d2fe',
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+    },
+    capaValorNumero: {
+        fontSize: 28,
+        fontFamily: 'Helvetica-Bold',
+        color: '#34d399',
+        marginTop: 4,
+    },
+    capaValorMeta: {
+        fontSize: 9,
+        color: '#a5b4fc',
+        textAlign: 'right',
+    },
+    capaFooter: {
+        backgroundColor: '#0f0e24',
+        paddingHorizontal: 50,
+        paddingVertical: 24,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+    },
+    capaFooterLeft: {
+        fontSize: 8,
+        color: '#6366f1',
+    },
+    capaFooterRight: {
+        fontSize: 8,
+        color: '#6366f1',
+        textAlign: 'right',
+    },
+    capaNumero: {
+        fontSize: 11,
+        color: '#c7d2fe',
+        fontFamily: 'Helvetica-Bold',
+        textAlign: 'right',
+        marginBottom: 4,
+    },
+});
+
+// ── Página de Capa ───────────────────────────────────────────────────────────
+const PropostaCapa: React.FC<{ data: NovaPropostaData; calc: any; empresa?: DadosEmpresa; numeroDoc: string }> = ({ data, calc, empresa, numeroDoc }) => {
+    const tipoCompleto = {
+        HCM: 'Hélice Contínua\nMonitorada',
+        ESC: 'Estaca Escavada\nMecanicamente',
+        SPT: 'Sondagem de\nReconhecimento SPT',
+    }[data?.tipo || 'HCM'] || 'Fundação Especial';
+
+    const dataEmissao = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+    const endObra = [data?.enderecoObra?.cidade, data?.enderecoObra?.estado].filter(Boolean).join(' / ');
+
+    return (
+        <Page size="A4" style={capaStyles.capaPage}>
+            {/* Topo */}
+            <View style={capaStyles.capaTopStripe}>
+                <View style={capaStyles.capaLogoArea}>
+                    <View style={capaStyles.capaLogoBox}>
+                        <Text style={capaStyles.capaLogoText}>E</Text>
+                    </View>
+                    <View>
+                        <Text style={capaStyles.capaEmpresaNome}>{empresa?.razaoSocial || 'ESTEMCO'}</Text>
+                        <Text style={capaStyles.capaEmpresaSub}>Engenharia em Fundações</Text>
+                    </View>
+                </View>
+            </View>
+
+            {/* Corpo */}
+            <View style={capaStyles.capaBody}>
+                <Text style={capaStyles.capaDocType}>Proposta Comercial</Text>
+                <Text style={capaStyles.capaTituloServico}>{tipoCompleto}</Text>
+                <View style={capaStyles.capaDivider} />
+
+                <Text style={capaStyles.capaClienteLabel}>Apresentado a</Text>
+                <Text style={capaStyles.capaClienteNome}>{data?.clienteNome || '—'}</Text>
+                {endObra ? <Text style={capaStyles.capaObraLinha}>Obra: {endObra}</Text> : null}
+                {data?.enderecoObra?.logradouro ? (
+                    <Text style={capaStyles.capaObraLinha}>{data.enderecoObra.logradouro}{data.enderecoObra.numero ? `, nº ${data.enderecoObra.numero}` : ''}</Text>
+                ) : null}
+
+                {/* Card de Valor */}
+                <View style={capaStyles.capaValorBox}>
+                    <View>
+                        <Text style={capaStyles.capaValorLabel}>Investimento Total Estimado</Text>
+                        <Text style={capaStyles.capaValorNumero}>{formatCurrency(calc?.valorTotal || 0)}</Text>
+                    </View>
+                    <View>
+                        <Text style={capaStyles.capaNumero}>Nº {numeroDoc}</Text>
+                        <Text style={capaStyles.capaValorMeta}>Válida por {data?.validadeProposta || 15} dias</Text>
+                        <Text style={capaStyles.capaValorMeta}>Emitida em {format(new Date(), 'dd/MM/yyyy')}</Text>
+                    </View>
+                </View>
+            </View>
+
+            {/* Rodapé */}
+            <View style={capaStyles.capaFooter}>
+                <View>
+                    <Text style={capaStyles.capaFooterLeft}>{empresa?.endereco || 'Rod. Capitão Barduíno, Km 131 - Socorro/SP'}</Text>
+                    <Text style={capaStyles.capaFooterLeft}>Tel: {empresa?.telefone || '(19) 3895-2630'} | {empresa?.email || 'contato@estemco.com.br'}</Text>
+                </View>
+                <Text style={capaStyles.capaFooterRight}>CNPJ: {empresa?.cnpj || '57.486.102/0001-86'}</Text>
+            </View>
+        </Page>
+    );
+};
+
 // ── Componente Principal ────────────────────────────────────────────────────
 interface PDFProps { data: NovaPropostaData; templateText?: string; tenantId?: string; empresa?: DadosEmpresa; }
 
@@ -245,6 +452,7 @@ const PropostaDocument: React.FC<PDFProps> = ({ data, templateText, tenantId, em
 
     return (
         <Document title={`Proposta ${numeroDoc} — ${data?.clienteNome || ''}`}>
+            <PropostaCapa data={data} calc={calc} empresa={empresa} numeroDoc={numeroDoc} />
             <Page size="A4" style={styles.page}>
 
                 {/* CABEÇALHO */}

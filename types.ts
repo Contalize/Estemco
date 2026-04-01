@@ -97,7 +97,8 @@ export enum Tab {
   DRE = 'dre',
   FINANCES = 'finances',
   MACHINES = 'machines',
-  TEMPLATES = 'TEMPLATES'
+  TEMPLATES = 'TEMPLATES',
+  MEDICOES = 'MEDICOES'
 }
 
 export interface Medicao {
@@ -360,6 +361,15 @@ export interface Proposta {
 
   criadoEm?: any;
   atualizadoEm?: any;
+
+  // Workflow CRM
+  enviadoEm?: any;        // Timestamp quando foi enviada ao cliente
+  aceitoEm?: any;         // Timestamp quando o cliente aceitou
+  recusadoEm?: any;       // Timestamp quando o cliente recusou
+  expiradoEm?: any;       // Timestamp quando expirou automaticamente
+  motivoRecusa?: 'preco' | 'prazo' | 'concorrente' | 'sem_verba' | 'projeto_cancelado' | 'outro';
+  observacaoRecusa?: string;
+  validadeProposta?: number; // dias
 }
 
 export interface PermissionsMap {

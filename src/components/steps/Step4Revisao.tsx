@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useEmpresa } from '../../hooks/useEmpresa';
 import { PropostaPreview } from '../PropostaPreview';
+import { PropostaCapaPreview } from '../PropostaCapaPreview';
 import { DownloadPropostaPDF, generatePropostaBlob } from '../../services/pdfService';
 import { CondicioesPagamento } from './CondicioesPagamento';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -170,8 +171,13 @@ export const Step4Revisao: React.FC<Step4Props> = ({
                     </h3>
                     <DownloadPropostaPDF data={data} tenantId={profile?.tenantId} empresa={empresa || undefined} />
                 </div>
+                {/* Capa da Proposta */}
+                <div className="rounded-lg overflow-hidden">
+                    <PropostaCapaPreview data={data} empresa={empresa || undefined} />
+                </div>
+                {/* Conteúdo Técnico */}
                 <div className="border border-slate-100 rounded-lg overflow-hidden">
-                    <PropostaPreview data={data} />
+                    <PropostaPreview data={data} empresa={empresa || undefined} />
                 </div>
             </div>
 
